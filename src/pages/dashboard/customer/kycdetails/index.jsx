@@ -1,28 +1,24 @@
+
 import React, { useState } from 'react'
 import { Label } from 'flowbite-react'
-import Button from '../../components/shared/button'
-import Card from '../../components/shared/card'
+import Button from '../../../../components/shared/button'
+import Card from '../../../../components/shared/card'
 import { toast } from 'react-toastify'
 import { BiUpload } from 'react-icons/bi'
 
 import { useNavigate } from 'react-router-dom'
 
 
-import { useAuthStore } from '../../../store/store'
+
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { handleCustomerForm } from '../../services/customer'
+import { handleCustomerForm } from '../../../../services/customer'
 
-
-function Addcustomer() {
-
+function KycDetails({ Id }) {
     const [id, setId] = useState("")
     const query = useQueryClient()
     const navigate = useNavigate()
-
-
-
 
     const formik = useFormik({
 
@@ -56,7 +52,7 @@ function Addcustomer() {
     });
     const { mutate: onMutate, isPending, isError } = useMutation({
         mutationFn: async (values) =>
-            handleCustomerForm(values)
+            handleCustomerForm(Id, values)
 
         , onSuccess: ({ data }) => {
             console.log(data)
@@ -69,10 +65,6 @@ function Addcustomer() {
             toast.error(error.message)
         }
     })
-
-
-
-
 
     return (
         <div>
@@ -370,11 +362,8 @@ function Addcustomer() {
                     </Card>
                 </div> */}
             </div>
-
-
-
         </div>
     )
 }
 
-export default Addcustomer
+export default KycDetails

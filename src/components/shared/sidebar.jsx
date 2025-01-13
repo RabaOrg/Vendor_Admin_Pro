@@ -3,9 +3,12 @@ import { Icons } from "../icons/icon";
 import Button from "./button";
 import { useAuthStore } from "../../../store/store";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { FaSignOutAlt } from 'react-icons/fa';
 
 const SidebarComponent = ({ isOpen, toggleSidebar }) => {
-    const [activeItem, setActiveItem] = useState("Dashboard");
+    const location = useLocation();
+
     const navigate = useNavigate()
     const handleItemClick = (item, path) => {
         setActiveItem(item);
@@ -18,12 +21,17 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Dashboard", icon: <Icons.Dashboard />, path: "/" },
         { name: "Product", icon: <Icons.Product />, path: "/product" },
         { name: "Customer", icon: <Icons.Customer />, path: "/customer" },
-        { name: "Transactions", icon: <Icons.Transaction /> },
+        { name: "Transactions", icon: <Icons.Transaction />, path: "/transaction" },
         { name: "Activations", icon: <Icons.Activation /> },
         { name: "Applications", icon: <Icons.Application /> },
         { name: "Repayment Plans", icon: <Icons.RepaymentPlan />, path: "/repayment-plan" },
 
     ];
+    const [activeItem, setActiveItem] = useState(() => {
+        const currentPath = location.pathname;
+        const currentItem = menuItems.find((item) => item.path === currentPath);
+        return currentItem ? currentItem.name : "Dashboard";
+    });
 
     return (
         <div>
@@ -55,9 +63,11 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
                             </li>
                         ))}
                     </ul>
-                    {/* <div>
-                        <Button onClick={() => logOut()}>Logout</Button>
-                    </div> */}
+                    <hr className="mt-40" />
+                    <div onClick={() => logOut()} className="flex gap-3 py-14 px-5">
+                        <FaSignOutAlt className="mt-1" />
+                        <p >Logout</p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -10,6 +10,8 @@ import Addproduct from "../pages/addproduct";
 import Addcustomer from "../pages/addcustomer";
 import ProtectedRoute from "../provider/protectedRoute";
 import PublicRoute from "../provider/publicRoute";
+import UpdateCustomer from "../pages/dashboard/updatecustomer";
+import TransactionList from "../pages/dashboard/transaction/transactionlist";
 
 
 export const router = createBrowserRouter([
@@ -52,6 +54,16 @@ export const router = createBrowserRouter([
             {
                 path: "/addcustomer",
                 element: <Addcustomer />
+
+            },
+            {
+                path: "/customer-details/:id",
+                element: <UpdateCustomer />
+
+            },
+            {
+                path: "/transaction",
+                element: <TransactionList />
 
             },
         ]

@@ -9,14 +9,16 @@ const axiosInstance = axios.create({
 });
 
 
-axiosInstance.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
-  }
-  config.headers["Content-Type"] = "application/json";
-  return config;
-});
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -24,7 +26,7 @@ axiosInstance.interceptors.response.use(
     const { response } = error;
     if (response) {
       if (response.status === 401) {
-        toast.error("Session Timeout");
+        toast.error("Unauthorized");
         useAuthStore.getState().logOut()
         
       } else if (response.status === 403) {

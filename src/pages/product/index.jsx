@@ -4,6 +4,7 @@ import Button from '../../components/shared/button'
 import { Checkbox, Label, TextInput } from "flowbite-react";
 import { FaEye, FaEdit, FaTrash } from 'react-icons/fa'
 import { BiUpload } from "react-icons/bi";
+import { Link } from 'react-router-dom';
 
 import { FaSearch } from 'react-icons/fa';
 
@@ -31,12 +32,12 @@ function Product() {
                             <FaSearch />
                         </span>
                     </div>
-                    <Button
+                    <Link to={"/addproduct"}> <Button
                         label="Add New Product"
                         variant="solid"
                         size="md"
                         className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
-                    />
+                    /></Link>
                 </div>
 
 
