@@ -1,15 +1,20 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useFormik } from 'formik'
 import { Label } from 'flowbite-react'
 import Button from '../../../../components/shared/button'
 import Card from '../../../../components/shared/card'
 import { handleFinancialDetailsForm } from '../../../../services/customer'
 import { toast } from 'react-toastify'
+import EditFinancial from '../editfinancialdetails'
 import * as Yup from 'yup'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 
 function FinancialDetails({ Id }) {
+    const [loading, setisLoading] = useState(false)
+    const [display, setDisplay] = useState(false)
+
+    const [fId, setFId] = useState("")
     const formik = useFormik({
 
         initialValues: {
@@ -26,7 +31,7 @@ function FinancialDetails({ Id }) {
 
             account_name: Yup.string().required("account_name is required"),
             thrift_master_phone_number: Yup.string()
-                .max(12, "Must be 12 characters or less")
+                .max(10, "Must be 10 characters or less")
                 .required("Phone number is required"),
             bank_code: Yup.string().required("Bank_code is required"),
             bank_uuid: Yup.string().required("Bank_uuid is required"),
@@ -36,6 +41,7 @@ function FinancialDetails({ Id }) {
 
         }),
         onSubmit: async (values) => {
+            setisLoading(true)
             onMutate(values)
 
         },
@@ -47,16 +53,24 @@ function FinancialDetails({ Id }) {
 
         , onSuccess: ({ data }) => {
             console.log(data)
-            setId(data.data.id)
             toast.success(data.message)
-            query.invalidateQueries({ queryKey: ["customers"] })
+
+            setisLoading(false)
+            if (data) {
+                setDisplay(true)
+            }
+            localStorage.setItem('businessDetailsDisplay', JSON.stringify(true));
+            // query.invalidateQueries({ queryKey: ["customers"] })
         }, onError: (error) => {
+            setisLoading(false)
             toast.error(error.message)
         }
     })
+
+
     return (
         <div>
-            <div className='p-4'>
+            {display === false ? <div className='p-4'>
                 <Card className='w-full h-full bg-white'>
                     <h3 className='p-3 px-10'>Financial Details</h3>
                     <div className='w-full border-t-2 border-gray-200'></div>
@@ -221,8 +235,9 @@ function FinancialDetails({ Id }) {
                                         />
                                         <input
                                             style={{ color: "#202224", borderRadius: "8px" }}
-                                            id="phone-number"
+
                                             type="text"
+                                            name='thrift_master_phone_number'
                                             value={formik.thrift_master_phone_number}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
@@ -268,13 +283,13 @@ function FinancialDetails({ Id }) {
                             </div>
                         </div>
                         <div className='mb-7'>
-                            <Button type="submit" size='lg' className="text-sm w-[150px]" label='Create Financial Details' loading={isPending} />
+                            <Button type="submit" size='lg' className="text-sm w-[150px]" label='Create Financial Details' loading={loading} />
 
 
                         </div>
                     </form>
                 </Card>
-            </div>
+            </div> : <EditFinancial />}
 
         </div>
     )

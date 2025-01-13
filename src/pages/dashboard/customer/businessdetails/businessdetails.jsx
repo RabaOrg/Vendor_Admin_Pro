@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup'
 import { Card, Label } from 'flowbite-react';
@@ -12,6 +13,8 @@ function BusinessDetails({ Id }) {
     const [userId, setUserId] = useState("")
     const [loading, setIsLoading] = useState(false)
     const [display, setDisplay] = useState(false)
+
+
     const formik = useFormik({
 
         initialValues: {
@@ -46,6 +49,12 @@ function BusinessDetails({ Id }) {
 
         },
     });
+    useEffect(() => {
+        const savedDisplayState = JSON.parse(localStorage.getItem('businessDetailsDisplay')) || false;
+        setDisplay(savedDisplayState);
+    }, []);
+
+
     const { mutate: onMutate, isPending, isError } = useMutation({
         mutationFn: async (values) =>
 
@@ -56,7 +65,10 @@ function BusinessDetails({ Id }) {
             toast.success(data.message)
 
             setIsLoading(false)
-            setDisplay(true)
+            if (data) {
+                setDisplay(true)
+            }
+            localStorage.setItem('businessDetailsDisplay', JSON.stringify(true));
             // query.invalidateQueries({ queryKey: ["customers"] })
         }, onError: (error) => {
             setIsLoading(false)
@@ -66,7 +78,7 @@ function BusinessDetails({ Id }) {
 
     return (
         <div>
-            {display ? <div className='p-4'>
+            {display === false ? <div className='p-4'>
                 <Card className='w-full h-full bg-white '>
 
                     <h3 className='p-3 px-10'>Business Details :</h3>
