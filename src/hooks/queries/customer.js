@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { handleGetCustomer, handleGetCustomerBusinessDetails, handleOneCustomer, handleGetCustomerFinancialDetails } from "../../services/customer"
+import { handleGetCustomer, handleGetCustomerBusinessDetails, handleOneCustomer, handleGetCustomerFinancialDetails} from "../../services/customer"
 
 export const useFetchCustomer = (page, perPage, search) => {
     console.log(page, perPage, search)
@@ -41,3 +41,4 @@ export const useFetchOneCustomer = (Id) => {
     })
 
 }
+

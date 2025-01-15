@@ -12,6 +12,9 @@ import ProtectedRoute from "../provider/protectedRoute";
 import PublicRoute from "../provider/publicRoute";
 import UpdateCustomer from "../pages/dashboard/updatecustomer";
 import TransactionList from "../pages/dashboard/transaction/transactionlist";
+import OrderList from "../pages/dashboard/order/orderList";
+import ActivationLists from "../pages/dashboard/activations/activations";
+import ApplicationList from "../pages/dashboard/application/application";
 
 
 export const router = createBrowserRouter([
@@ -66,6 +69,22 @@ export const router = createBrowserRouter([
                 element: <TransactionList />
 
             },
+            {
+                path: "/orders",
+                element: <OrderList />
+
+            },
+            {
+                path: "/activation",
+                element: <ActivationLists />
+
+            },
+            {
+                path: "/application",
+                element: <ApplicationList />
+
+            },
+
         ]
     }
 

@@ -5,6 +5,7 @@ import { useAuthStore } from "../../../store/store";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { FaSignOutAlt } from 'react-icons/fa';
+import OrderList from "../../pages/dashboard/order/orderList";
 
 const SidebarComponent = ({ isOpen, toggleSidebar }) => {
     const location = useLocation();
@@ -22,9 +23,11 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Product", icon: <Icons.Product />, path: "/product" },
         { name: "Customer", icon: <Icons.Customer />, path: "/customer" },
         { name: "Transactions", icon: <Icons.Transaction />, path: "/transaction" },
-        { name: "Activations", icon: <Icons.Activation /> },
-        { name: "Applications", icon: <Icons.Application /> },
+        { name: "Activations", icon: <Icons.Activation />, path: "/activation" },
+        { name: "Applications", icon: <Icons.Application />, path: "/application" },
         { name: "Repayment Plans", icon: <Icons.RepaymentPlan />, path: "/repayment-plan" },
+        { name: "Orders", icon: <Icons.RepaymentPlan />, path: "/orders" },
+
 
     ];
     const [activeItem, setActiveItem] = useState(() => {
