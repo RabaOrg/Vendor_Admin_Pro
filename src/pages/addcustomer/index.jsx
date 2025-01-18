@@ -64,7 +64,7 @@ function Addcustomer() {
             setId(data.data.id)
             toast.success(data.message)
             query.invalidateQueries({ queryKey: ["customers"] })
-            navigate(`/customerdetails/${data.data.id}`)
+            navigate('/customer')
         }, onError: (error) => {
             toast.error(error.message)
         }
