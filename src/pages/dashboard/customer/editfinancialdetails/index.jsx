@@ -27,6 +27,7 @@ function EditFinancial() {
     })
 
 
+
     const handleInput = (e) => {
         const { name, value } = e.target
         setEditCustomerFinance((prevEditCustomerFinance) => ({
@@ -93,7 +94,7 @@ function EditFinancial() {
 
 
                                             className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                            placeholder="name@raba.com"
+
 
                                         />
 
@@ -224,7 +225,7 @@ function EditFinancial() {
                                             style={{ color: "#202224", borderRadius: "8px" }}
                                             id="phone-number"
                                             type="text"
-                                            defaultValue={editCustomerFinance.thrift_master_phone_number}
+                                            defaultValue={editCustomerFinance.thrift_master_phone_number || financialCustomer?.thrift_master_phone_number}
                                             onChange={(e) => handleInput(e)}
 
 

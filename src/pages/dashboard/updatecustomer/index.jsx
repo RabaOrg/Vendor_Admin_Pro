@@ -5,8 +5,9 @@ import BusinessDetails from '../customer/businessdetails/businessdetails';
 import FinancialDetails from '../customer/financialdetails/financialdetail';
 import Guarantor from '../customer/guarantor';
 import ImageUpload from '../uploadimage';
-import Repayment from '../customer/repayment';
+
 import EditCustomer from '../customer/editcustomer';
+import Repayment from '../repayment_plan';
 
 function UpdateCustomer() {
     const { id } = useParams();

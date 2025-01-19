@@ -1,15 +1,18 @@
 import React, { useState } from 'react'
 import Card from '../../components/shared/card'
 import Button from '../../components/shared/button'
-import { Checkbox, Label, TextInput } from "flowbite-react";
+import { Checkbox, Label, TabItem, TextInput } from "flowbite-react";
 import { FaEye, FaEdit, FaTrash } from 'react-icons/fa'
 import { BiUpload } from "react-icons/bi";
 import { Link } from 'react-router-dom';
 
 import { FaSearch } from 'react-icons/fa';
+import { useFetchProduct } from '../../hooks/queries/product';
 
 
 function Product() {
+    const { data: productData, isPending, isError } = useFetchProduct()
+    console.log(productData)
 
     return (
 
@@ -70,99 +73,43 @@ function Product() {
                         </thead>
                         <tbody>
 
-                            <tr className="bg-white">
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <img className="w-11 h-11" src="/image.png" alt="Product" />
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">Apple Watch Series 4</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">Digital Product</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">#690,000</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">14 Feb 2025</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <span className="relative inline-block px-8 py-2 font-semibold bg-[#ccf0eb] leading-tight rounded-md">
-                                        <span aria-hidden className="absolute inset-0 text-[#00B69B] opacity-50 rounded-lg" />
-                                        <span className="relative text-[#00B69B]">Active</span>
-                                    </span>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white flex">
-                                    <button
-                                        className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
-                                        aria-label="Edit"
-                                    >
-                                        <FaEdit className="text-gray-500 text-lg" />
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr className="bg-white">
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <img className="w-11 h-11" src="/image.png" alt="Product" />
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">Apple Watch Series 4</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">Digital Product</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">#690,000</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">14 Feb 2025</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <span className="relative inline-block px-[1.7rem] py-2 font-semibold bg-[#e0d4fc] leading-tight rounded-md">
-                                        <span aria-hidden className="absolute inset-0 text-[#6226EF] opacity-50 rounded-lg" />
-                                        <span className="relative text-[#6226EF]">InActive</span>
-                                    </span>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white flex">
-                                    <button
-                                        className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
-                                        aria-label="Edit"
-                                    >
-                                        <FaEdit className="text-gray-500 text-lg" />
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr className="bg-white">
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <img className="w-11 h-11" src="/image.png" alt="Product" />
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">Apple Watch Series 4</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">Digital Product</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">#690,000</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <p className="font-[500] whitespace-no-wrap text-xs">14 Feb 2025</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                                    <span className="relative inline-block px-8 py-2 font-semibold bg-[#ccf0eb] leading-tight rounded-md">
-                                        <span aria-hidden className="absolute inset-0 text-[#00B69B] opacity-50 rounded-lg" />
-                                        <span className="relative text-[#00B69B]">Active</span>
-                                    </span>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white flex">
-                                    <button
-                                        className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
-                                        aria-label="Edit"
-                                    >
-                                        <FaEdit className="text-gray-500 text-lg" />
-                                    </button>
-                                </td>
-                            </tr>
+                            {Array.isArray(productData) && productData.map((item, index) => {
+                                const { id, display_attachment_url, name, price, updated_at, category } = item;
+                                return (
+                                    <tr className="bg-white">
+                                        <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                            <img className="w-11 h-11" src={display_attachment_url.url} alt="Product" />
+                                        </td>
+                                        <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                            <p className="font-[500] whitespace-no-wrap text-xs">{name}</p>
+                                        </td>
+                                        <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                            <p className="font-[500] whitespace-no-wrap text-xs">{category}</p>
+                                        </td>
+                                        <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                            <p className="font-[500] whitespace-no-wrap text-xs">{price}</p>
+                                        </td>
+                                        <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                            <p className="font-[500] whitespace-no-wrap text-xs">{new Date(updated_at).toLocaleDateString()}</p>
+                                        </td>
+                                        <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                            <span className="relative inline-block px-8 py-2 font-semibold bg-[#ccf0eb] leading-tight rounded-md">
+                                                <span aria-hidden className="absolute inset-0 text-[#00B69B] opacity-50 rounded-lg" />
+                                                <span className="relative text-[#00B69B]">Active</span>
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-5 border-b border-gray-200 bg-white flex">
+                                            <button
+                                                className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
+                                                aria-label="Edit"
+                                            >
+                                                <FaEdit className="text-gray-500 text-lg" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+
 
                         </tbody>
                     </table>

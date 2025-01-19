@@ -1,4 +1,6 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
+
 import Button from '../../../../components/shared/button'
 import { Card, Label } from 'flowbite-react'
 import { useFormik } from 'formik'
@@ -6,10 +8,13 @@ import * as Yup from 'yup'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { handleGuarantorDetailsForm } from '../../../../services/customer'
+import EditGuarantor from '../editguarantordetails.jsx'
 
 
 function Guarantor({ Id }) {
+
     const query = useQueryClient()
+    const [display, setDisplay] = useState(false)
     const formik = useFormik({
 
         initialValues: {
@@ -33,24 +38,29 @@ function Guarantor({ Id }) {
 
         },
     });
+    useEffect(() => {
+        const savedDisplayState = JSON.parse(localStorage.getItem('guarantorDisplay')) || false;
+        setDisplay(savedDisplayState);
+    }, []);
     const { mutate: onMutate, isPending, isError } = useMutation({
         mutationFn: async (values) =>
-            handleGuarantorDetailsForm(Id, values)
+            handleGuarantorDetailsForm(Id, [values])
 
         , onSuccess: ({ data }) => {
-            console.log(data)
-            console.log(data.data.id)
-            setId(data.data.id)
+
+
             toast.success(data.message)
+            localStorage.setItem('guarantorDisplay', JSON.stringify(true));
             query.invalidateQueries({ queryKey: ["customers"] })
 
         }, onError: (error) => {
             toast.error(error.message)
         }
     })
+
     return (
         <div>
-            <div className='p-4'>
+            {display === false ? <div className='p-4'>
                 <Card className='w-full h-full bg-white'>
                     <h3 className='p-3 px-5'>Guarantor</h3>
                     <div className='w-full border-t-2 border-gray-200'></div>
@@ -69,6 +79,7 @@ function Guarantor({ Id }) {
                                         id="email2"
                                         type="text"
                                         value={formik.name}
+                                        name='name'
                                         onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
@@ -93,6 +104,7 @@ function Guarantor({ Id }) {
                                         style={{ color: "#202224", borderRadius: "8px" }}
                                         id="email3"
                                         type="text"
+                                        name='phone_number'
                                         value={formik.phone_number}
                                         onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
@@ -117,7 +129,7 @@ function Guarantor({ Id }) {
 
 
                 </Card>
-            </div>
+            </div> : <EditGuarantor />}
         </div>
     )
 }

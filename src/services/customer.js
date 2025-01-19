@@ -60,17 +60,22 @@ export const handleGetCustomerBusinessDetails = async (Id) => {
 export const handleGetCustomerFinancialDetails = async (Id) => {
      const { data } = await axiosInstance.get(`/admin/user/${Id}`);
      
-    return data.data.Financial
+    return data.data.FinancialAccounts[0]
+}
+export const handleGetCustomerGuarantorDetails = async (Id) => {
+     const { data } = await axiosInstance.get(`/admin/user/${Id}`);
+     
+    return data.data.Guarantors[0]
 }
 export const handleEditFinancialDetails = async (Id, fid) => {
      const { data } = await axiosInstance.put(`admin/user/${Id}/financial-account/${fid}`);
      
-    return data.data.Financial
+   
 }
 export const handleEditGuarantorDetails = async (Id, Gid) => {
      const { data } = await axiosInstance.put(`/admin/user/${Id}/guarantor/${Gid}`);
      
-    return data.data
+    return data.data.Guarantors[0]
 }
 
 

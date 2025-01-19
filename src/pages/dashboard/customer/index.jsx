@@ -71,6 +71,7 @@ function Customer() {
                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Date created</th>
                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">State</th>
                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
+                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan application</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,6 +103,17 @@ function Customer() {
                                         >
                                             <FaEdit className="text-gray-500 text-lg" />
                                         </button>
+                                    </td>
+                                    <td>
+                                        <Link to={`/create_application/${id}`}>
+                                            <Button
+                                                label="Create Application"
+                                                variant="solid"
+
+                                                size="md"
+                                                className="text-sm px-6 py-5"
+                                            />
+                                        </Link>
                                     </td>
                                 </tr>
                             );

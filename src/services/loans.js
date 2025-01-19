@@ -1,5 +1,6 @@
 
 
+import axios from "axios";
 import axiosInstance from "../../store/axiosInstance";
 
 
@@ -18,3 +19,10 @@ export const handleGetActivation = async () => {
      
     return data.data
 }
+
+export const  handleRepayment = async (formInfo) => {
+  return axiosInstance.post(
+   "/admin/repayment_plans",
+    formInfo
+  );
+};

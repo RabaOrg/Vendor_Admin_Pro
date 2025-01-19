@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useFormik } from 'formik'
 import { Label } from 'flowbite-react'
 import Button from '../../../../components/shared/button'
@@ -46,10 +46,15 @@ function FinancialDetails({ Id }) {
 
         },
     });
+    useEffect(() => {
+        const savedDisplayState = JSON.parse(localStorage.getItem('financialDetailsDisplay')) || false;
+        setDisplay(savedDisplayState);
+    }, []);
     const { mutate: onMutate, isPending, isError } = useMutation({
         mutationFn: async (values) =>
 
-            handleFinancialDetailsForm(Id, values)
+            handleFinancialDetailsForm(Id, [values])
+
 
         , onSuccess: ({ data }) => {
             console.log(data)
@@ -59,7 +64,7 @@ function FinancialDetails({ Id }) {
             if (data) {
                 setDisplay(true)
             }
-            localStorage.setItem('businessDetailsDisplay', JSON.stringify(true));
+            localStorage.setItem('financialDetailsDisplay', JSON.stringify(true));
             // query.invalidateQueries({ queryKey: ["customers"] })
         }, onError: (error) => {
             setisLoading(false)

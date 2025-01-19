@@ -1,21 +1,20 @@
 import React from 'react'
-import Button from '../../../components/shared/button'
+import { useFetchRepayment } from '../../../hooks/queries/loan'
 import { Link } from 'react-router-dom'
-import { useFetchLoanApplication } from '../../../hooks/queries/loan'
+import Button from '../../../components/shared/button'
 
+function Repayment() {
+  const { data: repaymentPlan, isPending, IsError } = useFetchRepayment()
 
-function ApplicationList() {
-  const { data: applicationData, isPending, isError } = useFetchLoanApplication()
-  console.log(applicationData)
+  console.log(repaymentPlan)
   return (
     <div className='px-6'>
 
 
       <div className="inline-block min-w-full  rounded-lg overflow-hidden">
-
         <div className="flex items-center justify-between p-4 mt-3">
           <h1 className="text-3xl font-semibold">
-            Application<span className="text-black-400">{'>'}</span> Add Application
+            Repayment <span className="text-black-400">{'>'}</span> Add Repayment-Plan
           </h1>
           <div className='flex gap-3'>
             <Button
@@ -25,7 +24,7 @@ function ApplicationList() {
               className="text-sm w-[150px]"
             />
             <Link to={'/create_repayment_plan'}> <Button
-              label="Create Application"
+              label="Create Repayment-plan"
               variant="solid"
 
               size="md"
@@ -42,26 +41,26 @@ function ApplicationList() {
               </th>
 
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Business Name
+                Tenure Unit
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Products
+                Max Downplay(%)
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Down Payment
+                Min Downplay(%)
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Date
+                Created By
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Status
+                Updated AT
               </th>
 
 
             </tr>
           </thead>
 
-          {Array.isArray(applicationData) && applicationData.map((item, index) => (
+          {Array.isArray(repaymentPlan) && repaymentPlan.map((item, index) => (
             <tr className="bg-white" >
 
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
@@ -72,17 +71,17 @@ function ApplicationList() {
 
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                 <p className="font-[500] whitespace-no-wrap text-xs">
-                  {item.business_name}
+                  {item.tenure_unit}
                 </p>
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                 <p className="font-[500] whitespace-no-wrap text-xs">
-                  {item.product}
+                  {item.down_percent_max}
                 </p>
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                 <p className="font-[500] whitespace-no-wrap text-xs">
-                  {item.down_payment}
+                  {item.down_percent_min}
                 </p>
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
@@ -91,22 +90,10 @@ function ApplicationList() {
                 </p>
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
-                <button
-                  className={`font-[500] whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === "approved"
-                    ? "bg-[#ccf0eb] text-[#00B69B] font-semibold"
-                    : item.status === "pending"
-                      ? "bg-orange-100 text-[#FFA756] font-semibold"
-                      : item.status === "Rejected"
-                        ? "bg-red-300 text-[#EF3826] font-semibold"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-                >
-                  {item.status}
-                </button>
+                <p className="font-[500] whitespace-no-wrap text-xs">
+                  {new Date(item.updated_at).toLocaleDateString()}
+                </p>
               </td>
-
-
-
 
 
             </tr>
@@ -127,8 +114,8 @@ function ApplicationList() {
 
 
       </div>
-    </div >
+    </div>
   )
 }
 
-export default ApplicationList
+export default Repayment

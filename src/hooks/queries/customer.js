@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { handleGetCustomer, handleGetCustomerBusinessDetails, handleOneCustomer, handleGetCustomerFinancialDetails} from "../../services/customer"
+import { handleGetCustomer, handleGetCustomerBusinessDetails, handleOneCustomer, handleGetCustomerFinancialDetails, handleGetCustomerGuarantorDetails} from "../../services/customer"
 
 export const useFetchCustomer = (page, perPage, search) => {
     console.log(page, perPage, search)
@@ -26,6 +26,16 @@ export const useFetchBusinessFinancialDetails = (Id) => {
     return useQuery({
         queryFn: () => handleGetCustomerFinancialDetails(Id),
         queryKey: ["financialcustomers", { Id}],
+        
+        
+    })
+
+}
+export const useFetchGuarantorDetails = (Id) => {
+  
+    return useQuery({
+        queryFn: () => handleGetCustomerGuarantorDetails(Id),
+        queryKey: ["guarantorscustomers", { Id}],
         
         
     })

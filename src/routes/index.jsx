@@ -5,7 +5,7 @@ import Adminlayout from "../components/layout/admin-layout";
 import Dashboard from "../pages/dashboard";
 import Customer from "../pages/dashboard/customer";
 import Product from "../pages/product";
-import Repayment from "../pages/repayment";
+
 import Addproduct from "../pages/addproduct";
 import Addcustomer from "../pages/addcustomer";
 import ProtectedRoute from "../provider/protectedRoute";
@@ -15,6 +15,10 @@ import TransactionList from "../pages/dashboard/transaction/transactionlist";
 import OrderList from "../pages/dashboard/order/orderList";
 import ActivationLists from "../pages/dashboard/activations/activations";
 import ApplicationList from "../pages/dashboard/application/application";
+import Repayment from "../pages/dashboard/repayment_plan";
+import RepaymentPlan from "../pages/dashboard/repayment_Plan/createrepayment";
+import CreateApplication from "../pages/dashboard/application/createapplication";
+
 
 
 export const router = createBrowserRouter([
@@ -82,6 +86,16 @@ export const router = createBrowserRouter([
             {
                 path: "/application",
                 element: <ApplicationList />
+
+            },
+            {
+                path: "/create_repayment_plan",
+                element: <RepaymentPlan />
+
+            },
+            {
+                path: "/create_application/:id",
+                element: <CreateApplication />
 
             },
 
