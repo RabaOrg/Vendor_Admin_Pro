@@ -65,17 +65,17 @@ function Customer() {
                     </Link>
                 </div>
 
-                <table className="min-w-full leading-normal">
+                {/* <table className="min-w-full leading-normal">
                     <thead>
                         <tr>
-                            <th className="px-12 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">ID</th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Name</th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Business name</th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Date created</th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">State</th>
-                            <th className="px-6 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
-                            <th className="px-1 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">View</th>
-                            <th className="px-12 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan application</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">ID</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Name</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Business name</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Date created</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">State</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">View</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan application</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,22 +84,22 @@ function Customer() {
 
                             return (
                                 <tr className="bg-white" key={index}>
-                                    <td className="px-12 border-b border-gray-200 bg-white text-xs">
+                                    <td className="px-4 border-b border-gray-200 bg-white text-xs">
                                         <p className="font-[500] whitespace-no-wrap text-xs">{id}</p>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-sm">
                                         <p className="font-[500] whitespace-no-wrap text-xs">{full_name}</p>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-xs">
                                         <p className="font-[500] whitespace-no-wrap text-xs">{Business?.name || 'N/A'}</p>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-xs">
                                         <p className="font-[500] whitespace-no-wrap text-xs">{new Date(created_at).toLocaleString()}</p>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-xs">
                                         <p className="font-[500] whitespace-no-wrap text-xs">{Business?.state || 'NA'}</p>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white flex">
+                                    <td className="px-4 py-5 border-b border-gray-200 bg-white flex">
                                         <button
                                             className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
                                             aria-label="Edit"
@@ -134,7 +134,78 @@ function Customer() {
 
 
                     </tbody>
+                </table> */}
+                <table className="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">ID</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Name</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Business Name</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Date Created</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">State</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">View</th>
+                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan Application</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Array.isArray(customerData) &&
+                            customerData
+                                .slice((page - 1) * perPage, page * perPage)
+                                .map((item, index) => {
+                                    const { id, full_name, created_at, Business } = item;
+
+                                    return (
+                                        <tr className="bg-white" key={index}>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
+                                                <p className="font-medium">{id}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
+                                                <p className="font-medium">{full_name}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
+                                                <p className="font-medium">{Business?.name || 'N/A'}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
+                                                <p className="font-medium">{new Date(created_at).toLocaleString()}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
+                                                <p className="font-medium">{Business?.state || 'NA'}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-center">
+                                                <button
+                                                    className="w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg flex justify-center items-center hover:bg-gray-200 focus:outline-none"
+                                                    aria-label="Edit"
+                                                    onClick={() => handleCustomer(id)}
+                                                >
+                                                    <FaEdit className="text-gray-500 text-lg" />
+                                                </button>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-center">
+                                                <button
+                                                    className="w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg flex justify-center items-center hover:bg-gray-200 focus:outline-none"
+                                                    aria-label="View"
+                                                    onClick={() => handleViewCustomer(id)}
+                                                >
+                                                    <FaEye className="text-gray-500 text-lg" />
+                                                </button>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-center">
+                                                <Link to={`/create_application/${id}`}>
+                                                    <Button
+                                                        label="Create Application"
+                                                        variant="solid"
+                                                        size="md"
+                                                        className="text-sm px-6 py-2"
+                                                    />
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                    </tbody>
                 </table>
+
 
                 <div className="flex justify-between items-center mt-4">
                     <button

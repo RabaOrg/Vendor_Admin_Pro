@@ -168,7 +168,7 @@ function EditProduct() {
     <div>
       <div className="flex items-center justify-between p-4">
         <h1 className="text-3xl font-semibold">
-          Products <span className="text-black-400">{'>'}</span> Add Products
+          Products <span className="text-black-400">{'>'}</span> Update Products
         </h1>
         <div className='flex gap-3'>
           <Button
