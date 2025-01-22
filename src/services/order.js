@@ -5,3 +5,8 @@ export const handleGetOrder = async () => {
      
     return data.data
 }
+// export const handleGetOrderSummary = async () => {
+//      const { data } = await axiosInstance.get("/orders/stats/summary");
+     
+//     return data
+// }

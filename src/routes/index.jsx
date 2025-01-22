@@ -18,6 +18,12 @@ import ApplicationList from "../pages/dashboard/application/application";
 import Repayment from "../pages/dashboard/repayment_plan";
 import RepaymentPlan from "../pages/dashboard/repayment_Plan/createrepayment";
 import CreateApplication from "../pages/dashboard/application/createapplication";
+import ViewOrderSummary from "../pages/dashboard/order/viewOrderSummary";
+import EditProduct from "../pages/addproduct/editproduct";
+import ViewActivation from "../pages/dashboard/activations/viewactivation";
+import ViewCustomerDetails from "../pages/dashboard/customer/viewcustomer";
+
+
 
 
 
@@ -96,6 +102,26 @@ export const router = createBrowserRouter([
             {
                 path: "/create_application/:id",
                 element: <CreateApplication />
+
+            },
+            {
+                path: "/order_summary",
+                element: <ViewOrderSummary />
+
+            },
+            {
+                path: "/editproduct/:id",
+                element: <EditProduct />
+
+            },
+            {
+                path: "/view_activation/:id",
+                element: <ViewActivation />
+
+            },
+            {
+                path: "/view_details/:id",
+                element: <ViewCustomerDetails />
 
             },
 

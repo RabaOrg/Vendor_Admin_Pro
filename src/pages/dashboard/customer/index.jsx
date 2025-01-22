@@ -18,6 +18,9 @@ function Customer() {
 
     const totalCustomers = Array.isArray(customerData) ? customerData.length : 0;
     const totalPages = Math.ceil(totalCustomers / perPage);
+    const handleViewCustomer = (id) => {
+        navigate(`/view_details/${id}`)
+    }
 
     const handleNextPage = () => {
         if (page < totalPages) setPage(page + 1);
@@ -65,13 +68,14 @@ function Customer() {
                 <table className="min-w-full leading-normal">
                     <thead>
                         <tr>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">ID</th>
+                            <th className="px-12 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">ID</th>
                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Name</th>
                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Business name</th>
                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Date created</th>
                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">State</th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan application</th>
+                            <th className="px-6 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
+                            <th className="px-1 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">View</th>
+                            <th className="px-12 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan application</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,7 +84,7 @@ function Customer() {
 
                             return (
                                 <tr className="bg-white" key={index}>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                                    <td className="px-12 border-b border-gray-200 bg-white text-xs">
                                         <p className="font-[500] whitespace-no-wrap text-xs">{id}</p>
                                     </td>
                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
@@ -104,7 +108,16 @@ function Customer() {
                                             <FaEdit className="text-gray-500 text-lg" />
                                         </button>
                                     </td>
-                                    <td>
+                                    <td className=" border-b border-gray-200 bg-white">
+                                        <button
+                                            className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
+                                            aria-label="Edit"
+                                            onClick={(e) => handleViewCustomer(id)}
+                                        >
+                                            <FaEye className="text-gray-500 text-lg" />
+                                        </button>
+                                    </td>
+                                    <td className='border-b px-9 border-gray-200 bg-white'>
                                         <Link to={`/create_application/${id}`}>
                                             <Button
                                                 label="Create Application"

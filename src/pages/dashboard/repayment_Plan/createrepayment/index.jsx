@@ -150,7 +150,7 @@ function RepaymentPlan() {
 
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      value={formik.values.weekly_tenure_min}
+                      value={formik.weekly_tenure_min}
                       placeholder='Enter weekly_tenure_min'
 
                     />

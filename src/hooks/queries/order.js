@@ -9,7 +9,20 @@ export const useFetchOrder = () => {
         
         
     })
+    
 
 
 }
+// export const useFetchOrderSummary = () => {
+   
+//     return useQuery({
+//         queryFn: () => handleGetOrderSummary(),
+//         queryKey: ["OrderSummary"],
+        
+        
+//     })
+    
+
+
+// }
 

@@ -45,7 +45,7 @@ export const useFetchOneCustomer = (Id) => {
    
     return useQuery({
         queryFn: () => handleOneCustomer(Id),
-        queryKey: ["OneCustomers", { Id }],
+        queryKey: ["OneCustomers", Id ],
         
         
     })

@@ -4,15 +4,22 @@ import Button from '../../components/shared/button'
 import { Checkbox, Label, TabItem, TextInput } from "flowbite-react";
 import { FaEye, FaEdit, FaTrash } from 'react-icons/fa'
 import { BiUpload } from "react-icons/bi";
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
 import { FaSearch } from 'react-icons/fa';
 import { useFetchProduct } from '../../hooks/queries/product';
+import { handleProduct } from '../../services/product';
 
 
 function Product() {
     const { data: productData, isPending, isError } = useFetchProduct()
+    const Navigate = useNavigate()
     console.log(productData)
+
+    const handleProduct = (id) => {
+        Navigate(`/editproduct/${id}`)
+    }
 
     return (
 
@@ -102,6 +109,7 @@ function Product() {
                                             <button
                                                 className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
                                                 aria-label="Edit"
+                                                onClick={() => handleProduct(id)}
                                             >
                                                 <FaEdit className="text-gray-500 text-lg" />
                                             </button>

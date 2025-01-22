@@ -3,23 +3,34 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import Button from '../../../../components/shared/button';
 import { Card, Label } from 'flowbite-react';
+
 import { toast } from 'react-toastify';
 import { useFormik } from 'formik';
 import * as Yup from 'yup'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useFetchOneCustomer } from '../../../../hooks/queries/customer';
+import { useParams } from 'react-router-dom';
+import { useFetchProduct } from '../../../../hooks/queries/product';
+import { handleCreateLoanApplication } from '../../../../services/loans';
 
 
 function CreateApplication() {
   const [userId, setUserId] = useState("")
+  const { id } = useParams()
   const [loading, setIsLoading] = useState(false)
+  const { data: singleCustomer } = useFetchOneCustomer(id)
+  const { data: productList } = useFetchProduct()
   const [display, setDisplay] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState('')
 
 
 
 
   const formik = useFormik({
     initialValues: {
-      customer: null,
+      customer: {
+        id: Number(id)
+      },
       product: {},
       down_payment_percent: null,
       down_payment_amount: null,
@@ -30,6 +41,8 @@ function CreateApplication() {
       repayment_interval: '',
     },
     validationSchema: Yup.object({
+      product: Yup.object().required("Product is required"),
+
       down_payment_percent: Yup.number().required("Down payment percent is required"),
       down_payment_amount: Yup.number().required("Down payment amount is required"),
       principal: Yup.number().required("Principal is required"),
@@ -45,13 +58,26 @@ function CreateApplication() {
 
     },
   });
+  const handleProduct = (e) => {
+    const idselected = e.target.value
+    const product = productList.find(item => item.name === idselected)
+    setSelectedProduct(product)
+    if (product) {
+      setSelectedProduct(product);
+
+      const productId = product.id
+      const productValue = product ? { productId } : {};
+      formik.setFieldValue("product", productValue);
+    }
+
+  }
 
 
 
   const { mutate: onMutate, isPending, isError } = useMutation({
     mutationFn: async (values) =>
 
-      handleBusinessDetailsForm(Id, values)
+      handleCreateLoanApplication(values)
 
     , onSuccess: ({ data }) => {
       console.log(data)
@@ -73,7 +99,7 @@ function CreateApplication() {
     <div>
       <div className="flex items-center justify-between p-4">
         <h1 className="text-3xl font-semibold">
-          Repayment <span className="text-black-400">{'>'}</span> Add Repayment
+          Loan<span className="text-black-400">{'>'}</span> Add Loan Application -{singleCustomer?.full_name}
         </h1>
         <div className='flex gap-3'>
           <Button
@@ -94,7 +120,7 @@ function CreateApplication() {
       <div >
         <div className='p-4'>
           <Card className='w-full h-full bg-white'>
-            <h3 className='p-3 px-10'>Create Loan Application for customers</h3>
+            <h2 className='p-3 px-10 font-bold'>Create Loan Application for ({singleCustomer?.full_name})</h2>
             <div className='w-full border-t-2 border-gray-200'></div>
 
             <form className=' px-10' onSubmit={formik.handleSubmit}>
@@ -129,11 +155,11 @@ function CreateApplication() {
                       style={{ color: "#202224", borderRadius: "8px" }}
 
                       value={formik.principal}
-                      name=' principal'
+                      name='principal'
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                      type="text"
+                      type="number"
                       placeholder='Enter principal'
                     />
                     {formik.touched.principal && formik.errors.principal ? (
@@ -149,12 +175,12 @@ function CreateApplication() {
 
                       className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                       type="number"
-                      id="email"
-                      name=" tenure_value"
+
+                      name="tenure_value"
 
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      value={formik.values.tenure_value}
+                      value={formik.tenure_value}
                       placeholder='Enter tenure_value'
 
                     />
@@ -196,7 +222,7 @@ function CreateApplication() {
                     <input
                       style={{ color: "#202224", borderRadius: "8px" }}
 
-                      type="date"
+                      type="number"
                       value={formik.down_payment_amount}
                       name='down_payment_amount'
                       onChange={formik.handleChange}
@@ -214,17 +240,16 @@ function CreateApplication() {
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="down_payment_percent" />
                     </div>
                     <input
-                      style={{ color: "#202224", borderRadius: "8px" }}
+                      type="number"
+                      value={formik.values.down_payment_percent}
+                      name="down_payment_percent"
+                      onChange={(e) => formik.setFieldValue('down_payment_percent', Number(e.target.value))}
 
-                      value={formik.down_payment_percent}
-                      name='phone_number'
-                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                      type="text"
-                      placeholder='Enter down_payment_percent'
-
+                      placeholder="Enter down_payment_percent"
                     />
+
                     {formik.touched.down_payment_percent && formik.errors.down_payment_percent ? (
                       <small className="text-red-500">{formik.errors.down_payment_percent}</small>
                     ) : null}
@@ -241,7 +266,7 @@ function CreateApplication() {
                     <input
                       style={{ color: "#202224", borderRadius: "8px" }}
 
-                      type="text"
+                      type="number"
                       value={formik.interest_rate}
                       name='interest_rate'
                       onChange={formik.handleChange}
@@ -258,20 +283,18 @@ function CreateApplication() {
 
                   <div>
                     <div className="mb-2 block">
-                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="product" />
+                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Product" />
                     </div>
-                    <input
-                      style={{ color: "#202224", borderRadius: "8px" }}
+                    <select className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
+                      name="name" id="" onChange={(e) => handleProduct(e)} value={formik.product}>
+                      <option value="">Select a product</option>
+                      {Array.isArray(productList) && productList.map((item, index) => (
+                        <option key={item.id} value={item.name}>{item.name}</option>
+                      ))}
+                    </select>
 
-                      value={formik.product}
-                      name="product"
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                      type="text"
-                      placeholder="Enter product"
 
-                    />
+
                     {formik.touched.product && formik.errors.product ? (
                       <small className="text-red-500">{formik.errors.product}</small>
                     ) : null}
@@ -281,8 +304,23 @@ function CreateApplication() {
 
                 </div>
               </div>
-              <div className='mb-7'>
-                <Button type="submit" size='lg' className="text-sm w-[150px]" label='Create Repayment Plan' loading={isPending} />
+              {selectedProduct && (
+                <div className="mt-3 p-4 bg-white-100 rounded-md shadow-md">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">{selectedProduct.name}</h3>
+                  <p className="text-gray-600 mb-2">Description: {selectedProduct.description}</p>
+                  <p className="text-gray-600 mb-2">Price: ${selectedProduct.price}</p>
+                  {selectedProduct.display_attachment_url && (
+                    <img
+                      src={selectedProduct.display_attachment_url.url}
+                      alt={selectedProduct.name}
+                      className="w-20 h-20 mt-4 rounded-md"
+                    />
+                  )}
+                </div>
+              )}
+
+              <div className='mb-7 mt-7'>
+                <Button type="submit" size='lg' className="text-sm w-[150px]" label='Create loan application' loading={isPending} />
 
 
               </div>

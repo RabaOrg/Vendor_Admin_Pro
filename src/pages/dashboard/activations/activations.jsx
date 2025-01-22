@@ -1,9 +1,16 @@
 import React, { useState } from 'react'
 import { useFetchActivation } from '../../../hooks/queries/loan'
+import { FaEye } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
 
 function ActivationLists() {
   const { data: activationList, isPending, isError } = useFetchActivation()
   console.log(activationList)
+  const Navigate = useNavigate()
+
+  const handleViewCustomer = (id) => {
+    Navigate(`/view_activation/${id}`)
+  }
   return (
     <div className='px-6'>
 
@@ -32,6 +39,9 @@ function ActivationLists() {
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Status
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                View
               </th>
 
 
@@ -86,7 +96,18 @@ function ActivationLists() {
                 >
                   {item.status}
                 </button>
+
               </td>
+              <td className="px-5 py-5 border-b border-gray-200 bg-white flex">
+                <button
+                  className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
+                  aria-label="View"
+                  onClick={() => handleViewCustomer(item.id)}
+                >
+                  <FaEye className="text-gray-500 text-lg" />
+                </button>
+              </td>
+
 
 
 
