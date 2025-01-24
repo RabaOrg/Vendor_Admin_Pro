@@ -7,11 +7,18 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify';
 
 import { BiUpload } from 'react-icons/bi'
-import { handleCreateProduct } from '../../services/product';
+import { handleCreateProduct, handleDisplayProductImage, handleProductImage } from '../../services/product';
 import { Formik } from 'formik'
 
 function Addproduct() {
-    const [loading, setIsLoading] = useState()
+    const [loading, setIsLoading] = useState(false)
+    const [isload, setIsLoad] = useState(false)
+    const [load, setLoad] = useState(false)
+    const [selectedImage, setSelectedImage] = useState(null)
+    const [selectedImageDisplay, setSelectedImageDisplay] = useState(null)
+    const [preview, setPreview] = useState(null)
+    const [imageId, setImageId] = useState("")
+    const [previews, setPreviews] = useState(null)
     const Navigate = useNavigate()
     const [product, setProduct] = useState({
         name: "",
@@ -31,6 +38,12 @@ function Addproduct() {
         },
 
     })
+
+
+
+
+
+
     const addInterestRule = () => {
         setProduct(prevProduct => ({
             ...prevProduct,
@@ -80,100 +93,6 @@ function Addproduct() {
 
 
 
-    // const handleSubmit = async (e) => {
-    //     console.log(product)
-    //     e.preventDefault();
-    //     const payload = {
-    //         name: product.name,
-    //         description: product.description,
-    //         shipping_days_min: Number(product.shipping_days_min),
-    //         shipping_days_max: Number(product.shipping_days_max),
-    //         category_id: 208,
-    //         price: product.price,
-    //         specifications: {
-    //             weight: product.specifications.weight,
-    //             colour: product.specifications.colour
-    //         },
-    //         interest_rule: {
-    //             weekly: product.interest_rule.weekly.map(rule => ({
-    //                 min: Number(rule.min),
-    //                 max: Number(rule.max),
-    //                 rate: Number(rule.rate)
-    //             })),
-    //             monthly: product.interest_rule.monthly.map(rule => ({
-    //                 min: Number(rule.min),
-    //                 max: Number(rule.max),
-    //                 rate: Number(rule.rate)
-    //             }))
-    //         },
-    //         repayment_policies: {
-    //             description: product.repayment_policies.description,
-    //             tenure_unit: product.repayment_policies.tenure_unit,
-    //             weekly_tenure: {
-    //                 min: Number(product.repayment_policies.weekly_tenure.min),
-    //                 max: Number(product.repayment_policies.weekly_tenure.max)
-    //             },
-    //             monthly_tenure: {
-    //                 min: Number(product.repayment_policies.monthly_tenure.min),
-    //                 max: Number(product.repayment_policies.monthly_tenure.max)
-    //             },
-    //             down_percentage: {
-    //                 min: Number(product.repayment_policies.down_percentage.min),
-    //                 max: Number(product.repayment_policies.down_percentage.max)
-    //             }
-    //         }
-    //     }
-
-    //     console.log(payload)
-    //     setIsLoading(true)
-    //     try {
-    //         const response = await handleCreateProduct(payload);
-    //         if (response) {
-    //             toast.success("Product created successfully")
-    //             Navigate('/product')
-    //         }
-
-    //         if (!response.ok) {
-    //             throw new Error('Failed to submit the product');
-    //         }
-
-    //         const result = await response.json();
-    //         console.log('Product submitted successfully:', result);
-
-
-    //         setProduct({
-    //             name: "",
-    //             description: "",
-    //             shipping_days_min: null,
-    //             shipping_days_max: null,
-    //             category_id: 25,
-    //             price: "",
-    //             specifications: {
-    //                 weight: "",
-    //                 colour: ""
-    //             },
-    //             interest_rule: {
-    //                 weekly: [
-    //                     { min: null, max: null, rate: null }
-    //                 ],
-    //                 monthly: [
-    //                     { min: null, max: null, rate: null }
-    //                 ]
-    //             },
-    //             repayment_policies: {
-    //                 description: "",
-    //                 tenure_unit: "",
-    //                 weekly_tenure: { min: null, max: null },
-    //                 monthly_tenure: { min: null, max: null },
-    //                 down_percentage: { min: null, max: null }
-    //             }
-    //         });
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //     } finally {
-    //         setIsLoading(false)
-    //     }
-    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -189,14 +108,14 @@ function Addproduct() {
             })),
             interest_rule: {
                 weekly: product.interest_rule.filter(rule => rule.interval === 'weekly').map(rule => ({
-                    min: Number(rule.min),
-                    max: Number(rule.max),
-                    rate: Number(rule.rate)
+                    min: rule.min ? Number(rule.min) : 0,
+                    max: rule.max ? Number(rule.max) : 0,
+                    rate: rule.rate ? Number(rule.rate) : 0,
                 })),
                 monthly: product.interest_rule.filter(rule => rule.interval === 'monthly').map(rule => ({
-                    min: Number(rule.min),
-                    max: Number(rule.max),
-                    rate: Number(rule.rate)
+                    min: rule.min ? Number(rule.min) : 0,
+                    max: rule.max ? Number(rule.max) : 0,
+                    rate: rule.max ? Number(rule.rate) : 0,
                 }))
             },
             repayment_policies: {
@@ -221,7 +140,9 @@ function Addproduct() {
         setIsLoading(true);
         try {
             const response = await handleCreateProduct(payload);
+            console.log(response.id)
             if (response) {
+                setImageId(response.id)
                 toast.success("Product created successfully");
                 Navigate('/product');
             }
@@ -232,6 +153,82 @@ function Addproduct() {
             console.error('Error:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        setSelectedImage(file);
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!preview) {
+            toast.error('Please select an image to upload.');
+            return;
+        }
+
+        const base64Image = preview.split(',')[1];
+
+        try {
+            setIsLoad(true)
+            console.log(base64Image);
+            const response = await handleProductImage(imageId, { attachment_type: 'products', image: base64Image });
+            console.log(response);
+            if (response && response.status === 200) {
+                toast.success('Image uploaded successfully!');
+            } else {
+                toast.error('Failed to upload the image. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            toast.error('An error occurred while uploading the image.');
+        } finally {
+            setIsLoad(false)
+        }
+    };
+    const handleImageChangeDisplay = (event) => {
+        const file = event.target.files[0];
+        setSelectedImageDisplay(file);
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setPreviews(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleUploadDisplay = async () => {
+        if (!previews) {
+            toast.error('Please select an image to upload.');
+            return;
+        }
+
+        const base64Image = previews.split(',')[1];
+
+        try {
+            setLoad(true)
+            console.log(base64Image);
+            const response = await handleDisplayProductImage(imageId, { attachment_type: 'products', image: base64Image });
+            console.log(response);
+            if (response && response.status === 200) {
+                toast.success('Image uploaded successfully!');
+            } else {
+                toast.error('Failed to upload the image. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            toast.error('An error occurred while uploading the image.');
+        } finally {
+            setLoad(false)
         }
     };
 
@@ -268,14 +265,14 @@ function Addproduct() {
                                 <div className="flex flex-col gap-4 w-full lg:w-1/2">
                                     <div>
                                         <div className="mb-2 block">
-                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor="name" value="Business name" />
+                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor="name" value="Product name" />
                                         </div>
                                         <input
                                             style={{ color: "#202224", borderRadius: "8px" }}
                                             id="name"
                                             type="text"
                                             className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                            placeholder="Enter Business name"
+                                            placeholder="Enter Product name"
                                             value={product.name}
                                             name='name'
                                             onChange={handleInput}
@@ -373,7 +370,7 @@ function Addproduct() {
 
                             <div className='p-4'>
                                 <Card className='w-full h-full bg-white'>
-                                    <h3 className='p-3 px-10 flex items-center justify-between'>
+                                    <h3 className='p-3 px-7 flex items-center justify-between'>
                                         <span>Specifications</span>
                                         <button
                                             type="button"
@@ -384,7 +381,7 @@ function Addproduct() {
                                         </button>
                                     </h3>
                                     <div className='w-full border-t-2 border-gray-200'></div>
-                                    <div className='flex flex-col lg:flex-row gap-12 px-10 pb-14 mt-5'>
+                                    <div className='flex flex-col lg:flex-row gap-12 px-7 pb-14 mt-5'>
                                         {product.specifications.length === 0 ? (
                                             <div className="p-10 flex justify-center items-center text-center text-gray-500">No specifications added yet</div>
                                         ) : (
@@ -430,7 +427,7 @@ function Addproduct() {
 
                             <div className='p-4'>
                                 <Card className='w-full h-full bg-white'>
-                                    <h3 className='p-3 px-10 flex justify-between items-center'>
+                                    <h3 className='p-3 px-7 flex justify-between items-center'>
                                         <span>Product Interest Rate Rule</span>
                                         <button
                                             type="button"
@@ -448,7 +445,7 @@ function Addproduct() {
                                         </div>
                                     ) : (
                                         product.interest_rule.map((rule, index) => (
-                                            <div key={index} className='flex flex-col lg:flex-row gap-12 px-10 pb-7 mt-4'>
+                                            <div key={index} className='flex flex-col lg:flex-row gap-12 px-7 pb-7 mt-4'>
                                                 <div className="flex flex-col gap-4 w-full lg:w-1/3">
                                                     <div>
                                                         <div className="mb-2 block">
@@ -528,10 +525,10 @@ function Addproduct() {
 
                             <div className='p-4'>
                                 <Card className='w-full h-full bg-white'>
-                                    <h3 className='p-3 px-10'>Create Repayment Plan</h3>
+                                    <h3 className='p-3 px-7'>Create Repayment Plan</h3>
                                     <div className='w-full border-t-2 border-gray-200'></div>
 
-                                    <div className='flex flex-col lg:flex-row gap-7 pb-10 mt-5 px-10'>
+                                    <div className='flex flex-col lg:flex-row gap-7 pb-7 mt-5 px-7'>
                                         <div className="flex flex-col gap-4 w-full lg:w-1/2">
                                             <div>
                                                 <div className="mb-2 block">
@@ -559,7 +556,7 @@ function Addproduct() {
                                                         value={product.repayment_policies.weekly_tenure.min ?? ""}
                                                         name='repayment_policies.weekly_tenure.min'
                                                         onChange={handleInputs}
-                                                        placeholder='Enter weekly tenure min'
+                                                        placeholder=' min'
                                                     />
                                                     <input
                                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -568,7 +565,7 @@ function Addproduct() {
                                                         value={product.repayment_policies.weekly_tenure.max ?? ""}
                                                         name='repayment_policies.weekly_tenure.max'
                                                         onChange={handleInputs}
-                                                        placeholder='Enter weekly tenure max'
+                                                        placeholder='max'
                                                     />
                                                 </div>
                                             </div>
@@ -581,7 +578,7 @@ function Addproduct() {
                                                     value={product.repayment_policies.description ?? ""}
                                                     name='repayment_policies.description'
                                                     onChange={handleInputs}
-                                                    className="bg-white text-sm p-3 py-14 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
+                                                    className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full h-40 resize-none"
                                                     placeholder='Enter description'
                                                 />
                                             </div>
@@ -599,7 +596,7 @@ function Addproduct() {
                                                         value={product.repayment_policies.down_percentage.min ?? ""}
                                                         name='repayment_policies.down_percentage.min'
                                                         onChange={handleInputs}
-                                                        placeholder="Enter down percentage min"
+                                                        placeholder=" min"
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />
                                                     <input
@@ -608,7 +605,7 @@ function Addproduct() {
                                                         value={product.repayment_policies.down_percentage.max ?? ""}
                                                         name='repayment_policies.down_percentage.max'
                                                         onChange={handleInputs}
-                                                        placeholder="Enter down percentage max"
+                                                        placeholder=" max"
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />
                                                 </div>
@@ -625,7 +622,7 @@ function Addproduct() {
                                                         value={product.repayment_policies.monthly_tenure.min ?? ""}
                                                         name='repayment_policies.monthly_tenure.min'
                                                         onChange={handleInputs}
-                                                        placeholder='Enter monthly tenure min'
+                                                        placeholder=' min'
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />
                                                     <input
@@ -634,7 +631,7 @@ function Addproduct() {
                                                         value={product.repayment_policies.monthly_tenure.max ?? ""}
                                                         name='repayment_policies.monthly_tenure.max'
                                                         onChange={handleInputs}
-                                                        placeholder='Enter monthly tenure max'
+                                                        placeholder='max'
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />
                                                 </div>
@@ -646,7 +643,7 @@ function Addproduct() {
 
 
 
-                            <div className='mb-7 px-10'>
+                            <div className='mb-7  px-11'>
                                 <Button type="submit" size='lg' className="text-sm w-[150px]" label='Create Product' loading={loading} />
 
 
@@ -660,43 +657,102 @@ function Addproduct() {
             </div>
 
 
-            {/* <div className='p-4'>
+            <div className='p-4'>
                 <Card className='w-full h-full bg-white'>
-                    <h3 className='p-3 px-10'>Upload Images</h3>
+                    <h3 className='p-3 px-11'>Upload Images</h3>
                     <div className='w-full border-t-2 border-gray-200'></div>
-                    <div className='flex gap-10 pb-10 py-5 px-10'>
+                    <div className='flex gap-10  py-5 px-11'>
                         <div className='w-[17rem] flex gap-10 h-12 py-1 mt-4 px-4 rounded-md border-1 border-gray-200 shadow bg-white '>
 
                             <div className='flex gap-2'>
+                                <input
+                                    type="file"
+                                    accept='image/*'
+                                    hidden
+                                    id="imageInput"
+                                    onChange={handleImageChange}
+                                />
                                 <button
                                     className="flex items-center justify-center mt-1 w-8 h-8 bg-gray-100 border-0 border-gray-300 rounded-full hover:bg-gray-200 focus:outline-none"
                                     aria-label="Edit"
+                                    onClick={() => document.getElementById('imageInput').click()}
                                 >
                                     <BiUpload className="text-gray-500 w-5 h-5 text-lg" />
                                 </button>
-                                <p className='text-xs mt-3 text-[#0A0F0C] font-[500]'>Location Pictures</p>
+                                <p className='text-xs mt-3 text-[#0A0F0C] font-[500]'>Product Image</p>
+                                {preview && (
+                                    <img src={preview} alt="Uploaded Image" className='w-6 h-6 mt-2 rounded-md' />
+                                )}
 
                             </div>
                         </div>
-                        <div className='w-[17rem] h-12 py-1 mt-4 px-4 rounded-md border-1 border-gray-200 shadow bg-white '>
 
-                            <div className='flex gap-2'>
-                                <button
-                                    className="flex items-center justify-center mt-1 w-8 h-8 bg-gray-100 border-0 border-gray-300 rounded-full hover:bg-gray-200 focus:outline-none"
-                                    aria-label="Edit"
-                                >
-                                    <BiUpload className="text-gray-500 w-5 h-5 text-lg" />
-                                </button>
-                                <p className='text-xs mt-3 text-[#0A0F0C] font-[500]'>ID Card</p>
 
-                            </div>
-                        </div>
+                    </div>
+                    <div className='px-11 pb-5'>
+                        <Button
+                            label="Upload"
+                            variant="solid"
+                            loading={isload}
+                            onClick={handleUpload}
+                            size="md"
+                            className="text-sm px-6 py-5"
+                        />
+
                     </div>
 
 
+                </Card>
+
+            </div>
+            <div className='p-4'>
+                <Card className='w-full h-full bg-white'>
+                    <h3 className='p-3 px-11'>Upload Display Product Image</h3>
+                    <div className='w-full border-t-2 border-gray-200'></div>
+                    <div className='flex gap-10  py-5 px-11'>
+                        <div className='w-[17rem] flex gap-10 h-12 py-1 mt-4 px-4 rounded-md border-1 border-gray-200 shadow bg-white '>
+
+                            <div className='flex gap-2'>
+                                <input
+                                    type="file"
+                                    accept='image/*'
+                                    hidden
+                                    id="imageInputDisplay"
+                                    onChange={handleImageChangeDisplay}
+                                />
+                                <button
+                                    className="flex items-center justify-center mt-1 w-8 h-8 bg-gray-100 border-0 border-gray-300 rounded-full hover:bg-gray-200 focus:outline-none"
+                                    aria-label="Edit"
+                                    onClick={() => document.getElementById('imageInputDisplay').click()}
+                                >
+                                    <BiUpload className="text-gray-500 w-5 h-5 text-lg" />
+                                </button>
+                                <p className='text-xs mt-3 text-[#0A0F0C] font-[500]'>Product Image</p>
+                                {previews && (
+                                    <img src={previews} alt="Uploaded Image" className='w-6 h-6 mt-2 rounded-md' />
+                                )}
+
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div className='px-11 pb-5'>
+                        <Button
+                            label="Upload"
+                            variant="solid"
+                            loading={load}
+                            onClick={handleUploadDisplay}
+                            size="md"
+                            className="text-sm px-6 py-5"
+                        />
+
+                    </div>
+
 
                 </Card>
-            </div> */}
+
+            </div>
 
 
         </div>

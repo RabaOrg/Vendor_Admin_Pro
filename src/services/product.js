@@ -21,3 +21,15 @@ export const handleGetSingleProduct = async (Id) => {
      
     return data
 }
+export const  handleProductImage= async (id, formInfo) => {
+  return axiosInstance.post(
+   `/admin/products/${id}/attachments`,
+    formInfo
+  );
+};
+export const  handleDisplayProductImage= async (id, formInfo) => {
+  return axiosInstance.post(
+   `/admin/products/${id}/display-attachments`,
+    formInfo
+  );
+};
