@@ -28,7 +28,10 @@ function Addproduct() {
         category_id: 25,
         price: "",
         specifications: [],
-        interest_rule: [],
+        interest_rule: [{
+            monthly: { min: 0, max: 0, rate: 0 },
+            weekly: { min: 0, max: 0, rate: 0 }
+        }],
         repayment_policies: {
             description: "",
             tenure_unit: "",
@@ -93,58 +96,118 @@ function Addproduct() {
 
 
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation for required fields
+        const errors = [];
+
+        // Validate main product details
+        if (!product.name) errors.push("Product name is required.");
+        if (!product.description) errors.push("Product description is required.");
+        if (!product.shipping_days_min || product.shipping_days_min <= 0)
+            errors.push("Minimum shipping days must be greater than 0.");
+        if (!product.shipping_days_max || product.shipping_days_max <= 0)
+            errors.push("Maximum shipping days must be greater than 0.");
+        if (!product.price || product.price <= 0) errors.push("Product price is required.");
+
+        // Validate specifications
+        if (!product.specifications || product.specifications.length === 0)
+            errors.push("At least one product specification is required.");
+
+        // Validate interest rules
+        const weeklyRules = product.interest_rule.filter(rule => rule.interval === "weekly");
+        const monthlyRules = product.interest_rule.filter(rule => rule.interval === "monthly");
+
+        if (weeklyRules.length === 0 && monthlyRules.length === 0)
+            errors.push("At least one weekly or monthly interest rule is required.");
+
+        // Validate repayment policies
+        if (!product.repayment_policies.description)
+            errors.push("Repayment policy description is required.");
+        if (!product.repayment_policies.tenure_unit)
+            errors.push("Repayment policy tenure unit is required.");
+        if (
+            !product.repayment_policies.weekly_tenure.min ||
+            !product.repayment_policies.weekly_tenure.max
+        )
+            errors.push("Weekly tenure minimum and maximum are required.");
+        if (
+            !product.repayment_policies.monthly_tenure.min ||
+            !product.repayment_policies.monthly_tenure.max
+        )
+            errors.push("Monthly tenure minimum and maximum are required.");
+        if (
+            !product.repayment_policies.down_percentage.min ||
+            !product.repayment_policies.down_percentage.max
+        )
+            errors.push("Down payment percentage minimum and maximum are required.");
+
+        // If there are any errors, prevent submission and show error messages
+        if (errors.length > 0) {
+            errors.forEach(error => toast.error(error)); // Display each error as a Toastify notification
+            return;
+        }
+
+        // Build payload
         const payload = {
-            name: product.name,
-            description: product.description,
-            shipping_days_min: Number(product.shipping_days_min),
-            shipping_days_max: Number(product.shipping_days_max),
+            name: product.name || "",
+            description: product.description || "",
+            shipping_days_min: Number(product.shipping_days_min || 0),
+            shipping_days_max: Number(product.shipping_days_max || 0),
             category_id: 208,
-            price: product.price,
-            specifications: product.specifications.map(spec => ({
-                [spec.attribute]: spec.value
-            })),
-            interest_rule: {
-                weekly: product.interest_rule.filter(rule => rule.interval === 'weekly').map(rule => ({
-                    min: rule.min ? Number(rule.min) : 0,
-                    max: rule.max ? Number(rule.max) : 0,
-                    rate: rule.rate ? Number(rule.rate) : 0,
-                })),
-                monthly: product.interest_rule.filter(rule => rule.interval === 'monthly').map(rule => ({
-                    min: rule.min ? Number(rule.min) : 0,
-                    max: rule.max ? Number(rule.max) : 0,
-                    rate: rule.max ? Number(rule.rate) : 0,
+            price: Number(product.price || 0),
+            specifications: product.specifications
+                ? product.specifications.map(spec => ({
+                    [spec.attribute]: spec.value
                 }))
+                : [],
+            interest_rule: {
+                weekly: weeklyRules.length > 0
+                    ? weeklyRules.map(rule => ({
+                        min: rule.min ? Number(rule.min) : 0,
+                        max: rule.max ? Number(rule.max) : 0,
+                        rate: rule.rate ? Number(rule.rate) : 0,
+                    }))
+                    : [{ min: 0, max: 0, rate: 0 }],
+                monthly: monthlyRules.length > 0
+                    ? monthlyRules.map(rule => ({
+                        min: rule.min ? Number(rule.min) : 0,
+                        max: rule.max ? Number(rule.max) : 0,
+                        rate: rule.rate ? Number(rule.rate) : 0,
+                    }))
+                    : [{ min: 0, max: 0, rate: 0 }]
             },
-            repayment_policies: {
-                description: product.repayment_policies.description,
-                tenure_unit: product.repayment_policies.tenure_unit,
-                weekly_tenure: {
-                    min: Number(product.repayment_policies.weekly_tenure.min),
-                    max: Number(product.repayment_policies.weekly_tenure.max)
-                },
-                monthly_tenure: {
-                    min: Number(product.repayment_policies.monthly_tenure.min),
-                    max: Number(product.repayment_policies.monthly_tenure.max)
-                },
-                down_percentage: {
-                    min: Number(product.repayment_policies.down_percentage.min),
-                    max: Number(product.repayment_policies.down_percentage.max)
+            repayment_policies: product.repayment_policies
+                ? {
+                    description: product.repayment_policies.description || "",
+                    tenure_unit: product.repayment_policies.tenure_unit || "",
+                    weekly_tenure: {
+                        min: Number(product.repayment_policies.weekly_tenure?.min || 0),
+                        max: Number(product.repayment_policies.weekly_tenure?.max || 0),
+                    },
+                    monthly_tenure: {
+                        min: Number(product.repayment_policies.monthly_tenure?.min || 0),
+                        max: Number(product.repayment_policies.monthly_tenure?.max || 0),
+                    },
+                    down_percentage: {
+                        min: Number(product.repayment_policies.down_percentage?.min || 0),
+                        max: Number(product.repayment_policies.down_percentage?.max || 0),
+                    },
                 }
-            }
+                : {}
         };
 
         console.log(payload);
         setIsLoading(true);
         try {
             const response = await handleCreateProduct(payload);
-            console.log(response.id)
+            console.log(response.data.id)
             if (response) {
-                setImageId(response.id)
+                console.log(response)
+                setImageId(response.data.id)
                 toast.success("Product created successfully");
-                Navigate('/product');
+
             }
 
 
