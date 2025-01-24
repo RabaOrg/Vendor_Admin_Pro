@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Label } from 'flowbite-react'
 import Button from '../../components/shared/button'
 import Card from '../../components/shared/card'
+import { FaMinus } from 'react-icons/fa'
 
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify';
@@ -94,7 +95,20 @@ function Addproduct() {
         });
     };
 
-
+    const removeSpecification = (index) => {
+        const updatedSpecifications = product.specifications.filter((_, i) => i !== index);
+        setProduct({
+            ...product,
+            specifications: updatedSpecifications,
+        });
+    };
+    const removeInterestRule = (index) => {
+        const updatedInterestRule = product.interest_rule.filter((_, i) => i !== index);
+        setProduct({
+            ...product,
+            interest_rule: updatedInterestRule,
+        });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -449,7 +463,7 @@ function Addproduct() {
                                             <div className="p-10 flex justify-center items-center text-center text-gray-500">No specifications added yet</div>
                                         ) : (
                                             product.specifications.map((spec, index) => (
-                                                <div key={index} className="flex flex-col lg:flex-row gap-4 w-full">
+                                                <div key={index} className=" flex-col lg:flex-row gap-4 w-full">
                                                     <div className="flex-1">
                                                         <div className="mb-2 block">
                                                             <Label className="text-[#212C25] text-xs font-[500]" htmlFor={`attribute-${index}`} value="Attribute" />
@@ -478,6 +492,13 @@ function Addproduct() {
                                                             onChange={(e) => handleChange(index, e)}
                                                         />
                                                     </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeSpecification(index)}
+                                                        className="text-red-500 hover:text-red-700 mt-3 flex items-center gap-2"
+                                                    >
+                                                        <FaMinus /> Remove
+                                                    </button>
                                                 </div>
                                             ))
                                         )}
@@ -576,6 +597,13 @@ function Addproduct() {
                                                         </select>
                                                     </div>
                                                 </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeInterestRule(index)}
+                                                    className="text-red-500 hover:text-red-700 mt-3 flex items-center gap-2"
+                                                >
+                                                    <FaMinus /> Remove
+                                                </button>
                                             </div>
                                         ))
                                     )}
