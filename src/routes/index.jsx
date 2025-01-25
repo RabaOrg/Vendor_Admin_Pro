@@ -22,7 +22,7 @@ import ViewOrderSummary from "../pages/dashboard/order/viewOrderSummary";
 import EditProduct from "../pages/addproduct/editproduct";
 import ViewActivation from "../pages/dashboard/activations/viewactivation";
 import ViewCustomerDetails from "../pages/dashboard/customer/viewcustomer";
-import Repayment_Plan from "../pages/dashboard/repayment_plan";
+import RepaymentMainPlan from "../pages/dashboard/repaymentMainPlan";
 
 
 
@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "/repayment-plan",
-                element: <Repayment_Plan />
+                element: <RepaymentMainPlan />
 
             },
             {
