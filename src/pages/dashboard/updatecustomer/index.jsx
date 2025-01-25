@@ -7,7 +7,7 @@ import Guarantor from '../customer/guarantor';
 import ImageUpload from '../uploadimage';
 
 import EditCustomer from '../customer/editcustomer';
-import Repayment from '../repayment_plan';
+import RepaymentMainPlan from '../repaymentMainPlan';
 
 function UpdateCustomer() {
     const { id } = useParams();
