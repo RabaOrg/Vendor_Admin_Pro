@@ -16,7 +16,7 @@ import OrderList from "../pages/dashboard/order/orderList";
 import ActivationLists from "../pages/dashboard/activations/activations";
 import ApplicationList from "../pages/dashboard/application/application";
 
-import RepaymentPlan from "../pages/dashboard/repayment_Plan/createrepayment";
+import RepaymentPlan from "../pages/dashboard/repaymentMainPlan/createrepayment";
 import CreateApplication from "../pages/dashboard/application/createapplication";
 import ViewOrderSummary from "../pages/dashboard/order/viewOrderSummary";
 import EditProduct from "../pages/addproduct/editproduct";
