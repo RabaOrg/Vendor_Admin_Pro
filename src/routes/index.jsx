@@ -15,13 +15,14 @@ import TransactionList from "../pages/dashboard/transaction/transactionlist";
 import OrderList from "../pages/dashboard/order/orderList";
 import ActivationLists from "../pages/dashboard/activations/activations";
 import ApplicationList from "../pages/dashboard/application/application";
-import Repayment from "../pages/dashboard/repayment_plan/index";
+
 import RepaymentPlan from "../pages/dashboard/repayment_Plan/createrepayment";
 import CreateApplication from "../pages/dashboard/application/createapplication";
 import ViewOrderSummary from "../pages/dashboard/order/viewOrderSummary";
 import EditProduct from "../pages/addproduct/editproduct";
 import ViewActivation from "../pages/dashboard/activations/viewactivation";
 import ViewCustomerDetails from "../pages/dashboard/customer/viewcustomer";
+import Repayment_Plan from "../pages/dashboard/repayment_plan";
 
 
 
@@ -56,7 +57,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "/repayment-plan",
-                element: <Repayment />
+                element: <Repayment_Plan />
 
             },
             {

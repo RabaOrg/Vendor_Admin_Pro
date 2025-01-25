@@ -3,7 +3,7 @@ import { useFetchRepayment } from '../../../hooks/queries/loan'
 import { Link } from 'react-router-dom'
 import Button from '../../../components/shared/button'
 
-function Repayment() {
+function Repayment_Plan() {
   const { data: repaymentPlan, isPending, IsError } = useFetchRepayment()
 
   console.log(repaymentPlan)
@@ -118,4 +118,4 @@ function Repayment() {
   )
 }
 
-export default Repayment
+export default Repayment_Plan
