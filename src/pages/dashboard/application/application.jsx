@@ -61,7 +61,7 @@ function ApplicationList() {
             </tr>
           </thead>
 
-          {Array.isArray(applicationData) && applicationData.map((item, index) => (
+          {Array.isArray(applicationData?.data.data) && applicationData?.data.data.map((item, index) => (
             <tr className="bg-white" >
 
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">

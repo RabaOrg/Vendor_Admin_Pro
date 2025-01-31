@@ -10,15 +10,21 @@ import { toast } from 'react-toastify';
 import { BiUpload } from 'react-icons/bi'
 import { handleCreateProduct, handleDisplayProductImage, handleProductImage } from '../../services/product';
 import { Formik } from 'formik'
+import { useFetchCategory } from '../../hooks/queries/product'
+import { useFetchRepayment } from '../../hooks/queries/loan'
 
 function Addproduct() {
     const [loading, setIsLoading] = useState(false)
     const [isload, setIsLoad] = useState(false)
+    const { data: category, isPending, isError } = useFetchCategory()
+    const { data: repaymentPlan } = useFetchRepayment()
+    const [imageId, setImageId] = useState('')
     const [load, setLoad] = useState(false)
     const [selectedImage, setSelectedImage] = useState(null)
     const [selectedImageDisplay, setSelectedImageDisplay] = useState(null)
     const [preview, setPreview] = useState(null)
-    const [imageId, setImageId] = useState("")
+
+
     const [previews, setPreviews] = useState(null)
     const Navigate = useNavigate()
     const [product, setProduct] = useState({
@@ -112,114 +118,54 @@ function Addproduct() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Validation for required fields
-        const errors = [];
-
-        // Validate main product details
-        if (!product.name) errors.push("Product name is required.");
-        if (!product.description) errors.push("Product description is required.");
-        if (!product.shipping_days_min || product.shipping_days_min <= 0)
-            errors.push("Minimum shipping days must be greater than 0.");
-        if (!product.shipping_days_max || product.shipping_days_max <= 0)
-            errors.push("Maximum shipping days must be greater than 0.");
-        if (!product.price || product.price <= 0) errors.push("Product price is required.");
-
-        // Validate specifications
-        if (!product.specifications || product.specifications.length === 0)
-            errors.push("At least one product specification is required.");
-
-        // Validate interest rules
-        const weeklyRules = product.interest_rule.filter(rule => rule.interval === "weekly");
-        const monthlyRules = product.interest_rule.filter(rule => rule.interval === "monthly");
-
-        if (weeklyRules.length === 0 && monthlyRules.length === 0)
-            errors.push("At least one weekly or monthly interest rule is required.");
-
-        // Validate repayment policies
-        if (!product.repayment_policies.description)
-            errors.push("Repayment policy description is required.");
-        if (!product.repayment_policies.tenure_unit)
-            errors.push("Repayment policy tenure unit is required.");
-        if (
-            !product.repayment_policies.weekly_tenure.min ||
-            !product.repayment_policies.weekly_tenure.max
-        )
-            errors.push("Weekly tenure minimum and maximum are required.");
-        if (
-            !product.repayment_policies.monthly_tenure.min ||
-            !product.repayment_policies.monthly_tenure.max
-        )
-            errors.push("Monthly tenure minimum and maximum are required.");
-        if (
-            !product.repayment_policies.down_percentage.min ||
-            !product.repayment_policies.down_percentage.max
-        )
-            errors.push("Down payment percentage minimum and maximum are required.");
-
-        // If there are any errors, prevent submission and show error messages
-        if (errors.length > 0) {
-            errors.forEach(error => toast.error(error)); // Display each error as a Toastify notification
-            return;
-        }
-
-        // Build payload
         const payload = {
-            name: product.name || "",
-            description: product.description || "",
-            shipping_days_min: Number(product.shipping_days_min || 0),
-            shipping_days_max: Number(product.shipping_days_max || 0),
-            category_id: 208,
-            price: Number(product.price || 0),
-            specifications: product.specifications
-                ? product.specifications.map(spec => ({
-                    [spec.attribute]: spec.value
-                }))
-                : [],
+            name: product.name,
+            description: product.description,
+            shipping_days_min: Number(product.shipping_days_min),
+            shipping_days_max: Number(product.shipping_days_max),
+            category_id: product.category_id,
+            price: product.price,
+            specifications: product.specifications.map(spec => ({
+                [spec.attribute]: spec.value
+            })),
             interest_rule: {
-                weekly: weeklyRules.length > 0
-                    ? weeklyRules.map(rule => ({
-                        min: rule.min ? Number(rule.min) : 0,
-                        max: rule.max ? Number(rule.max) : 0,
-                        rate: rule.rate ? Number(rule.rate) : 0,
-                    }))
-                    : [{ min: 0, max: 0, rate: 0 }],
-                monthly: monthlyRules.length > 0
-                    ? monthlyRules.map(rule => ({
-                        min: rule.min ? Number(rule.min) : 0,
-                        max: rule.max ? Number(rule.max) : 0,
-                        rate: rule.rate ? Number(rule.rate) : 0,
-                    }))
-                    : [{ min: 0, max: 0, rate: 0 }]
+                weekly: product.interest_rule.filter(rule => rule.interval === 'weekly').map(rule => ({
+                    min: rule.min ? Number(rule.min) : 0,
+                    max: rule.max ? Number(rule.max) : 0,
+                    rate: rule.rate ? Number(rule.rate) : 0,
+                })),
+                monthly: product.interest_rule.filter(rule => rule.interval === 'monthly').map(rule => ({
+                    min: rule.min ? Number(rule.min) : 0,
+                    max: rule.max ? Number(rule.max) : 0,
+                    rate: rule.max ? Number(rule.rate) : 0,
+                }))
             },
-            repayment_policies: product.repayment_policies
-                ? {
-                    description: product.repayment_policies.description || "",
-                    tenure_unit: product.repayment_policies.tenure_unit || "",
-                    weekly_tenure: {
-                        min: Number(product.repayment_policies.weekly_tenure?.min || 0),
-                        max: Number(product.repayment_policies.weekly_tenure?.max || 0),
-                    },
-                    monthly_tenure: {
-                        min: Number(product.repayment_policies.monthly_tenure?.min || 0),
-                        max: Number(product.repayment_policies.monthly_tenure?.max || 0),
-                    },
-                    down_percentage: {
-                        min: Number(product.repayment_policies.down_percentage?.min || 0),
-                        max: Number(product.repayment_policies.down_percentage?.max || 0),
-                    },
+            repayment_policies: {
+                description: product.repayment_policies.description,
+                tenure_unit: product.repayment_policies.tenure_unit,
+                weekly_tenure: {
+                    min: Number(product.repayment_policies.weekly_tenure.min),
+                    max: Number(product.repayment_policies.weekly_tenure.max)
+                },
+                monthly_tenure: {
+                    min: Number(product.repayment_policies.monthly_tenure.min),
+                    max: Number(product.repayment_policies.monthly_tenure.max)
+                },
+                down_percentage: {
+                    min: Number(product.repayment_policies.down_percentage.min),
+                    max: Number(product.repayment_policies.down_percentage.max)
                 }
-                : {}
+            }
         };
 
         console.log(payload);
         setIsLoading(true);
         try {
             const response = await handleCreateProduct(payload);
-            console.log(response.data.id)
-            if (response) {
-                console.log(response)
+            console.log(response)
+            if (response.data) {
                 setImageId(response.data.id)
+                console.log(response.data.id)
                 toast.success("Product created successfully");
 
             }
@@ -232,6 +178,35 @@ function Addproduct() {
             setIsLoading(false);
         }
     };
+
+    const handleRepaymentPlanSelect = (e) => {
+        const selectedPlanId = e.target.value;
+        const selectedPlan = repaymentPlan.find((plan) => plan.id === selectedPlanId);
+
+        if (selectedPlan) {
+            setProduct((prevState) => ({
+                ...prevState,
+                repayment_policies: {
+                    ...prevState.repayment_policies,
+                    tenure_unit: selectedPlan.tenure_unit,
+                    weekly_tenure: {
+                        min: selectedPlan.weekly_tenure_min,
+                        max: selectedPlan.weekly_tenure_max
+                    },
+                    monthly_tenure: {
+                        min: selectedPlan.monthly_tenure_min,
+                        max: selectedPlan.monthly_tenure_max
+                    },
+                    down_percentage: {
+                        min: selectedPlan.down_percent_min,
+                        max: selectedPlan.down_percent_max
+                    },
+                    description: selectedPlan.description
+                }
+            }));
+        }
+    };
+
     const handleImageChange = (event) => {
         const file = event.target.files[0];
         setSelectedImage(file);
@@ -256,6 +231,7 @@ function Addproduct() {
         try {
             setIsLoad(true)
             console.log(base64Image);
+            console.log(imageId)
             const response = await handleProductImage(imageId, { attachment_type: 'products', image: base64Image });
             console.log(response);
             if (response && response.status === 200) {
@@ -357,23 +333,6 @@ function Addproduct() {
                                     </div>
                                     <div>
                                         <div className="mb-2 block">
-                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor="shipping_days_min" value="Shipping Days Min" />
-                                        </div>
-                                        <input
-                                            style={{ color: "#202224", borderRadius: "8px" }}
-                                            id="shipping_days_min"
-                                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                            type="number"
-                                            value={product.shipping_days_min}
-                                            name='shipping_days_min'
-                                            onChange={handleInput}
-                                            placeholder='Enter shipping_days_min'
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                                    <div>
-                                        <div className="mb-2 block">
                                             <Label className="text-[#212C25] text-xs font-[500]" htmlFor="shipping_days_max" value="Shipping Days Max" />
                                         </div>
                                         <input
@@ -386,6 +345,25 @@ function Addproduct() {
                                             onChange={handleInput}
                                             placeholder='Enter shipping_days_max'
 
+                                        />
+                                    </div>
+
+                                </div>
+
+                                <div className="flex flex-col gap-4 w-full lg:w-1/2">
+                                    <div>
+                                        <div className="mb-2 block">
+                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor="shipping_days_min" value="Shipping Days Min" />
+                                        </div>
+                                        <input
+                                            style={{ color: "#202224", borderRadius: "8px" }}
+                                            id="shipping_days_min"
+                                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
+                                            type="number"
+                                            value={product.shipping_days_min}
+                                            name='shipping_days_min'
+                                            onChange={handleInput}
+                                            placeholder='Enter shipping_days_min'
                                         />
                                     </div>
                                     <div>
@@ -410,18 +388,27 @@ function Addproduct() {
                                         <div className="mb-2 block">
                                             <Label className="text-[#212C25] text-xs font-[500]" htmlFor="category" value="Category" />
                                         </div>
-                                        <input
+                                        <select
                                             style={{ color: "#202224", borderRadius: "8px" }}
                                             id="category"
-                                            type="number"
                                             className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                            placeholder="e.g., Electronics"
-                                            name='category_id'
+                                            name="category_id"
                                             value={product.category_id}
                                             onChange={handleInput}
-
-
-                                        />
+                                        >
+                                            <option value="">Select a category</option>
+                                            {isPending ? (
+                                                <option disabled>Loading...</option>
+                                            ) : isError ? (
+                                                <option disabled>Error loading categories</option>
+                                            ) : (
+                                                category?.map((cat) => (
+                                                    <option key={cat.id} value={cat.id}>
+                                                        {cat.name}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -533,6 +520,25 @@ function Addproduct() {
                                                 <div className="flex flex-col gap-4 w-full lg:w-1/3">
                                                     <div>
                                                         <div className="mb-2 block">
+                                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor={`interest-rule-interval-${index}`} value="Interval" />
+                                                        </div>
+                                                        <select
+                                                            style={{ color: "#202224", borderRadius: "8px" }}
+                                                            id={`interest-rule-interval-${index}`}
+                                                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
+                                                            name="interval"
+                                                            value={rule.interval || ''}
+                                                            onChange={(e) => handleChangeInterest(index, e)}
+                                                        >
+                                                            <option value="" disabled>Select interval</option>
+                                                            <option value="weekly">Weekly</option>
+                                                            <option value="monthly">Monthly</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-4 w-full lg:w-1/3">
+                                                    <div>
+                                                        <div className="mb-2 block">
                                                             <Label className="text-[#212C25] text-xs font-[500]" htmlFor={`interest-rule-min-${index}`} value="Min" />
                                                         </div>
                                                         <input
@@ -578,25 +584,7 @@ function Addproduct() {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col gap-4 w-full lg:w-1/3">
-                                                    <div>
-                                                        <div className="mb-2 block">
-                                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor={`interest-rule-interval-${index}`} value="Interval" />
-                                                        </div>
-                                                        <select
-                                                            style={{ color: "#202224", borderRadius: "8px" }}
-                                                            id={`interest-rule-interval-${index}`}
-                                                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                                            name="interval"
-                                                            value={rule.interval || ''}
-                                                            onChange={(e) => handleChangeInterest(index, e)}
-                                                        >
-                                                            <option value="" disabled>Select interval</option>
-                                                            <option value="weekly">Weekly</option>
-                                                            <option value="monthly">Monthly</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
+
                                                 <button
                                                     type="button"
                                                     onClick={() => removeInterestRule(index)}
@@ -625,15 +613,28 @@ function Addproduct() {
                                                 <div className="mb-2 block">
                                                     <Label className="text-[#212C25] text-xs font-[500]" htmlFor="tenure_unit" value="Tenure Unit" />
                                                 </div>
-                                                <input
+                                                <select
                                                     style={{ color: "#202224", borderRadius: "8px" }}
-                                                    type="text"
-                                                    value={product.repayment_policies?.tenure_unit ?? ""}
-                                                    name='repayment_policies.tenure_unit'
-                                                    onChange={handleInputs}
+                                                    id="Enter tenure unit"
                                                     className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                                    placeholder="Enter tenure unit"
-                                                />
+                                                    name="repayment_policies.tenure_unit"
+                                                    value={product.repayment_policies?.tenure_unit ?? ""}
+                                                    onChange={handleRepaymentPlanSelect}
+                                                >
+                                                    <option value="">Select a Repayment Plan</option>
+                                                    {isPending ? (
+                                                        <option disabled>Loading...</option>
+                                                    ) : isError ? (
+                                                        <option disabled>Error loading categories</option>
+                                                    ) : (
+                                                        repaymentPlan?.map((cat) => (
+                                                            <option key={cat.id} value={cat.id}>
+                                                                {cat.tenure_unit}
+                                                            </option>
+                                                        ))
+                                                    )}
+                                                </select>
+
                                             </div>
                                             <div>
                                                 <div className="mb-2 block">
@@ -646,7 +647,7 @@ function Addproduct() {
                                                         type="number"
                                                         value={product.repayment_policies.weekly_tenure.min ?? ""}
                                                         name='repayment_policies.weekly_tenure.min'
-                                                        onChange={handleInputs}
+                                                        onChange={handleRepaymentPlanSelect}
                                                         placeholder=' min'
                                                     />
                                                     <input
@@ -655,7 +656,7 @@ function Addproduct() {
                                                         type="number"
                                                         value={product.repayment_policies.weekly_tenure.max ?? ""}
                                                         name='repayment_policies.weekly_tenure.max'
-                                                        onChange={handleInputs}
+                                                        onChange={handleRepaymentPlanSelect}
                                                         placeholder='max'
                                                     />
                                                 </div>
@@ -668,7 +669,7 @@ function Addproduct() {
                                                     style={{ color: "#202224", borderRadius: "8px" }}
                                                     value={product.repayment_policies.description ?? ""}
                                                     name='repayment_policies.description'
-                                                    onChange={handleInputs}
+                                                    onChange={handleRepaymentPlanSelect}
                                                     className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full h-40 resize-none"
                                                     placeholder='Enter description'
                                                 />
@@ -686,7 +687,7 @@ function Addproduct() {
                                                         type="number"
                                                         value={product.repayment_policies.down_percentage.min ?? ""}
                                                         name='repayment_policies.down_percentage.min'
-                                                        onChange={handleInputs}
+                                                        onChange={handleRepaymentPlanSelect}
                                                         placeholder=" min"
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />
@@ -695,7 +696,7 @@ function Addproduct() {
                                                         type="number"
                                                         value={product.repayment_policies.down_percentage.max ?? ""}
                                                         name='repayment_policies.down_percentage.max'
-                                                        onChange={handleInputs}
+                                                        onChange={handleRepaymentPlanSelect}
                                                         placeholder=" max"
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />
@@ -712,7 +713,7 @@ function Addproduct() {
                                                         type="number"
                                                         value={product.repayment_policies.monthly_tenure.min ?? ""}
                                                         name='repayment_policies.monthly_tenure.min'
-                                                        onChange={handleInputs}
+                                                        onChange={handleRepaymentPlanSelect}
                                                         placeholder=' min'
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />
@@ -721,7 +722,7 @@ function Addproduct() {
                                                         type="number"
                                                         value={product.repayment_policies.monthly_tenure.max ?? ""}
                                                         name='repayment_policies.monthly_tenure.max'
-                                                        onChange={handleInputs}
+                                                        onChange={handleRepaymentPlanSelect}
                                                         placeholder='max'
                                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                     />

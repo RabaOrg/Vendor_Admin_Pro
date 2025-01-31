@@ -1,37 +1,58 @@
-import React, { useState } from 'react'
-import Card from '../../components/shared/card'
-import Button from '../../components/shared/button'
-import { Checkbox, Label, TabItem, TextInput } from "flowbite-react";
-import { FaEye, FaEdit, FaTrash } from 'react-icons/fa'
-import { BiUpload } from "react-icons/bi";
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-
+import React, { useEffect, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
+import { FaEdit, FaEye } from 'react-icons/fa';
+import axiosInstance from '../../../store/axiosInstance';
+import { useNavigate, Link } from 'react-router-dom';
+import Button from '../../components/shared/button';
 import { useFetchProduct } from '../../hooks/queries/product';
-import { handleProduct } from '../../services/product';
-
 
 function Product() {
-    const { data: productData, isPending, isError } = useFetchProduct()
-    const Navigate = useNavigate()
-    console.log(productData)
+    const [currentPage, setCurrentPage] = useState(1);
+    const [product, setProduct] = useState([])
+    const [productMeta, setMetaProduct] = useState([])
+    const itemsPerPage = 10; // You can adjust this as per the "per_page" in the response
+    const { data: productData, isPending, isError } = useFetchProduct(currentPage, itemsPerPage);
 
+    const navigate = useNavigate();
     const handleProduct = (id) => {
-        Navigate(`/editproduct/${id}`)
-    }
+        navigate(`/editproduct/${id}`);
+    };
+    const handleViewProduct = (id) => {
+        navigate(`/view_product_details/${id}`);
+    };
 
+
+    const handleNextPage = () => {
+        if (currentPage < productMeta?.meta?.total_pages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const data = await axiosInstance.get(`admin/products?page=${currentPage}&perPage=${itemsPerPage}`);
+                console.log(data);
+                setProduct(data.data);
+                setMetaProduct(data.data);
+            } catch (error) {
+                console.log('Error fetching products:', error);
+            }
+        };
+
+        fetchProduct();
+    }, [currentPage, itemsPerPage]);
     return (
-
         <div className="px-6">
             <div className="inline-block min-w-full rounded-lg overflow-hidden">
-
                 <div className="flex justify-between flex-col md:flex-row w-full gap-4 py-6">
-                    <h1 className="text-3xl font-semibold text-black mb-4 md:mb-0">
-                        Products
-                    </h1>
-
-
+                    <h1 className="text-3xl font-semibold text-black mb-4 md:mb-0">Products</h1>
                     <div className="relative w-full md:w-[700px]">
                         <input
                             type="text"
@@ -42,123 +63,112 @@ function Product() {
                             <FaSearch />
                         </span>
                     </div>
-                    <Link to={"/addproduct"}> <Button
-                        label="Add New Product"
-                        variant="solid"
-                        size="md"
-                        className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
-                    /></Link>
+                    <Link to={"/addproduct"}>
+                        <Button
+                            label="Add New Product"
+                            variant="solid"
+                            size="md"
+                            className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
+                        />
+                    </Link>
                 </div>
-
 
                 <div className="overflow-x-auto hidden md:block">
                     <table className="min-w-full leading-normal rounded-md rounded-t-md border-gray-200">
                         <thead>
                             <tr>
-                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">
-                                    Image
-                                </th>
-                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">
-                                    Product Name
-                                </th>
-                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">
-                                    Category
-                                </th>
-                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">
-                                    Price
-                                </th>
-                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">
-                                    Updated At
-                                </th>
-                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">
-                                    Status
-                                </th>
-                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">
-                                    Action
-                                </th>
+                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Image</th>
+                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Product Name</th>
+                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Category</th>
+                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Price</th>
+
+                                <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Action</th>
+                                <th className="px-4 pl-7  py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Status</th>
+
                             </tr>
                         </thead>
                         <tbody>
+                            {Array.isArray(product.data) && product.data.length > 0 ? (
+                                product.data.map((item) => {
+                                    const { id, display_attachment_url, name, price, updated_at, category } = item;
+                                    return (
+                                        <tr className="bg-white" key={id}>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
+                                                <img className="w-11 h-11" src={display_attachment_url?.url} alt="Product" />
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
+                                                <p className="font-[500] whitespace-no-wrap">{name}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
+                                                <p className="font-[500] whitespace-no-wrap">{category}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
+                                                <p className="font-[500] whitespace-no-wrap">{price}</p>
+                                            </td>
+                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
+                                                <span className="relative inline-block px-8 py-2 font-semibold bg-[#ccf0eb] leading-tight rounded-md">
+                                                    <span aria-hidden className="absolute inset-0 text-[#00B69B] opacity-50 rounded-lg" />
+                                                    <span className="relative text-[#00B69B]">Active</span>
+                                                </span>
+                                            </td>
+                                            <td className="px-7 py-4 border-b  gap-2 border-gray-200 bg-white flex justify-center">
+                                                <button
+                                                    className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
+                                                    aria-label="View"
+                                                    onClick={() => handleViewProduct(id)}
+                                                >
+                                                    <FaEye className="text-gray-500 text-lg" />
+                                                </button>
+                                                <button
+                                                    className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
+                                                    aria-label="Edit"
+                                                    onClick={() => handleProduct(id)}
+                                                >
+                                                    <FaEdit className="text-gray-500 text-lg" />
+                                                </button>
+                                            </td>
 
-                            {Array.isArray(productData) && productData.map((item, index) => {
-                                const { id, display_attachment_url, name, price, updated_at, category } = item;
-                                return (
-                                    <tr className="bg-white">
-                                        <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
-                                            <img className="w-11 h-11" src={display_attachment_url.url} alt="Product" />
-                                        </td>
-                                        <td className="px-4 py-4 border-b border-gray-200 bg-white text-sm">
-                                            <p className="font-[500] whitespace-no-wrap text-xs">{name}</p>
-                                        </td>
-                                        <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
-                                            <p className="font-[500] whitespace-no-wrap text-xs">{category}</p>
-                                        </td>
-                                        <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
-                                            <p className="font-[500] whitespace-no-wrap text-xs">{price}</p>
-                                        </td>
-                                        <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
-                                            <p className="font-[500] whitespace-no-wrap text-xs">{new Date(updated_at).toLocaleDateString()}</p>
-                                        </td>
-                                        <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
-                                            <span className="relative inline-block px-8 py-2 font-semibold bg-[#ccf0eb] leading-tight rounded-md">
-                                                <span aria-hidden className="absolute inset-0 text-[#00B69B] opacity-50 rounded-lg" />
-                                                <span className="relative text-[#00B69B]">Active</span>
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-4 border-b border-gray-200 bg-white flex">
-                                            <button
-                                                className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
-                                                aria-label="Edit"
-                                                onClick={() => handleProduct(id)}
-                                            >
-                                                <FaEdit className="text-gray-500 text-lg" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
 
-
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan="7" className="text-center py-4 text-gray-500">
+                                        No products found
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
+
+
                     </table>
                 </div>
 
 
-                <div className="md:hidden">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                        <div className="bg-white px-4 rounded-lg shadow-md">
-
-                            <div className='flex justify-between mt-5'>
-                                <div>
-                                    <img className="rounded-full w-6 h-6 mt-1 " src="/image.png" alt="" />
-                                </div>
-                                <div>
-                                    <h2 className="text-sm font-semibold ">Apple Watch Series 4</h2>
-                                    <p className="text-xs text-gray-600">Digital Product</p>
-                                    <h2 className="text-sm font-semibold ">Apple Watch Series 4</h2>
-
-                                </div>
-
-                                <button className='bg-[#ccf0eb] px-4 h-5 rounded-md  text-xs text-[#00B69B] mt-1 '>Active</button>
-                            </div>
-                            <div className=" flex justify-end">
-                                <button
-                                    className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 focus:outline-none"
-                                    aria-label="Edit"
-
-                                >
-                                    <FaEdit className="text-gray-500 text-lg" />
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
+                <div className="flex justify-between items-center mt-6">
+                    <button
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 bg-[#0f5d30] text-white rounded-md hover:bg-[#0e4c24] disabled:bg-gray-200 disabled:opacity-50"
+                    >
+                        Previous
+                    </button>
+                    <span className="text-sm">
+                        Page {currentPage} of {productMeta?.meta?.total_pages}
+                    </span>
+                    <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === productMeta?.meta?.total_pages}
+                        className="px-4 py-2 bg-[#0f5d30] text-white rounded-md hover:bg-[#0e4c24] disabled:bg-gray-200 disabled:opacity-50"
+                    >
+                        Next
+                    </button>
                 </div>
+
             </div>
         </div>
-
-    )
+    );
 }
 
-export default Product
+export default Product;

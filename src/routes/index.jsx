@@ -23,6 +23,7 @@ import EditProduct from "../pages/addproduct/editproduct";
 import ViewActivation from "../pages/dashboard/activations/viewactivation";
 import ViewCustomerDetails from "../pages/dashboard/customer/viewcustomer";
 import RepaymentMainPlan from "../pages/dashboard/repaymentMainPlan";
+import ViewProductDetails from "../pages/product/viewProductDetails";
 
 
 
@@ -123,6 +124,11 @@ export const router = createBrowserRouter([
             {
                 path: "/view_details/:id",
                 element: <ViewCustomerDetails />
+
+            },
+            {
+                path: "/view_product_details/:id",
+                element: <ViewProductDetails />
 
             },
 
