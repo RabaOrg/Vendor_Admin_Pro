@@ -19,7 +19,7 @@ function CreateApplication() {
   const { id } = useParams()
   const [loading, setIsLoading] = useState(false)
   const { data: singleCustomer } = useFetchOneCustomer(id)
-  const { data: productList } = useFetchProduct()
+  const { data: productList } = useFetchProduct(1, 50)
   const [display, setDisplay] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState('')
 
