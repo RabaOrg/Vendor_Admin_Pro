@@ -24,7 +24,7 @@ function CreateApplication() {
   const [selectedProduct, setSelectedProduct] = useState('')
 
 
-
+  console.log(productList)
 
   const formik = useFormik({
     initialValues: {
@@ -60,7 +60,7 @@ function CreateApplication() {
   });
   const handleProduct = (e) => {
     const idselected = e.target.value
-    const product = productList.find(item => item.name === idselected)
+    const product = productList.data.data.find(item => item.name === idselected)
     setSelectedProduct(product)
     if (product) {
       setSelectedProduct(product);
@@ -288,7 +288,7 @@ function CreateApplication() {
                     <select className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                       name="name" id="" onChange={(e) => handleProduct(e)} value={formik.product}>
                       <option value="">Select a product</option>
-                      {Array.isArray(productList) && productList.map((item, index) => (
+                      {Array.isArray(productList?.data?.data) && productList?.data?.data.map((item, index) => (
                         <option key={item.id} value={item.name}>{item.name}</option>
                       ))}
                     </select>
