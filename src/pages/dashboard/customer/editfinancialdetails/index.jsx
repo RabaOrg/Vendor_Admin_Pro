@@ -26,7 +26,7 @@ function EditFinancial() {
         thrift_master_phone_number: ""
     })
 
-
+    console.log(financialCustomer)
 
     const handleInput = (e) => {
         const { name, value } = e.target
@@ -38,27 +38,26 @@ function EditFinancial() {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+        const payload = {
+            account_number: financialCustomer?.account_number || editCustomerFinance.account_number,
+            account_name: financialCustomer?.account_name || editCustomerFinance.account_name,
+            bank_name: financialCustomer?.bank_name || editCustomerFinance.bank_name,
+            bank_code: financialCustomer?.bank_code || editCustomerFinance.bank_code,
+            bank_uuid: financialCustomer?.bank_uuid || editCustomerFinance.bank_uuid,
+            thrift_master_name: financialCustomer?.thrift_master_name || editCustomerFinance.thrift_master_name,
+            thrift_master_phone_number: financialCustomer?.thrift_master_phone_number || editCustomerFinance.thrift_master_phone_number
+        };
+        console.log(payload)
         setIsLoading(true)
-        try {
-            const payload = {
-                name: editCustomerFinance.name || financialCustomer.name,
-                category: editCustomerFinance.category || financialCustomer.category,
-                cac_number: editCustomerFinance.cac_number || financialCustomer.cac_number,
-                time_in_business: editCustomerFinance.time_in_business || financialCustomer.time_in_business,
-                equipment_of_interest: editCustomerFinance.equipment_of_interest || financialCustomer.equipment_of_interest,
-                monthly_revenue: editCustomerFinance.monthly_revenue || financialCustomer.monthly_revenue,
 
-                state: editCustomerFinance.state || financialCustomer.state,
-                lga: editCustomerFinance.lga || financialCustomer.lga,
-                street_address: editCustomerFinance.street_address || financialCustomer.street_address,
-            };
+        try {
 
 
             const response = await handleEditFinancialDetails(id, payload);
             console.log(response);
             console.log('Customer updated successfully:', response.data);
 
-            toast.success(response.data.message);
+            toast.success("Financial details created successfully");
 
         } catch (error) {
             console.error('Error updating customer:', error);
@@ -224,7 +223,8 @@ function EditFinancial() {
                                         <input
                                             style={{ color: "#202224", borderRadius: "8px" }}
                                             id="phone-number"
-                                            type="text"
+                                            type="number"
+                                            name="thrift_master_phone_number"
                                             defaultValue={editCustomerFinance.thrift_master_phone_number || financialCustomer?.thrift_master_phone_number}
                                             onChange={(e) => handleInput(e)}
 

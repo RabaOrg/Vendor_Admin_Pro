@@ -7,7 +7,7 @@ import Guarantor from '../customer/guarantor';
 import ImageUpload from '../uploadimage';
 
 import EditCustomer from '../customer/editcustomer';
-import RepaymentMainPlan from '../repaymentMainPlan';
+// import RepaymentMainPlan from '../repaymentMainPlan';
 
 function UpdateCustomer() {
     const { id } = useParams();
@@ -19,7 +19,7 @@ function UpdateCustomer() {
             <FinancialDetails Id={id} />
             <Guarantor Id={id} />
             <ImageUpload />
-            <Repayment />
+            {/* <Repayment /> */}
         </div>
     )
 }

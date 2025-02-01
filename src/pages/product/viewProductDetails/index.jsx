@@ -23,7 +23,8 @@ function ViewProductDetails() {
     console.log(data)
   }
 
-  const categoryDetails = category.find(cat => cat.id === oneProduct?.category_id) || {};
+  const categoryDetails = category?.find(cat => cat.id === oneProduct?.category_id) || {};
+
 
   return (
     <div className="px-6">

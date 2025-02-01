@@ -68,7 +68,8 @@ export const handleGetCustomerGuarantorDetails = async (Id) => {
     return data.data.Guarantors[0]
 }
 export const handleEditFinancialDetails = async (Id, fid) => {
-     const { data } = await axiosInstance.put(`admin/user/${Id}/financial-account/${fid}`);
+  const { data } = await axiosInstance.put(`admin/user/${Id}/financial-account/${fid}`);
+  return
      
    
 }
