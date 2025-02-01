@@ -28,23 +28,23 @@ function ViewActivation() {
             <form className=' px-10' >
 
               <div className='flex flex-col lg:flex-row gap-7 pb-10 mt-5'>
-                <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                  <div>
-                    <div className="mb-2 block">
+                <div className="flex flex-col gap-4 w-full lg:w-1/2 " >
+                  <div className='mb-4'>
+                    <div className=" block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email2" value="Business Name" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.business_name}</p>
 
                   </div>
-                  <div>
-                    <div className="mb-2 block">
+                  <div className='mb-4'>
+                    <div className=" block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" value="Customer Name" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.customer_name}</p>
                   </div>
 
-                  <div>
-                    <div className="mb-2 block ">
+                  <div className='mb-4'>
+                    <div className="block ">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Down-Payment" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.down_payment}</p>
@@ -58,22 +58,22 @@ function ViewActivation() {
                 </div>
 
 
-                <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                  <div>
-                    <div className="mb-2 block">
+                <div className="flex flex-col gap-4 w-full lg:w-1/2 ">
+                  <div className='mb-4'>
+                    <div className=" block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Product" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.product}</p>
                   </div>
 
-                  <div>
-                    <div className="mb-2 block">
+                  <div className="mb-4">
+                    <div className="block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" value="Interest_amount" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.interest_amount}</p>
                   </div>
-                  <div>
-                    <div className="mb-2 block">
+                  <div className='mb-4'>
+                    <div className="block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Total_repayment" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.total_repayment}</p>
@@ -83,25 +83,44 @@ function ViewActivation() {
 
                 </div>
                 <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                  <div>
-                    <div className="mb-2 block">
+                  <div className='mb-4'>
+                    <div className=" block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Customer Id" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.id}</p>
                   </div>
 
-                  <div>
-                    <div className="mb-2 block">
+                  <div className='mb-4'>
+                    <div className=" block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" value="Status" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.status}</p>
                   </div>
-                  <div>
-                    <div className="mb-2 block">
+                  <div className='mb-4'>
+                    <div className=" block">
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Loan Application Id" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.loan_application_id}</p>
                   </div>
+
+
+
+                </div>
+                <div className="flex flex-col gap-4 w-full lg:w-1/2">
+                  <div className='mb-4'>
+                    <div className=" block">
+                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Repayment_period" />
+                    </div>
+                    <p className='text-sm font-normal'>{singleLoanList?.repayment_period}</p>
+                  </div>
+
+                  <div className='mb-4'>
+                    <div className=" block">
+                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" value="Created At" />
+                    </div>
+                    <p className='text-sm font-normal'>{new Date(singleLoanList?.created_at).toLocaleDateString()}</p>
+                  </div>
+
 
 
 
