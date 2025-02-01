@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Modal from '../../../components/shared/modal';
 import CustomInput from '../../../components/shared/customInput';
 import Button from '../../../components/shared/button';
-import { handleGetAllTrnsaction } from '../../../services/transaction';
+import { handleGetAllTrnsaction, handleGetTrnsaction } from '../../../services/transaction';
 import { toast } from 'react-toastify';
 
 function TransactionList() {
@@ -14,13 +14,27 @@ function TransactionList() {
   });
 
   const [isModal, setIsModal] = useState(false);
+  const pageItem = 10
+  const [currentPage, setcurrentPage] = useState(1)
   const [transactionDisplay, setTransactionDisplay] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleModal = () => {
     setIsModal(true);
   };
+  useEffect(() => {
+    fetchTransactions()
+  }, [])
 
+  const fetchTransactions = async () => {
+    try {
+      const response = await handleGetTrnsaction(1, 20)
+      console.log(response)
+      setTransactionDisplay(response)
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const handleCloseModal = () => {
     setIsModal(false);
   };
@@ -32,7 +46,7 @@ function TransactionList() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!searchDetails.start_date || !searchDetails.end_date || !searchDetails.page || !searchDetails.perPage) {
+    if (!searchDetails.start_date || !searchDetails.end_date) {
       toast.error("All fields are required.");
       return;
     }
@@ -41,8 +55,8 @@ function TransactionList() {
       const queryParams = {
         start_date: searchDetails.start_date,
         end_date: searchDetails.end_date,
-        page: searchDetails.page,
-        perPage: searchDetails.perPage,
+        page: currentPage,
+        perPage: 10,
       };
       const response = await handleGetAllTrnsaction(
         queryParams.start_date,
@@ -81,33 +95,45 @@ function TransactionList() {
         />
       </div>
 
-      {/* Transactions Table */}
+
       {transactionDisplay.length > 0 ? (
-        <div className="overflow-x-auto mt-6">
-          <table className="table-auto w-full border-collapse border border-gray-200">
+        <div className="overflow-x-auto mt-6 px-7">
+          <table className="min-w-full leading-normal mt-4 ">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="border px-4 py-2">ID</th>
-                <th className="border px-4 py-2">Status</th>
-                <th className="border px-4 py-2">Type</th>
-                <th className="border px-4 py-2">Internal Ref</th>
-                <th className="border px-4 py-2">External Ref</th>
-                <th className="border px-4 py-2">Amount</th>
-                <th className="border px-4 py-2">Created At</th>
-                <th className="border px-4 py-2">Updated At</th>
+              <tr className="bg-white-200  text-gray-900">
+                <th className="border px-6 py-3 text-xs text-left font-bold">LOAN ID</th>
+                <th className="border px-6 py-3 text-xs text-left font-bold">TYPE</th>
+                <th className="border px-6 py-3 text-xs text-left font-bold">AMOUNT</th>
+                <th className="border px-6 py-3 text-xs text-left font-bold">CREATED AT</th>
+                <th className="border px-6 py-3 text-xs text-left font-bold">UPDATED AT</th>
+                <th className="border px-6 py-3 text-xs text-left font-bold">STATUS</th>
               </tr>
             </thead>
             <tbody>
               {transactionDisplay.map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="border px-4 py-2">{item.id}</td>
-                  <td className="border px-4 py-2">{item.status}</td>
-                  <td className="border px-4 py-2">{item.type}</td>
-                  <td className="border px-4 py-2">{item.internal_ref}</td>
-                  <td className="border px-4 py-2">{item.external_ref}</td>
-                  <td className="border px-4 py-2">{item.amount}</td>
-                  <td className="border px-4 py-2">{new Date(item.created_at).toLocaleString()}</td>
-                  <td className="border px-4 py-2">{new Date(item.updated_at).toLocaleString()}</td>
+                <tr key={index} className={`hover:bg-gray-50 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                  <td className="border px-6 py-4 text-xs">{item.id}</td>
+                  <td className="border px-6 py-4 text-xs">{item.type}</td>
+                  <td className="border px-6 py-4 text-xs">{item.amount}</td>
+                  <td className="border px-6 py-4 text-xs">{new Date(item.created_at).toLocaleString()}</td>
+                  <td className="border px-6 py-4 text-xs">{new Date(item.updated_at).toLocaleString()}</td>
+                  <td className="border px-6 py-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      {item.status === 'pending' ? (
+                        <button
+                          className="bg-yellow-300 text-yellow-700 px-4 py-2 rounded-md text-xs"
+                        >
+                          Pending
+                        </button>
+                      ) : (
+                        <button
+                          className="bg-green-400 text-green-700 px-4 py-2 rounded-md text-xs"
+                        >
+                          Complete
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -116,6 +142,7 @@ function TransactionList() {
       ) : (
         <p className="py-48 text-center text-gray-500">No transactions to display.</p>
       )}
+
 
       {/* Modal */}
       <Modal isOpen={isModal} onClose={handleCloseModal}>
@@ -136,22 +163,7 @@ function TransactionList() {
             value={searchDetails.end_date}
             onChange={handleInputChange}
           />
-          <CustomInput
-            label="Page"
-            type="number"
-            name="page"
-            placeholder="Page number"
-            value={searchDetails.page}
-            onChange={handleInputChange}
-          />
-          <CustomInput
-            label="Per Page"
-            type="number"
-            name="perPage"
-            placeholder="Items per page"
-            value={searchDetails.perPage}
-            onChange={handleInputChange}
-          />
+
           <div className="flex space-x-4">
             <Button
               label="Search"

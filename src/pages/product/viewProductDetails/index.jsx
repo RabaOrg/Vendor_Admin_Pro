@@ -1,13 +1,30 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Card, Label } from 'flowbite-react'
 
-import { useFetchSingleProduct } from '../../../hooks/queries/product'
+import { useFetchCategory, useFetchSingleProduct } from '../../../hooks/queries/product'
+import axiosInstance from '../../../../store/axiosInstance'
 
 function ViewProductDetails() {
   const { id } = useParams()
   const { data: oneProduct, isPending, isError } = useFetchSingleProduct(id)
-  console.log(oneProduct)
+  const { data: category } = useFetchCategory()
+  console.log(category)
+  const [categoryName, setcategory] = useState('')
+
+
+  useEffect(() => {
+    handleGetSingleProduct()
+
+  }, [])
+  const handleGetSingleProduct = async () => {
+    const data = await axiosInstance.get(`/admin/products/${id}`);
+
+    console.log(data)
+  }
+
+  const categoryDetails = category.find(cat => cat.id === oneProduct?.category_id) || {};
+
   return (
     <div className="px-6">
       <div className="inline-block min-w-full rounded-lg overflow-hidden">
@@ -25,15 +42,19 @@ function ViewProductDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 pb-10 mt-5">
 
               <div className="flex flex-col gap-4">
-                <DetailItem label="Business Name" value={oneProduct?.name} />
+                <DetailItem label="Product Name" value={oneProduct?.name} />
                 <DetailItem label="Product Price" value={oneProduct?.price} />
                 <DetailItem label="Description" value={oneProduct?.description} />
+                <DetailItem label="Category" value={categoryDetails.name} />
+
               </div>
 
 
               <div className="flex flex-col gap-4">
                 <DetailItem label="Shipping Days Min" value={oneProduct?.shipping_days_min} />
                 <DetailItem label="Shipping Days Max" value={oneProduct?.shipping_days_max} />
+                <DetailItem label="Repayment plan ID" value={oneProduct?.repayment_policies?.id} />
+
 
               </div>
             </div>
@@ -133,6 +154,59 @@ function ViewProductDetails() {
                 </div>
               </div>
             )}
+            <div>
+
+              {oneProduct?.display_attachment && (
+                <div className="mt-8">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Main Display Attachment</h4>
+                  <div className="bg-white p-6 border border-gray-200 rounded-lg shadow-lg">
+                    <div className="w-full h-80 rounded-lg overflow-hidden flex justify-center items-center bg-gray-50">
+                      <img
+                        src={oneProduct.display_attachment}
+                        alt="Main Display Attachment"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+
+
+              {oneProduct?.attachments && oneProduct.attachments.length > 0 && (
+                <div className="mt-8">
+                  <h4 className="text-lg font-semibold text-[#212C25] mb-4">Product Attachments</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {oneProduct.attachments.map((attachment, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden"
+                      >
+                        {/* Image Container to ensure proper display */}
+                        <div className="w-full h-52 flex justify-center items-center bg-gray-100">
+                          <img
+                            src={attachment.url}
+                            alt={attachment.title || `Attachment ${index + 1}`}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+
+                        <div className="p-4">
+                          <h5 className="text-md font-semibold text-gray-900">
+                            {attachment.title || `Attachment ${index + 1}`}
+                          </h5>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+
+
 
 
 

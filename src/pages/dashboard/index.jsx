@@ -1,8 +1,11 @@
 import React from 'react'
 import { Card } from 'flowbite-react'
 import { Icons } from '../../components/icons/icon'
+import { useFetchDashboardInsights } from '../../hooks/insights'
 
 function Dashboard() {
+    const { data: dashboardData, isPending, isError } = useFetchDashboardInsights()
+
     return (
         <>
 
@@ -11,24 +14,34 @@ function Dashboard() {
                 <div className="flex flex-wrap justify-start gap-6">
                     {[
                         {
-                            label: "Active Subscription",
-                            value: "156",
+                            label: "Successful Transactions",
+                            value: dashboardData?.successfulTrasactionsCount,
                             icon: "/Icon.png",
                         },
                         {
-                            label: "Repayment Dues",
-                            value: "#20,000",
+                            label: "Transaction Volume",
+                            value: `₦${dashboardData?.volumeOfTransactions.toLocaleString()}`,
                             icon: "/iconn.png",
                         },
                         {
-                            label: "Total Activation",
-                            value: "198",
+                            label: "Total Transactions",
+                            value: dashboardData?.totalTransactionsCount,
                             icon: "/iconn1.png",
                         },
                         {
-                            label: "Payment Received",
-                            value: "#30,000,303",
+                            label: "Pending Transactions",
+                            value: dashboardData?.pendingTransactionCount,
                             icon: "/Icon.png",
+                        },
+                        {
+                            label: "Loan Applications",
+                            value: dashboardData?.productLoanApplicationCount,
+                            icon: "/iconn.png",
+                        },
+                        {
+                            label: "Active Loans",
+                            value: dashboardData?.productLoanCount,
+                            icon: "/iconn1.png",
                         },
                     ].map((card, index) => (
                         <Card
@@ -51,6 +64,7 @@ function Dashboard() {
                     ))}
                 </div>
             </div>
+
 
 
 

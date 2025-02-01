@@ -5,3 +5,9 @@ export const handleGetAllTrnsaction = async (start_date, end_date, page, perPage
     
     return data.data
 }
+export const handleGetTrnsaction = async ( page, perPage) => {
+   
+    const { data } = await axiosInstance.get(`/admin/transaction?page=${page}&perPage=${perPage}`);
+    
+    return data.data
+}

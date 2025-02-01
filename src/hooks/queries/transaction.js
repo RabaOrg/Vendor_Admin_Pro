@@ -11,3 +11,13 @@ export const useFetchTransactionDetails = (start_date, end_date, page, perPage) 
     })
 
 }
+export const useFetchAllTransactionDetails = ( page, perPage) => {
+  
+    return useQuery({
+        queryFn: () => handleGetAllTrnsaction( page, perPage),
+        queryKey: ["businessAlltransaction", { page, perPage}],
+        
+        
+    })
+
+}
