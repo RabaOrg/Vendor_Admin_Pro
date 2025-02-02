@@ -32,15 +32,19 @@ export const useFetchBusinessFinancialDetails = (Id) => {
 
 }
 export const useFetchGuarantorDetails = (Id) => {
-  
     return useQuery({
-        queryFn: () => handleGetCustomerGuarantorDetails(Id),
-        queryKey: ["guarantorscustomers", { Id}],
-        
-        
-    })
+        queryFn: () => {
+            if (!Id) {
+                console.warn("useFetchGuarantorDetails called with invalid Id:", Id);
+                return null; 
+            }
+            return handleGetCustomerGuarantorDetails(Id);
+        },
+        queryKey: ["guarantorscustomers", { Id }],
+        enabled: !!Id,
+    });
+};
 
-}
 export const useFetchOneCustomer = (Id) => {
    
     return useQuery({

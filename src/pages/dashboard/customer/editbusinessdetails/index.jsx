@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup'
 import { useFetchBusinessCustomerDetails, useFetchOneCustomer } from '../../../../hooks/queries/customer'
 import { useParams } from 'react-router-dom'
-import { handleEditCustomerBusiness } from '../../../../services/customer'
+import { handleEditCustomerBusiness, handleBusinessDetailsForm } from '../../../../services/customer'
 import { toast } from 'react-toastify'
 
 function EditBusinessDetails() {
@@ -33,38 +33,76 @@ function EditBusinessDetails() {
         }))
     }
 
+    // const handleUpdate = async (e) => {
+    //     e.preventDefault();
+    //     setIsLoading(true)
+    //     try {
+    //         const payload = {
+    //             name: editCustomer.name || businessCustomer.name,
+    //             category: editCustomer.category || businessCustomer.category,
+    //             cac_number: editCustomer.cac_number || businessCustomer.cac_number,
+    //             time_in_business: editCustomer.time_in_business || businessCustomer.time_in_business,
+    //             equipment_of_interest: editCustomer.equipment_of_interest || businessCustomer.equipment_of_interest,
+    //             monthly_revenue: editCustomer.monthly_revenue || businessCustomer.monthly_revenue,
+
+    //             state: editCustomer.state || businessCustomer.state,
+    //             lga: editCustomer.lga || businessCustomer.lga,
+    //             street_address: editCustomer.street_address || businessCustomer.street_address,
+    //         };
+
+
+    //         const response = await handleEditCustomerBusiness(id, payload);
+    //         console.log(response);
+    //         console.log('Customer updated successfully:', response.data);
+
+    //         toast.success(response.data.message);
+
+    //     } catch (error) {
+    //         console.error('Error updating customer:', error);
+
+    //         toast.error('Error updating customer. Please try again.');
+    //     } finally {
+    //         setIsLoading(false)
+    //     }
+    // };
     const handleUpdate = async (e) => {
         e.preventDefault();
-        setIsLoading(true)
+        setIsLoading(true);
+
         try {
             const payload = {
-                name: editCustomer.name || businessCustomer.name,
-                category: editCustomer.category || businessCustomer.category,
-                cac_number: editCustomer.cac_number || businessCustomer.cac_number,
-                time_in_business: editCustomer.time_in_business || businessCustomer.time_in_business,
-                equipment_of_interest: editCustomer.equipment_of_interest || businessCustomer.equipment_of_interest,
-                monthly_revenue: editCustomer.monthly_revenue || businessCustomer.monthly_revenue,
-
-                state: editCustomer.state || businessCustomer.state,
-                lga: editCustomer.lga || businessCustomer.lga,
-                street_address: editCustomer.street_address || businessCustomer.street_address,
+                name: editCustomer.name || businessCustomer?.name,
+                category: editCustomer.category || businessCustomer?.category,
+                cac_number: editCustomer.cac_number || businessCustomer?.cac_number,
+                time_in_business: editCustomer.time_in_business || businessCustomer?.time_in_business,
+                equipment_of_interest: editCustomer.equipment_of_interest || businessCustomer?.equipment_of_interest,
+                monthly_revenue: editCustomer.monthly_revenue || businessCustomer?.monthly_revenue,
+                state: editCustomer.state || businessCustomer?.state,
+                lga: editCustomer.lga || businessCustomer?.lga,
+                street_address: editCustomer.street_address || businessCustomer?.street_address,
             };
 
+            let response;
 
-            const response = await handleEditCustomerBusiness(id, payload);
-            console.log(response);
-            console.log('Customer updated successfully:', response.data);
+            if (!businessCustomer) {
 
-            toast.success(response.data.message);
+                response = await handleBusinessDetailsForm(id, payload);
+                toast.success('Business details updated successfully!');
+            } else {
+                console.log(businessCustomer?.id)
+                response = await handleEditCustomerBusiness(id, businessCustomer?.id, payload);
+                toast.success('Business details updated successfully!');
+            }
 
+            console.log('Response:', response.data);
         } catch (error) {
-            console.error('Error updating customer:', error);
-
-            toast.error('Error updating customer. Please try again.');
+            console.error('Error updating business details:', error);
+            toast.error('Error saving business details. Please try again.');
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     };
+
     return (
         <div>
             <div className='p-4'>
@@ -99,7 +137,7 @@ function EditBusinessDetails() {
                                 </div>
                                 <div>
                                     <div className="mb-2 block">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" defaultValue="Business type/category" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Business type/category" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -117,7 +155,7 @@ function EditBusinessDetails() {
                                 </div>
                                 <div>
                                     <div className="mb-2 block ">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" defaultValue="Registered? CAC Registration Number" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Registered? CAC Registration Number" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -139,7 +177,7 @@ function EditBusinessDetails() {
                             <div className="flex flex-col gap-4 w-full lg:w-1/2">
                                 <div>
                                     <div className="mb-2 block">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" defaultValue="Month / years in business" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" value="Month / years in business" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -158,7 +196,7 @@ function EditBusinessDetails() {
                                 </div>
                                 <div>
                                     <div className="mb-2 block">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" defaultValue="Monthly revenue" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" value="Monthly revenue" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -176,7 +214,7 @@ function EditBusinessDetails() {
                                 </div>
                                 <div>
                                     <div className="mb-2 block">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" defaultValue="Equipment of interest" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Equipment of interest" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -196,7 +234,7 @@ function EditBusinessDetails() {
                             <div className="flex flex-col gap-4 w-full lg:w-1/2">
                                 <div>
                                     <div className="mb-2 block">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" defaultValue="State" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" value="State" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -214,7 +252,7 @@ function EditBusinessDetails() {
                                 </div>
                                 <div>
                                     <div className="mb-2 block">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" defaultValue="Local government area" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" value="Local government area" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}
@@ -232,7 +270,7 @@ function EditBusinessDetails() {
                                 </div>
                                 <div>
                                     <div className="mb-2 block">
-                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" defaultValue="Street address" />
+                                        <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Street address" />
                                     </div>
                                     <input
                                         style={{ color: "#202224", borderRadius: "8px" }}

@@ -87,14 +87,16 @@ function CreateApplication() {
       if (data) {
         setDisplay(true)
       }
-      localStorage.setItem('businessDetailsDisplay', JSON.stringify(true));
+
       // query.invalidateQueries({ queryKey: ["customers"] })
     }, onError: (error) => {
       setIsLoading(false)
       toast.error(error.message)
     }
   })
-
+  const handleCancel = () => {
+    navigate('/application')
+  }
   return (
     <div>
       <div className="flex items-center justify-between p-4">
@@ -106,10 +108,11 @@ function CreateApplication() {
             label="Cancel"
             variant="transparent"
             size="lg"
+            onClick={handleCancel}
             className="text-sm w-[150px]"
           />
           <Button
-            label="Create Repayment-plan"
+            label="Create Loan Application"
             variant="solid"
             disabled
             size="md"

@@ -18,19 +18,14 @@ function ApplicationList() {
             Application<span className="text-black-400">{'>'}</span> Add Application
           </h1>
           <div className='flex gap-3'>
-            <Button
-              label="Cancel"
-              variant="transparent"
-              size="lg"
-              className="text-sm w-[150px]"
-            />
-            <Link to={'/create_repayment_plan'}> <Button
+
+            {/* <Link to={'/create_repayment_plan'}> <Button
               label="Create Application"
               variant="solid"
 
               size="md"
               className="text-sm px-6 py-5"
-            /></Link>
+            /></Link> */}
           </div>
         </div>
         <table className="min-w-full leading-normal mt-3 ">

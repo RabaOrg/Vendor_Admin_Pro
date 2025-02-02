@@ -17,12 +17,7 @@ function RepaymentMainPlan() {
             Repayment <span className="text-black-400">{'>'}</span> Add Repayment-Plan
           </h1>
           <div className='flex gap-3'>
-            <Button
-              label="Cancel"
-              variant="transparent"
-              size="lg"
-              className="text-sm w-[150px]"
-            />
+
             <Link to={'/create_repayment_plan'}> <Button
               label="Create Repayment-plan"
               variant="solid"

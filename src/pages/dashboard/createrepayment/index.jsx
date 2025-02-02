@@ -59,11 +59,14 @@ function RepaymentPlan() {
 
       toast.success(data.message)
 
-      navigate('/repayment')
+      navigate('/repayment-plan')
     }, onError: (error) => {
       toast.error(error.message)
     }
   })
+  const handleCancel = () => {
+    navigate('/repayment-plan')
+  }
 
   return (
     <div>
@@ -77,6 +80,7 @@ function RepaymentPlan() {
             variant="transparent"
             size="lg"
             className="text-sm w-[150px]"
+            onClick={handleCancel}
           />
           <Button
             label="Create Repayment-plan"
@@ -192,7 +196,7 @@ function RepaymentPlan() {
                     <input
                       style={{ color: "#202224", borderRadius: "8px" }}
 
-                      type="date"
+                      type="number"
                       value={formik.monthly_tenure_min}
                       name='monthly_tenure_min'
                       onChange={formik.handleChange}

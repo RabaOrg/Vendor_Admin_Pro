@@ -9,7 +9,7 @@ import { useParams } from 'react-router-dom'
 import * as Yup from 'yup'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFetchBusinessFinancialDetails } from '../../../../hooks/queries/customer'
-import { handleEditFinancialDetails } from '../../../../services/customer'
+import { handleEditFinancialDetails, handleFinancialDetailsForm } from '../../../../services/customer'
 
 
 function EditFinancial() {
@@ -26,7 +26,6 @@ function EditFinancial() {
         thrift_master_phone_number: ""
     })
 
-    console.log(financialCustomer)
 
     const handleInput = (e) => {
         const { name, value } = e.target
@@ -38,26 +37,37 @@ function EditFinancial() {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        const payload = {
-            account_number: financialCustomer?.account_number || editCustomerFinance.account_number,
-            account_name: financialCustomer?.account_name || editCustomerFinance.account_name,
-            bank_name: financialCustomer?.bank_name || editCustomerFinance.bank_name,
-            bank_code: financialCustomer?.bank_code || editCustomerFinance.bank_code,
-            bank_uuid: financialCustomer?.bank_uuid || editCustomerFinance.bank_uuid,
-            thrift_master_name: financialCustomer?.thrift_master_name || editCustomerFinance.thrift_master_name,
-            thrift_master_phone_number: financialCustomer?.thrift_master_phone_number || editCustomerFinance.thrift_master_phone_number
-        };
-        console.log(payload)
+
         setIsLoading(true)
 
+
         try {
+            const payload = {
+                account_number: editCustomerFinance.account_number || financialCustomer?.account_number,
+                account_name: editCustomerFinance.account_name || financialCustomer?.account_name,
+                bank_name: editCustomerFinance.bank_name || financialCustomer?.bank_name,
+                bank_code: editCustomerFinance.bank_code || financialCustomer?.bank_code,
+                bank_uuid: editCustomerFinance.bank_uuid || financialCustomer?.bank_uuid,
+                thrift_master_name: editCustomerFinance.thrift_master_name || financialCustomer?.thrift_master_name,
+                thrift_master_phone_number: editCustomerFinance.thrift_master_phone_number || financialCustomer?.thrift_master_phone_number
+            }
+            console.log(payload)
 
+            let response;
 
-            const response = await handleEditFinancialDetails(id, payload);
-            console.log(response);
-            console.log('Customer updated successfully:', response.data);
+            if (!financialCustomer) {
+                response = await handleFinancialDetailsForm(id, [payload]);
+                console.log(response);
 
-            toast.success("Financial details created successfully");
+                toast.success("Financial details updated successfully");
+            } else {
+                console.log(financialCustomer?.id)
+                console.log(payload)
+                response = await handleEditFinancialDetails(id, financialCustomer?.id, payload);
+                console.log(response);
+
+                toast.success("Financial details updated successfully");
+            }
 
         } catch (error) {
             console.error('Error updating customer:', error);

@@ -58,7 +58,9 @@ function EditCustomer() {
             setIsLoading(false)
         }
     };
-
+    const handlecancel = () => {
+        Navigate('/customer')
+    }
 
     return (
         <div>
@@ -70,6 +72,7 @@ function EditCustomer() {
                     <Button
                         label="Cancel"
                         variant="transparent"
+                        onClick={handlecancel}
                         size="lg"
                         className="text-sm w-[150px]"
                     />

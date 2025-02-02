@@ -135,76 +135,68 @@ function Customer() {
 
                     </tbody>
                 </table> */}
-                <table className="min-w-full leading-normal">
-                    <thead>
+                <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                    <thead className="bg-white-100 text-black-700">
                         <tr>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">ID</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Name</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Business Name</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Date Created</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">State</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">View</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan Application</th>
+                            {["ID", "Name", "Business Name", "Date Created", "State", "Edit", "View", "Loan Application"].map((header, index) => (
+                                <th key={index} className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
+                                    {header}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
                         {Array.isArray(customerData) &&
-                            customerData
-                                .slice((page - 1) * perPage, page * perPage)
-                                .map((item, index) => {
-                                    const { id, full_name, created_at, Business } = item;
+                            customerData.slice((page - 1) * perPage, page * perPage).map((item, index) => {
+                                const { id, full_name, created_at, Business } = item;
 
-                                    return (
-                                        <tr className="bg-white" key={index}>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
-                                                <p className="font-medium">{id}</p>
-                                            </td>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
-                                                <p className="font-medium">{full_name}</p>
-                                            </td>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
-                                                <p className="font-medium">{Business?.name || 'N/A'}</p>
-                                            </td>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
-                                                <p className="font-medium">{new Date(created_at).toLocaleString()}</p>
-                                            </td>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs whitespace-nowrap">
-                                                <p className="font-medium">{Business?.state || 'NA'}</p>
-                                            </td>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-center">
-                                                <button
-                                                    className="w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg flex justify-center items-center hover:bg-gray-200 focus:outline-none"
-                                                    aria-label="Edit"
-                                                    onClick={() => handleCustomer(id)}
-                                                >
-                                                    <FaEdit className="text-gray-500 text-lg" />
-                                                </button>
-                                            </td>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-center">
-                                                <button
-                                                    className="w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg flex justify-center items-center hover:bg-gray-200 focus:outline-none"
-                                                    aria-label="View"
-                                                    onClick={() => handleViewCustomer(id)}
-                                                >
-                                                    <FaEye className="text-gray-500 text-lg" />
-                                                </button>
-                                            </td>
-                                            <td className="px-4 py-4 border-b border-gray-200 bg-white text-center">
-                                                <Link to={`/create_application/${id}`}>
-                                                    <Button
-                                                        label="Create Application"
-                                                        variant="solid"
-                                                        size="md"
-                                                        className="text-sm px-6 py-2"
-                                                    />
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                                return (
+                                    <tr key={index} className="hover:bg-gray-50 transition">
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{id}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{full_name}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{Business?.name || "N/A"}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{new Date(created_at).toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{Business?.state || "N/A"}</td>
+
+                                        {/* Edit Button */}
+                                        <td className="px-6 py-4 border-b border-gray-200 text-center">
+                                            <button
+                                                className="w-9 h-9 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none"
+                                                aria-label="Edit"
+                                                onClick={() => handleCustomer(id)}
+                                            >
+                                                <FaEdit className="text-gray-600 text-base" />
+                                            </button>
+                                        </td>
+
+                                        {/* View Button */}
+                                        <td className="px-6 py-4 border-b border-gray-200 text-center">
+                                            <button
+                                                className="w-9 h-9 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none"
+                                                aria-label="View"
+                                                onClick={() => handleViewCustomer(id)}
+                                            >
+                                                <FaEye className="text-gray-600 text-base" />
+                                            </button>
+                                        </td>
+
+                                        {/* Loan Application Button */}
+                                        <td className="px-6 py-4 border-b border-gray-200 text-center">
+                                            <Link to={`/create_application/${id}`}>
+                                                <Button
+                                                    label="Create Application"
+                                                    variant="solid"
+                                                    size="md"
+                                                    className="text-xs px-4 py-2 rounded-md"
+                                                />
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                     </tbody>
                 </table>
+
 
 
                 <div className="flex justify-between items-center mt-4">

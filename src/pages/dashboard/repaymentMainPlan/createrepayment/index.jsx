@@ -55,15 +55,18 @@ function RepaymentPlan() {
 
     , onSuccess: ({ data }) => {
       console.log(data)
-      console.log(data.data.id)
+
 
       toast.success(data.message)
 
-      navigate('/repayment')
+      navigate('/repayment-plan')
     }, onError: (error) => {
       toast.error(error.message)
     }
   })
+  const handleCancel = () => {
+    navigate('/repayment-plan')
+  }
 
   return (
     <div>
@@ -76,6 +79,7 @@ function RepaymentPlan() {
             label="Cancel"
             variant="transparent"
             size="lg"
+            onClick={handleCancel}
             className="text-sm w-[150px]"
           />
           <Button
@@ -125,7 +129,7 @@ function RepaymentPlan() {
                       style={{ color: "#202224", borderRadius: "8px" }}
 
                       value={formik.description}
-                      name=' description'
+                      name='description'
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
@@ -146,7 +150,7 @@ function RepaymentPlan() {
                       className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                       type="text"
                       id="email"
-                      name=" weekly_tenure_min"
+                      name="weekly_tenure_min"
 
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
@@ -192,7 +196,7 @@ function RepaymentPlan() {
                     <input
                       style={{ color: "#202224", borderRadius: "8px" }}
 
-                      type="date"
+                      type="number"
                       value={formik.monthly_tenure_min}
                       name='monthly_tenure_min'
                       onChange={formik.handleChange}
@@ -213,7 +217,7 @@ function RepaymentPlan() {
                       style={{ color: "#202224", borderRadius: "8px" }}
 
                       value={formik.monthly_tenure_max}
-                      name='phone_number'
+                      name='monthly_tenure_max'
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"

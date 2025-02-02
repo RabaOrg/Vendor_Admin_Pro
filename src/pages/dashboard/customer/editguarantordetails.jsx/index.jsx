@@ -2,9 +2,10 @@ import React from 'react'
 import { useState } from 'react'
 import { Card, Label } from 'flowbite-react'
 import Button from '../../../../components/shared/button'
+import { toast } from 'react-toastify'
 
 
-import { handleEditGuarantorDetails } from '../../../../services/customer'
+import { handleEditGuarantorDetails, handleGuarantorDetailsForm } from '../../../../services/customer'
 import { useParams } from 'react-router-dom'
 import { useFetchGuarantorDetails } from '../../../../hooks/queries/customer'
 
@@ -35,13 +36,21 @@ function EditGuarantor() {
         phone_number: editGuarantor.phone_number || guarantorData.phone_number
       };
 
+      let response;
+      if (!guarantorData) {
+        response = await handleGuarantorDetailsForm(id, [payload]);
 
-      const response = await handleEditGuarantorDetails(id, payload);
-      console.log(response);
-      console.log('Customer updated successfully:', response.data);
 
-      toast.success(response.data.message);
 
+        toast.success("Guarantor's Details updated successfully");
+
+
+      } else {
+        response = await handleEditGuarantorDetails(id, guarantorData?.id, payload);
+
+
+        toast.success("Guarantor's Details updated successfully");
+      }
     } catch (error) {
       console.error('Error updating customer:', error);
 
