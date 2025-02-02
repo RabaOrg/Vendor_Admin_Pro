@@ -10,7 +10,7 @@ function Product() {
     const [currentPage, setCurrentPage] = useState(1);
     const [product, setProduct] = useState([])
     const [productMeta, setMetaProduct] = useState([])
-    const itemsPerPage = 10; // You can adjust this as per the "per_page" in the response
+    const itemsPerPage = 10;
     const { data: productData, isPending, isError } = useFetchProduct(currentPage, itemsPerPage);
 
     const navigate = useNavigate();
@@ -81,9 +81,11 @@ function Product() {
                                 <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Product Name</th>
                                 <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Category</th>
                                 <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Price</th>
-
                                 <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Action</th>
-                                <th className="px-4 pl-7  py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Status</th>
+
+                                <th className="px-4 pl-12  py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Status</th>
+
+
 
                             </tr>
                         </thead>
