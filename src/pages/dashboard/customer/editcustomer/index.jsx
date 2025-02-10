@@ -19,7 +19,7 @@ function EditCustomer() {
         dob: '',
         phone_number: '',
     })
-
+    console.log(oneCustomer)
 
     const handleInput = (e) => {
         const { name, value } = e.target

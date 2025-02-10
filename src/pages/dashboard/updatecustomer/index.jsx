@@ -7,6 +7,9 @@ import Guarantor from '../customer/guarantor';
 import ImageUpload from '../uploadimage';
 
 import EditCustomer from '../customer/editcustomer';
+import EditBusinessDetails from '../customer/editbusinessdetails';
+import EditFinancial from '../customer/editfinancialdetails';
+import EditGuarantor from '../customer/editguarantordetails.jsx';
 // import RepaymentMainPlan from '../repaymentMainPlan';
 
 function UpdateCustomer() {
@@ -15,9 +18,12 @@ function UpdateCustomer() {
     return (
         <div>
             <EditCustomer Id={id} />
-            <BusinessDetails Id={id} />
-            <FinancialDetails Id={id} />
-            <Guarantor Id={id} />
+            <EditBusinessDetails Id={id} />
+            <EditFinancial Id={id} />
+            <EditGuarantor Id={id} />
+            {/* <BusinessDetails Id={id} /> */}
+            {/* <FinancialDetails Id={id} /> */}
+            {/* <Guarantor Id={id} /> */}
             <ImageUpload />
             {/* <Repayment /> */}
         </div>

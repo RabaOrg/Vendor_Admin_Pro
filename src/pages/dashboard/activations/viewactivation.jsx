@@ -42,6 +42,12 @@ function ViewActivation() {
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.customer_name}</p>
                   </div>
+                  <div className='mb-4'>
+                    <div className=" block">
+                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" value="Repayment Period" />
+                    </div>
+                    <p className='text-sm font-normal'>{singleLoanList?.repayment_period}</p>
+                  </div>
 
                   <div className='mb-4'>
                     <div className="block ">
@@ -71,6 +77,13 @@ function ViewActivation() {
                       <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" value="Interest_amount" />
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.interest_amount}</p>
+                  </div>
+                  <div className="mb-4">
+
+                    <div className="block">
+                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password3" value="Interest_amount" />
+                    </div>
+                    <p className='text-sm font-normal'>{singleLoanList?.repayment_details?.interval}</p>
                   </div>
                   <div className='mb-4'>
                     <div className="block">
@@ -113,6 +126,12 @@ function ViewActivation() {
                     </div>
                     <p className='text-sm font-normal'>{singleLoanList?.repayment_period}</p>
                   </div>
+                  <div className='mb-4'>
+                    <div className=" block">
+                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="password2" value="Product Amount" />
+                    </div>
+                    <p className='text-sm font-normal'>{singleLoanList?.product_amount}</p>
+                  </div>
 
                   <div className='mb-4'>
                     <div className=" block">
@@ -132,7 +151,7 @@ function ViewActivation() {
           </Card>
         </div>
       </div>
-    </div>
+    </div >
   )
 }
 

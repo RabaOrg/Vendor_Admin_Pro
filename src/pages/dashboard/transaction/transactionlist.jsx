@@ -104,6 +104,7 @@ function TransactionList() {
                 <th className="border px-6 py-3 text-xs text-left font-bold">LOAN ID</th>
                 <th className="border px-6 py-3 text-xs text-left font-bold">TYPE</th>
                 <th className="border px-6 py-3 text-xs text-left font-bold">AMOUNT</th>
+                <th className="border px-6 py-3 text-xs text-left font-bold">CUSTOMER NAME</th>
                 <th className="border px-6 py-3 text-xs text-left font-bold">CREATED AT</th>
                 <th className="border px-6 py-3 text-xs text-left font-bold">UPDATED AT</th>
                 <th className="border px-6 py-3 text-xs text-left font-bold">STATUS</th>
@@ -115,6 +116,7 @@ function TransactionList() {
                   <td className="border px-6 py-4 text-xs">{item.id}</td>
                   <td className="border px-6 py-4 text-xs">{item.type}</td>
                   <td className="border px-6 py-4 text-xs">{item.amount}</td>
+                  <td className="border px-6 py-4 text-xs">{item.customer_name}</td>
                   <td className="border px-6 py-4 text-xs">{new Date(item.created_at).toLocaleString()}</td>
                   <td className="border px-6 py-4 text-xs">{new Date(item.updated_at).toLocaleString()}</td>
                   <td className="border px-6 py-4 text-sm">

@@ -23,7 +23,7 @@ function EditBusinessDetails() {
         lga: "",
         street_address: ""
     })
-
+    console.log(businessCustomer)
 
     const handleInput = (e) => {
         const { name, value } = e.target

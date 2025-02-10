@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Label } from 'flowbite-react'
 import Button from '../../components/shared/button'
 import Card from '../../components/shared/card'
+import FinancialDetails from '../dashboard/customer/financialdetails/financialdetail'
+import BusinessDetails from '../dashboard/customer/businessdetails/businessdetails'
 import { toast } from 'react-toastify'
 import { BiUpload } from 'react-icons/bi'
 
@@ -13,6 +15,8 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { handleCustomerForm } from '../../services/customer'
+import Guarantor from '../dashboard/customer/guarantor'
+import ImageUpload from '../dashboard/uploadimage'
 
 
 function Addcustomer() {
@@ -369,6 +373,10 @@ function Addcustomer() {
                         </div>
                     </Card>
                 </div> */}
+                <BusinessDetails />
+                <FinancialDetails />
+                <Guarantor />
+                <ImageUpload />
             </div>
 
 

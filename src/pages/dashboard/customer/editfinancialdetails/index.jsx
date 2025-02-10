@@ -25,7 +25,7 @@ function EditFinancial() {
         thrift_master_name: "",
         thrift_master_phone_number: ""
     })
-
+    console.log(financialCustomer)
 
     const handleInput = (e) => {
         const { name, value } = e.target
