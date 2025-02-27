@@ -3,6 +3,7 @@ import Button from '../../../../components/shared/button'
 import { Card, Label } from 'flowbite-react'
 import { useFormik } from 'formik';
 import * as Yup from 'yup'
+import { useFetchStates } from '../../../../hooks/queries/customer';
 import { useFetchBusinessCustomerDetails, useFetchOneCustomer } from '../../../../hooks/queries/customer'
 import { useParams } from 'react-router-dom'
 import { handleEditCustomerBusiness, handleBusinessDetailsForm } from '../../../../services/customer'
@@ -10,6 +11,7 @@ import { toast } from 'react-toastify'
 
 function EditBusinessDetails() {
     const { id } = useParams()
+    const { data: states } = useFetchStates()
     const { data: businessCustomer, isPending, isError } = useFetchBusinessCustomerDetails(id)
     const [loading, setIsLoading] = useState(false)
     const [editCustomer, setEditCustomer] = useState({
@@ -236,19 +238,24 @@ function EditBusinessDetails() {
                                     <div className="mb-2 block">
                                         <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" value="State" />
                                     </div>
-                                    <input
-                                        style={{ color: "#202224", borderRadius: "8px" }}
-                                        id="email3"
+
+                                    <select
+                                        id="state"
+                                        name="state"
                                         defaultValue={editCustomer.state || businessCustomer?.state}
-                                        name='state'
                                         onChange={(e) => handleInput(e)}
 
-                                        type="text"
+                                        style={{ color: "#202224", borderRadius: "8px" }}
                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                        placeholder="name@raba.com"
-
-                                    />
-
+                                    >
+                                        <option value="">Select State</option>
+                                        {states &&
+                                            states.map((stateItem) => (
+                                                <option key={stateItem.id} value={stateItem.name}>
+                                                    {stateItem.name}
+                                                </option>
+                                            ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <div className="mb-2 block">

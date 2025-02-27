@@ -20,7 +20,7 @@ function Dashboard() {
                         },
                         {
                             label: "Transaction Volume",
-                            value: `₦${dashboardData?.volumeOfTransactions.toLocaleString()}`,
+                            value: `₦${dashboardData?.volumeOfTransactions}`,
                             icon: "/iconn.png",
                         },
                         {

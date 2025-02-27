@@ -57,10 +57,21 @@ export const handleGetCustomerBusinessDetails = async (Id) => {
      
     return data.data.Business
 }
+export const handleCustomerImage = async (id, formInfo) => {
+  return axiosInstance.post(
+   `/admin/add-attachments/${id}`,
+    formInfo
+  );
+};
 export const handleGetCustomerFinancialDetails = async (Id) => {
      const { data } = await axiosInstance.get(`/admin/user/${Id}`);
      
     return data.data.FinancialAccounts[0]
+}
+export const handleGetStates = async () => {
+     const { data } = await axiosInstance.get(`/admin/states`);
+     
+    return data.data
 }
 export const handleGetCustomerGuarantorDetails = async (Id) => {
      const { data } = await axiosInstance.get(`/admin/user/${Id}`);

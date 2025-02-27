@@ -11,6 +11,7 @@ function Customer() {
     const [page, setPage] = useState(1);
     const navigate = useNavigate()
     const [search, setSearch] = useState("");
+
     const { data: customerData, isPending, isError } = useFetchCustomer(page, perPage, search);
 
 
@@ -46,6 +47,7 @@ function Customer() {
                     <div className="relative w-full md:w-[700px]">
                         <input
                             type="text"
+                            name='search'
                             placeholder="Search customer name"
                             value={search}
                             onChange={handleSearch}
@@ -65,76 +67,7 @@ function Customer() {
                     </Link>
                 </div>
 
-                {/* <table className="min-w-full leading-normal">
-                    <thead>
-                        <tr>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">ID</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Name</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Business name</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Date created</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">State</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Edit</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">View</th>
-                            <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">Loan application</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Array.isArray(customerData) && customerData.slice((page - 1) * perPage, page * perPage).map((item, index) => {
-                            const { id, full_name, created_at, Business } = item;
 
-                            return (
-                                <tr className="bg-white" key={index}>
-                                    <td className="px-4 border-b border-gray-200 bg-white text-xs">
-                                        <p className="font-[500] whitespace-no-wrap text-xs">{id}</p>
-                                    </td>
-                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-sm">
-                                        <p className="font-[500] whitespace-no-wrap text-xs">{full_name}</p>
-                                    </td>
-                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-xs">
-                                        <p className="font-[500] whitespace-no-wrap text-xs">{Business?.name || 'N/A'}</p>
-                                    </td>
-                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-xs">
-                                        <p className="font-[500] whitespace-no-wrap text-xs">{new Date(created_at).toLocaleString()}</p>
-                                    </td>
-                                    <td className="px-4 py-5 border-b border-gray-200 bg-white text-xs">
-                                        <p className="font-[500] whitespace-no-wrap text-xs">{Business?.state || 'NA'}</p>
-                                    </td>
-                                    <td className="px-4 py-5 border-b border-gray-200 bg-white flex">
-                                        <button
-                                            className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
-                                            aria-label="Edit"
-                                            onClick={(e) => handleCustomer(id)}
-                                        >
-                                            <FaEdit className="text-gray-500 text-lg" />
-                                        </button>
-                                    </td>
-                                    <td className=" border-b border-gray-200 bg-white">
-                                        <button
-                                            className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
-                                            aria-label="Edit"
-                                            onClick={(e) => handleViewCustomer(id)}
-                                        >
-                                            <FaEye className="text-gray-500 text-lg" />
-                                        </button>
-                                    </td>
-                                    <td className='border-b px-9 border-gray-200 bg-white'>
-                                        <Link to={`/create_application/${id}`}>
-                                            <Button
-                                                label="Create Application"
-                                                variant="solid"
-
-                                                size="md"
-                                                className="text-sm px-6 py-5"
-                                            />
-                                        </Link>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-
-
-                    </tbody>
-                </table> */}
                 <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <thead className="bg-white-100 text-black-700">
                         <tr>

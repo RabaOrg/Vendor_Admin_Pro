@@ -68,7 +68,7 @@ function Addcustomer() {
             setId(data.data.id)
             toast.success(data.message)
             query.invalidateQueries({ queryKey: ["customers"] })
-            navigate('/customer')
+
         }, onError: (error) => {
             toast.error(error.message)
         }
@@ -107,7 +107,7 @@ function Addcustomer() {
                         <div className='w-full border-t-2 border-gray-200'></div>
 
                         <form className=' px-10' onSubmit={formik.handleSubmit}>
-                            {/* First Form */}
+
                             <div className='flex flex-col lg:flex-row gap-7 pb-10 mt-5'>
                                 <div className="flex flex-col gap-4 w-full lg:w-1/2">
                                     <div>
@@ -376,7 +376,7 @@ function Addcustomer() {
                 <BusinessDetails />
                 <FinancialDetails />
                 <Guarantor />
-                <ImageUpload />
+                <ImageUpload id={id} />
             </div>
 
 

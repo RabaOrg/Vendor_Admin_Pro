@@ -124,8 +124,7 @@ function ViewProductDetails() {
             {oneProduct?.repayment_policies && (
               <div className="mt-8">
                 <h4 className="text-lg font-semibold text-[#212C25] mb-4">Repayment Policies</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
 
                   {oneProduct.repayment_policies.monthly_tenure && (
                     <div className="flex flex-col bg-gray-100 p-4 border border-[#A0ACA4] rounded-md">
@@ -135,7 +134,6 @@ function ViewProductDetails() {
                     </div>
                   )}
 
-
                   {oneProduct.repayment_policies.weekly_tenure && (
                     <div className="flex flex-col bg-gray-100 p-4 border border-[#A0ACA4] rounded-md">
                       <span className="text-xs font-semibold text-[#212C25]">Weekly Tenure</span>
@@ -144,10 +142,18 @@ function ViewProductDetails() {
                     </div>
                   )}
 
+                  {oneProduct.repayment_policies.down_percentage && (
+                    <div className="flex flex-col bg-gray-100 p-4 border border-[#A0ACA4] rounded-md">
+                      <span className="text-xs font-semibold text-[#212C25]">Down Percentage</span>
+                      <p className="text-sm text-gray-700">Min: {oneProduct.repayment_policies.down_percentage.min}</p>
+                      <p className="text-sm text-gray-700">Max: {oneProduct.repayment_policies.down_percentage.max}</p>
+                    </div>
+                  )}
 
                   {oneProduct.repayment_policies.description && (
-                    <div className="col-span-2 flex flex-col bg-gray-100 p-4 border border-[#A0ACA4] rounded-md">
+                    <div className="col-span-3 flex flex-col bg-gray-100 p-4 border border-[#A0ACA4] rounded-md">
                       <span className="text-xs font-semibold text-[#212C25]">Description</span>
+                      <p className="text-sm text-gray-700">{oneProduct.repayment_policies.description}</p>
                       <p className="text-sm text-gray-700">{oneProduct.repayment_policies.description}</p>
                     </div>
                   )}
@@ -155,6 +161,7 @@ function ViewProductDetails() {
                 </div>
               </div>
             )}
+
             <div>
 
               {oneProduct?.display_attachment && (

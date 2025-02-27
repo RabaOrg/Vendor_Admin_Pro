@@ -24,7 +24,7 @@ function UpdateCustomer() {
             {/* <BusinessDetails Id={id} /> */}
             {/* <FinancialDetails Id={id} /> */}
             {/* <Guarantor Id={id} /> */}
-            <ImageUpload />
+            <ImageUpload id={id} />
             {/* <Repayment /> */}
         </div>
     )

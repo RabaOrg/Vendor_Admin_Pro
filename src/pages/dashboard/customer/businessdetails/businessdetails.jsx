@@ -8,12 +8,14 @@ import { toast } from 'react-toastify';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import EditBusinessDetails from '../editbusinessdetails';
 import { handleBusinessDetailsForm } from '../../../../services/customer';
+import { useFetchStates } from '../../../../hooks/queries/customer';
 
 function BusinessDetails({ Id }) {
     const [userId, setUserId] = useState("")
     const [loading, setIsLoading] = useState(false)
+    const { data: states } = useFetchStates()
     const [display, setDisplay] = useState(false)
-
+    console.log(states)
 
     const formik = useFormik({
 
@@ -43,8 +45,9 @@ function BusinessDetails({ Id }) {
 
         }),
         onSubmit: async (values) => {
-            setIsLoading(true);
-            onMutate(values);
+            console.log(values)
+            // setIsLoading(true);
+            // onMutate(values);
 
 
         },
@@ -221,18 +224,23 @@ function BusinessDetails({ Id }) {
                                     <div className="mb-2 block">
                                         <Label className="text-[#212C25] text-xs font-[500]" htmlFor="email3" value="State" />
                                     </div>
-                                    <input
-                                        style={{ color: "#202224", borderRadius: "8px" }}
-                                        id="email3"
-                                        value={formik.state}
-                                        name='state'
+                                    <select
+                                        id="state"
+                                        name="state"
+                                        value={formik.values.state}
                                         onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
-                                        type="text"
+                                        style={{ color: "#202224", borderRadius: "8px" }}
                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                        placeholder="name@raba.com"
-
-                                    />
+                                    >
+                                        <option value="">Select State</option>
+                                        {states &&
+                                            states.map((stateItem) => (
+                                                <option key={stateItem.id} value={stateItem.name}>
+                                                    {stateItem.name}
+                                                </option>
+                                            ))}
+                                    </select>
                                     {formik.touched.state && formik.errors.state ? (
                                         <small className="text-red-500">{formik.errors.state}</small>
                                     ) : null}
