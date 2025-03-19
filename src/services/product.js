@@ -1,10 +1,10 @@
 import axiosInstance from "../../store/axiosInstance";
 
-export const handleProduct = async (page , perPage ) => {
-  const data = await axiosInstance.get(`admin/products?page=${page}&perPage=${perPage}`);
-  return data;
+export const handleProduct = async (page , perPage, search ) => {
+  const data = await axiosInstance.get(`admin/products?page=${page}&perPage=${perPage}&search=${search || ""}`);
+  return data.data;
 }
-export const handleMetaProduct = async (page , perPage ) => {
+export const handleMetaProduct = async (page , perPage, search ) => {
   const { data } = await axiosInstance.get(`admin/products?page=${page}&perPage=${perPage}`);
   return data;
 }

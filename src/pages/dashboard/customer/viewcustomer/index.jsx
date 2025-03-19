@@ -31,6 +31,7 @@ function ViewCustomerDetails() {
                 <DetailItem label="Customer ID" value={oneCustomer?.id} />
                 <DetailItem label="Full Name" value={oneCustomer?.full_name} />
                 <DetailItem label="Age" value={oneCustomer?.age} />
+                <DetailItem label="Age" value={oneCustomer?.phone_number} />
               </div>
 
               <div className="flex flex-col gap-4">

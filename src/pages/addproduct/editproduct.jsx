@@ -84,7 +84,7 @@ function EditProduct() {
         specifications: singleProduct.specifications || [],
         interest_rule: normalizedInterest,
         repayment_policies: {
-          // If tenure_unit is an array, take the first element; otherwise, use it directly.
+
           ...singleProduct.repayment_policies,
           tenure_unit: Array.isArray(singleProduct.repayment_policies.tenure_unit)
             ? singleProduct.repayment_policies.tenure_unit[0]
@@ -124,7 +124,7 @@ function EditProduct() {
           }
         }));
       } else {
-        // If no valid plan is selected, you might want to reset or leave as is
+
         setProduct(prev => ({
           ...prev,
           repayment_policies: {
@@ -134,13 +134,10 @@ function EditProduct() {
         }));
       }
     } else {
-      // For other fields, update them normally
-      // (You might need to handle nested fields by parsing the name string.)
+
       setProduct(prev => ({
         ...prev,
-        // For example, if name is "repayment_policies.weekly_tenure.min"
-        // you can update that value accordingly.
-        // A simple (but not fully generic) approach:
+
         repayment_policies: {
           ...prev.repayment_policies,
           [name.split('.')[1]]: {
@@ -955,7 +952,7 @@ function EditProduct() {
           <h3 className="p-3 px-10 font-semibold">Update Display Attachment Image</h3>
           <div className="w-full border-t-2 border-gray-200"></div>
 
-          {/* Attachments List */}
+
           <div className="flex flex-wrap gap-4 p-6">
             {singleProduct?.attachments?.map((attachment) => (
               <div
@@ -967,7 +964,7 @@ function EditProduct() {
                   alt="Attachment"
                   className="w-full h-full object-cover"
                 />
-                {/* Update Button: Clicking this lets the user select a new image for this attachment */}
+
                 <label className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1 hover:bg-blue-700 transition cursor-pointer">
                   <BiUpload size={18} />
                   <input
@@ -980,7 +977,6 @@ function EditProduct() {
               </div>
             ))}
 
-            {/* Upload Button (to add new attachments, shown only if under MAX_ATTACHMENTS) */}
             {singleProduct?.attachments.length < MAX_ATTACHMENTS && (
               <div className="relative w-40 h-40 flex items-center justify-center border border-dashed border-gray-400 rounded-lg hover:bg-gray-100 transition">
                 <label className="flex flex-col items-center cursor-pointer">

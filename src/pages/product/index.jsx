@@ -1,26 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import { FaSearch } from 'react-icons/fa';
-import { FaEdit, FaEye } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaEye } from 'react-icons/fa';
 import axiosInstance from '../../../store/axiosInstance';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/shared/button';
-import { useFetchProduct } from '../../hooks/queries/product';
 
 function Product() {
     const [currentPage, setCurrentPage] = useState(1);
-    const [product, setProduct] = useState([])
-    const [productMeta, setMetaProduct] = useState([])
+    const [allProducts, setAllProducts] = useState([]); // Store original products
+    const [product, setProduct] = useState([]); // Displayed (filtered) products
+    const [productMeta, setMetaProduct] = useState([]);
     const itemsPerPage = 10;
-    const { data: productData, isPending, isError } = useFetchProduct(currentPage, itemsPerPage);
+    const [search, setSearch] = useState("");
 
     const navigate = useNavigate();
+
     const handleProduct = (id) => {
         navigate(`/editproduct/${id}`);
     };
+
     const handleViewProduct = (id) => {
         navigate(`/view_product_details/${id}`);
     };
 
+    const handleSearch = (e) => {
+        const query = e.target.value.toLowerCase();
+        setSearch(query);
+
+        if (query === "") {
+            setProduct(allProducts); // Reset to full list when search is cleared
+        } else {
+            const filteredProducts = allProducts.filter((item) =>
+                item.name.toLowerCase().includes(query)
+            );
+            setProduct(filteredProducts);
+        }
+    };
 
     const handleNextPage = () => {
         if (currentPage < productMeta?.meta?.total_pages) {
@@ -37,10 +51,11 @@ function Product() {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const data = await axiosInstance.get(`admin/products?page=${currentPage}&perPage=${itemsPerPage}`);
-                console.log(data);
-                setProduct(data.data);
-                setMetaProduct(data.data);
+                const response = await axiosInstance.get(`admin/products?page=${currentPage}&perPage=${itemsPerPage}`);
+                console.log(response);
+                setAllProducts(response.data.data); // Store original list
+                setProduct(response.data.data); // Set displayed list
+                setMetaProduct(response.data);
             } catch (error) {
                 console.log('Error fetching products:', error);
             }
@@ -48,6 +63,7 @@ function Product() {
 
         fetchProduct();
     }, [currentPage, itemsPerPage]);
+
     return (
         <div className="px-6">
             <div className="inline-block min-w-full rounded-lg overflow-hidden">
@@ -57,6 +73,8 @@ function Product() {
                         <input
                             type="text"
                             placeholder="Search product name"
+                            value={search}
+                            onChange={handleSearch}
                             className="w-full px-3 py-2 pl-8 mt-1 text-xs font-[400] text-[#202224] rounded-full bg-white border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none"
                         />
                         <span className="absolute left-3 top-[22px] transform -translate-y-1/2 text-gray-400">
@@ -82,17 +100,13 @@ function Product() {
                                 <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Category</th>
                                 <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Price</th>
                                 <th className="px-4 py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Action</th>
-
                                 <th className="px-4 pl-12  py-4 w-1/6 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black tracking-wider">Status</th>
-
-
-
                             </tr>
                         </thead>
                         <tbody>
-                            {Array.isArray(product.data) && product.data.length > 0 ? (
-                                product.data.map((item) => {
-                                    const { id, display_attachment_url, name, price, updated_at, category } = item;
+                            {Array.isArray(product) && product.length > 0 ? (
+                                product.map((item) => {
+                                    const { id, display_attachment_url, name, price, category } = item;
                                     return (
                                         <tr className="bg-white" key={id}>
                                             <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
@@ -129,8 +143,6 @@ function Product() {
                                                     <FaEdit className="text-gray-500 text-lg" />
                                                 </button>
                                             </td>
-
-
                                         </tr>
                                     );
                                 })
@@ -142,33 +154,29 @@ function Product() {
                                 </tr>
                             )}
                         </tbody>
-
-
                     </table>
                 </div>
-
-
-                <div className="flex justify-between items-center mt-6">
-                    <button
-                        onClick={handlePreviousPage}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 bg-[#0f5d30] text-white rounded-md hover:bg-[#0e4c24] disabled:bg-gray-200 disabled:opacity-50"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-sm">
-                        Page {currentPage} of {productMeta?.meta?.total_pages}
-                    </span>
-                    <button
-                        onClick={handleNextPage}
-                        disabled={currentPage === productMeta?.meta?.total_pages}
-                        className="px-4 py-2 bg-[#0f5d30] text-white rounded-md hover:bg-[#0e4c24] disabled:bg-gray-200 disabled:opacity-50"
-                    >
-                        Next
-                    </button>
-                </div>
-
             </div>
+            <div className="flex justify-between items-center mt-6">
+                <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-[#0f5d30] text-white rounded-md hover:bg-[#0e4c24] disabled:bg-gray-200 disabled:opacity-50"
+                >
+                    Previous
+                </button>
+                <span className="text-sm">
+                    Page {currentPage} of {productMeta?.meta?.total_pages}
+                </span>
+                <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === productMeta?.meta?.total_pages}
+                    className="px-4 py-2 bg-[#0f5d30] text-white rounded-md hover:bg-[#0e4c24] disabled:bg-gray-200 disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
+
         </div>
     );
 }
