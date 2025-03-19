@@ -53,8 +53,8 @@ function Product() {
             try {
                 const response = await axiosInstance.get(`admin/products?page=${currentPage}&perPage=${itemsPerPage}`);
                 console.log(response);
-                setAllProducts(response.data.data); // Store original list
-                setProduct(response.data.data); // Set displayed list
+                setAllProducts(response.data.data);
+                setProduct(response.data.data);
                 setMetaProduct(response.data);
             } catch (error) {
                 console.log('Error fetching products:', error);

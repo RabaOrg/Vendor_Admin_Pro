@@ -629,7 +629,7 @@ function Addproduct() {
                                                     ) : (
                                                         repaymentPlan?.map((cat) => (
                                                             <option key={cat.id} value={cat.id}>
-                                                                {cat.tenure_unit}
+                                                                {cat.id}
                                                             </option>
                                                         ))
                                                     )}
