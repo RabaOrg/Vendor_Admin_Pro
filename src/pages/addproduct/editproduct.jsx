@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { Label } from 'flowbite-react'
 import Button from '../../components/shared/button'
 import Card from '../../components/shared/card'
-import { FaMinus } from 'react-icons/fa'
+import { FaMinus, FaTrash } from 'react-icons/fa'
 import { useFetchRepayment } from '../../hooks/queries/loan';
 
 import { useNavigate } from 'react-router-dom'
@@ -12,14 +12,18 @@ import { toast } from 'react-toastify';
 import { useFetchCategory } from '../../hooks/queries/product';
 import { useParams } from 'react-router-dom'
 import { BiUpload } from 'react-icons/bi'
-import { handleCreateProduct, handleDeleteProduct, handleProductImage, handleUpdateProduct } from '../../services/product';
+import { useQueryClient } from "@tanstack/react-query";
+import { handleCreateProduct, handleDeleteImage, handleDeleteImageDisplay, handleDeleteProduct, handleDisplayProductImage, handleProductImage, handleUpdateProduct } from '../../services/product';
 import { useFetchSingleProduct } from '../../hooks/queries/product'
 
 function EditProduct() {
   const [loading, setIsLoading] = useState()
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageDisplay, setSelectedImageDisplay] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [previews, setPreviews] = useState(null);
   const [isLoad, setIsLoad] = useState(false);
+  const [isLoads, setIsLoads] = useState(false);
   const { id } = useParams()
   const [newImage, setNewImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
@@ -54,6 +58,7 @@ function EditProduct() {
 
   const [specifications, setSpecifications] = useState(singleProduct?.specifications || {});
   const [newSpecificationKey, setNewSpecificationKey] = useState("");
+  const queryClient = useQueryClient();
   const { data: repaymentPlan } = useFetchRepayment()
   const [newSpecifications, setNewSpecifications] = useState([]);
   const [newSpecificationValue, setNewSpecificationValue] = useState("");
@@ -83,6 +88,7 @@ function EditProduct() {
         price: singleProduct.price || '',
         specifications: singleProduct.specifications || [],
         interest_rule: normalizedInterest,
+        isArchived: singleProduct.is_archived ?? false,
         repayment_policies: {
 
           ...singleProduct.repayment_policies,
@@ -150,36 +156,53 @@ function EditProduct() {
   };
 
 
-  const handleUpdateImage = async (attachmentId, event) => {
-    const file = event.target.files[0];
-    if (!file) {
-      toast.error("Please select an image to update.");
-      return;
-    }
+  const handleDelete = async (attachmentId, url) => {
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = async () => {
-      const base64Image = reader.result.split(",")[1];
-      try {
-        setIsLoad(true);
+    try {
 
-        const response = await handleProductImage(id, { attachment_type: 'products', image: base64Image })
 
-        if (response && response.status === 200) {
-          toast.success("Image updated successfully!");
+      const response = await handleDeleteImage(id, attachmentId, { attachment_type: 'products', image: url })
 
-        } else {
-          toast.error("Failed to update the image. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error updating image:", error);
-        toast.error("An error occurred while updating the image.");
-      } finally {
-        setIsLoad(false);
+
+      if (response && response.status === 200) {
+        toast.success("Image deleted successfully!");
+        queryClient.invalidateQueries(["SingleProduct", id]);
+
+
+      } else {
+        toast.error("Failed to delete the image. Please try again.");
       }
-    };
+    } catch (error) {
+      console.error("Error updating image:", error);
+      toast.error("An error occurred while updating the image.");
+    } finally {
+      setIsLoad(false);
+    }
   };
+  const handleDeleteDisplay = async (url) => {
+
+    try {
+
+
+      const response = await handleDeleteImageDisplay(id, { attachment_type: 'products', image: url })
+
+
+      if (response && response.status === 200) {
+        toast.success("Image deleted successfully!");
+        queryClient.invalidateQueries(["SingleProduct", id]);
+
+
+      } else {
+        toast.error("Failed to delete the image. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating image:", error);
+      toast.error("An error occurred while updating the image.");
+    } finally {
+      setIsLoad(false);
+    }
+  };
+
 
   const addSpecification = () => {
     setNewSpecifications([...newSpecifications, { attribute: "", value: "" }]);
@@ -274,6 +297,18 @@ function EditProduct() {
       reader.readAsDataURL(file);
     }
   };
+  const handleImageChangeDisplay = (event) => {
+    const file = event.target.files[0];
+    setSelectedImageDisplay(file);
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviews(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleUpload = async () => {
     if (!preview) {
@@ -286,14 +321,12 @@ function EditProduct() {
     try {
       setIsLoad(true);
       console.log(base64Image);
-      const response = await handle
-      ProductImage({
-        attachment_type: "products",
-        image: base64Image,
-      });
+      const response = await handleProductImage(id, { attachment_type: 'products', image: base64Image })
+
 
       if (response && response.status === 200) {
         toast.success("Image uploaded successfully!");
+        queryClient.invalidateQueries(["SingleProduct", id]);
       } else {
         toast.error("Failed to upload the image. Please try again.");
       }
@@ -304,6 +337,35 @@ function EditProduct() {
       setIsLoad(false);
       setSelectedImage(null);
       setPreview(null);
+    }
+  };
+  const handleUploadDisplay = async () => {
+    if (!previews) {
+      toast.error("Please select an image to upload.");
+      return;
+    }
+
+    const base64Image = previews.split(",")[1];
+
+    try {
+      setIsLoads(true);
+      console.log(base64Image);
+      const response = await handleDisplayProductImage(id, { attachment_type: 'products', image: base64Image })
+
+
+      if (response && response.status === 200) {
+        toast.success("Image uploaded successfully!");
+        queryClient.invalidateQueries(["SingleProduct", id]);
+      } else {
+        toast.error("Failed to upload the image. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("An error occurred while uploading the image.");
+    } finally {
+      setIsLoads(false);
+      setSelectedImageDisplay(null);
+      setPreviews(null);
     }
   };
 
@@ -397,7 +459,9 @@ function EditProduct() {
           min: Number(product.repayment_policies.down_percentage.min),
           max: Number(product.repayment_policies.down_percentage.max)
         }
-      }
+      },
+      is_archived: product.isArchived ?? singleProduct?.isArchived ?? false,
+      isActive: product.isActive ?? singleProduct?.isActive ?? true,
     };
 
     console.log(payload);
@@ -561,6 +625,21 @@ function EditProduct() {
                       defaultValue={singleProduct?.description || product.description}
                       onChange={handleInput}
                     ></textarea>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+
+
+
+
+                  <div className="flex items-center gap-2 mt-3">
+                    <label className="text-sm font-medium text-gray-700">Archived:</label>
+                    <input
+                      type="checkbox"
+                      checked={product.isArchived}
+                      onChange={(e) => setProduct({ ...product, isArchived: e.target.checked })}
+                      className="w-5 h-5"
+                    />
                   </div>
                 </div>
               </div>
@@ -945,11 +1024,78 @@ function EditProduct() {
 
         </Card >
       </div >
+      <div className="p-4">
+        <Card className="w-full h-full bg-white">
+          <h3 className="p-3 px-10 font-semibold">Update Attachment Image</h3>
+          <div className="w-full border-t-2 border-gray-200"></div>
 
+
+          <div className="flex flex-wrap gap-4 p-6">
+            {singleProduct?.display_attachment && (
+              <div
+
+                className="relative w-40 h-40 border border-gray-200 rounded-lg overflow-hidden shadow-md"
+              >
+                <img
+                  src={singleProduct?.display_attachment}
+                  alt="Attachment"
+                  className="w-full h-full object-cover"
+                />
+
+                <button
+                  className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1 hover:bg-blue-700 transition cursor-pointer"
+                  onClick={() => handleDeleteDisplay()}
+                >
+                  <FaTrash size={18} />
+                </button>
+
+              </div>
+            )}
+
+            <div className="flex gap-10">
+              <div className="relative w-40 h-40 flex items-center justify-center border border-dashed border-gray-400 rounded-lg hover:bg-gray-100 transition">
+                <label className="flex flex-col items-center cursor-pointer">
+                  <BiUpload size={24} className="text-gray-500" />
+                  <span className="text-sm text-gray-600">Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChangeDisplay}
+                  />
+                </label>
+              </div>
+              {previews && (
+                <div className="flex flex-col items-center">
+                  <img
+                    src={previews}
+                    alt="Preview"
+                    className="w-40 h-40 object-cover rounded-lg border border-gray-200 shadow-md"
+                  />
+                  <div className="mt-3">
+                    <Button
+                      onClick={handleUploadDisplay}
+                      size="sm"
+                      label="Upload"
+                      className="mt-2"
+                      disabled={isLoads}
+                    >
+                      {isLoads ? "Uploading..." : "Upload"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+
+        </Card>
+      </div>
 
       <div className="p-4">
         <Card className="w-full h-full bg-white">
-          <h3 className="p-3 px-10 font-semibold">Update Display Attachment Image</h3>
+          <h3 className="p-3 px-10 font-semibold">Update Attachment Image</h3>
           <div className="w-full border-t-2 border-gray-200"></div>
 
 
@@ -965,23 +1111,22 @@ function EditProduct() {
                   className="w-full h-full object-cover"
                 />
 
-                <label className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1 hover:bg-blue-700 transition cursor-pointer">
-                  <BiUpload size={18} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleUpdateImage(attachment.id, e)}
-                  />
-                </label>
+                <button
+                  className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1 hover:bg-blue-700 transition cursor-pointer"
+                  onClick={(e) => handleDelete(attachment.id, attachment.url, e)}
+                >
+                  <FaTrash size={18} />
+                </button>
+
               </div>
             ))}
 
-            {singleProduct?.attachments.length < MAX_ATTACHMENTS && (
-              <div className="relative w-40 h-40 flex items-center justify-center border border-dashed border-gray-400 rounded-lg hover:bg-gray-100 transition">
+
+            <div className="flex gap-10">
+              <div className="relative w-40 h-40 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition">
                 <label className="flex flex-col items-center cursor-pointer">
-                  <BiUpload size={24} className="text-gray-500" />
-                  <span className="text-sm text-gray-600">Upload</span>
+                  <BiUpload size={28} className="text-gray-600" />
+                  <span className="mt-2 text-sm font-medium text-gray-700">Upload Image</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -990,57 +1135,36 @@ function EditProduct() {
                   />
                 </label>
               </div>
-            )}
+              {preview && (
+                <div className="flex flex-col items-center">
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="w-40 h-40 object-cover rounded-lg border border-gray-200 shadow-lg"
+                  />
+                  <div className="mt-3">
+                    <Button
+                      onClick={handleUpload}
+                      size="sm"
+                      label="Upload"
+                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      disabled={isLoad}
+                    >
+                      {isLoad ? "Uploading..." : "Upload"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
 
-          {/* Preview and Upload Selected Image */}
-          {preview && (
-            <div className="flex flex-col items-center mt-4">
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-40 h-40 object-cover rounded-lg border border-gray-200 shadow-md"
-              />
-              <Button
-                onClick={handleUpload}
-                size="sm"
-                label="Upload"
-                className="mt-2"
-                disabled={isLoad}
-              >
-                {isLoad ? "Uploading..." : "Upload"}
-              </Button>
-            </div>
-          )}
+
+
         </Card>
       </div>
 
-      {/* <div className='p-4'>
-        <Card className='w-full h-full bg-white'>
-          <h3 className='p-3 px-10'>Other Attachments</h3>
-          <div className='w-full border-t-2 border-gray-200'></div>
-          <div className='flex gap-10 pb-10 py-5 px-10'>
-            <div className='w-[17rem] flex gap-10 h-12 py-1 mt-4 px-4 rounded-md border-1 border-gray-200 shadow bg-white '>
 
-              <div className='flex gap-2'>
-                <button
-                  className="flex items-center justify-center mt-1 w-8 h-8 bg-gray-100 border-0 border-gray-300 rounded-full hover:bg-gray-200 focus:outline-none"
-                  aria-label="Edit"
-                >
-                  <BiUpload className="text-gray-500 w-5 h-5 text-lg" />
-                </button>
-                <p className='text-xs mt-3 text-[#0A0F0C] font-[500]'>Update Image 1 </p>
-                <img className='w-6 h-6 mt-2 rounded-md' src={singleProduct?.attachment} alt="" />
-
-              </div>
-            </div>
-
-          </div>
-
-
-
-        </Card>
-      </div> */}
 
 
     </div >

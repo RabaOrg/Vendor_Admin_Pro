@@ -48,6 +48,18 @@ export const handleProductImage = async (id, formInfo) => {
     formInfo
   );
 };
+export const handleDeleteImage = async (id, attachmentId, formInfo) => {
+  return axiosInstance.delete(
+   `/admin/products/${id}/attachments/${attachmentId}`,
+    formInfo
+  );
+};
+export const handleDeleteImageDisplay = async (id,  formInfo) => {
+  return axiosInstance.delete(
+   `/admin/products/${id}/display-attachment`,
+    formInfo
+  );
+};
 
 export const handleDisplayProductImage = async (id, formInfo) => {
   return axiosInstance.post(
