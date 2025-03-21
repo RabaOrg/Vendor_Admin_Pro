@@ -32,7 +32,7 @@ export const useFetchActivation = () => {
    
     return useQuery({
         queryFn: () => handleGetActivation(),
-        queryKey: ["activations"]
+        queryKey: ["getactivations"]
         
         
     })

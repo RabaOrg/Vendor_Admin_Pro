@@ -24,6 +24,7 @@ export const handleGetActivation = async () => {
     return data.data
 }
 
+
 export const  handleRepayment = async (formInfo) => {
   return axiosInstance.post(
    "/admin/repayment_plans",
@@ -33,6 +34,11 @@ export const  handleRepayment = async (formInfo) => {
 export const  handleUpdateStatus = async (id, formInfo) => {
   return axiosInstance.patch(
    `/admin/loan-applications/${id}/status`, formInfo
+  );
+};
+export const  handleUpdateLoanStatus = async (id, formInfo) => {
+  return axiosInstance.put(
+   `/admin/loans/${id}/status`, formInfo
   );
 };
 export const  handleCreateLoanApplication = async (formInfo) => {

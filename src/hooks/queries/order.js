@@ -1,11 +1,23 @@
 
 import { useQuery } from "@tanstack/react-query"
-import { handleGetOrder} from "../../services/order"
+import { handleGetOrder, handleGetSingleOrder} from "../../services/order"
 export const useFetchOrder = () => {
    
     return useQuery({
         queryFn: () => handleGetOrder(),
         queryKey: ["Orders"],
+        
+        
+    })
+    
+
+
+}
+export const useFetchSingleOrder = (id) => {
+   
+    return useQuery({
+        queryFn: () => handleGetSingleOrder(id),
+        queryKey: ["Orders", id],
         
         
     })

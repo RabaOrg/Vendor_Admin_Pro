@@ -30,7 +30,7 @@ function OrderList() {
               size="lg"
               className="text-sm w-[150px]"
             />
-            <Link to={'/order_summary'}> <Button
+            <Link to={'/'}> <Button
               label="View order summary"
               variant="solid"
 
@@ -68,43 +68,44 @@ function OrderList() {
           </thead>
 
           {Array.isArray(OrderList) && OrderList.map((item, index) => {
-            const { Product, User, State, amount } = item
+            const { Product, User, State, amount, id } = item
             return (
               <tr
-                key={item.id}
-                onClick={() => handleRowClick(item.id)}
+                key={id}
+                onClick={() => handleRowClick(id)}
 
                 className={`cursor-pointer transition-all duration-200 
-                    ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'} 
+                    ${selectedId === id ? 'bg-blue-200' : 'bg-white'} 
                     hover:bg-gray-200`}>
 
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
                     {Product.name}
                   </p>
                 </td>
 
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+
+                <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
                     {amount}
                   </p>
                 </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
                     {User.first_name} {User.last_name}
                   </p>
                 </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
                     {User.phone_number}
                   </p>
                 </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
                     {new Date(item.created_at).toLocaleDateString()}
                   </p>
                 </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
                     {new Date(item.updated_at).toLocaleDateString()}
                   </p>

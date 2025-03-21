@@ -25,6 +25,7 @@ import ViewCustomerDetails from "../pages/dashboard/customer/viewcustomer";
 import RepaymentMainPlan from "../pages/dashboard/repaymentMainPlan";
 import ViewProductDetails from "../pages/product/viewProductDetails";
 import SingleApplication from "../pages/dashboard/application/viewsingleapplication";
+import CategoryDashboard from "../pages/dashboard/category";
 
 
 
@@ -138,6 +139,7 @@ export const router = createBrowserRouter([
 
             },
             { path: "/order_summary/:id", element: <ViewOrderSummary /> },
+            { path: "/category", element: <CategoryDashboard /> },
 
         ]
     }
