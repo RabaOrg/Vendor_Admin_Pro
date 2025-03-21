@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { handleGetCategories, handleGetSingleLoan, handleGetSingleProduct, handleMetaProduct, handleProduct } from "../../services/product";
+import { handleGetCategories, handleGetSingleProduct, handleMetaProduct, handleProduct } from "../../services/product";
 
 export const useFetchProduct = (page, perPage) => {
   return useQuery({
