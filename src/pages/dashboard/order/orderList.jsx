@@ -1,13 +1,21 @@
 import React, { useState } from 'react'
 import Button from '../../../components/shared/button';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'
 import { useFetchOrder } from '../../../hooks/queries/order'
 
 function OrderList() {
   const [loading, setloading] = useState([]);
   const { data: OrderList, isPending, isError } = useFetchOrder()
-
+  const [selectedId, setSelectedId] = useState(null);
+  const navigate = useNavigate();
   console.log(OrderList)
+  const handleRowClick = (id) => {
+
+    setSelectedId(id);
+
+    navigate(`/order_summary/${id}`);
+  };
   return (
     <div className='px-6'>
       <div className="inline-block min-w-full  rounded-lg overflow-hidden">
@@ -62,7 +70,13 @@ function OrderList() {
           {Array.isArray(OrderList) && OrderList.map((item, index) => {
             const { Product, User, State, amount } = item
             return (
-              <tr className="bg-white" >
+              <tr
+                key={item.id}
+                onClick={() => handleRowClick(item.id)}
+
+                className={`cursor-pointer transition-all duration-200 
+                    ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'} 
+                    hover:bg-gray-200`}>
 
                 <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">

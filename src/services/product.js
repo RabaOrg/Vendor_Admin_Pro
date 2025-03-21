@@ -9,6 +9,7 @@ export const handleMetaProduct = async (page , perPage, search ) => {
   return data;
 }
 
+
 export const handleCreateProduct = async (formInfo) => {
   return axiosInstance.post(
    "/admin/product",

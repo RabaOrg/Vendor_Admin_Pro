@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { handleGetCategories, handleGetSingleProduct, handleMetaProduct, handleProduct } from "../../services/product";
+import { handleGetCategories, handleGetSingleLoan, handleGetSingleProduct, handleMetaProduct, handleProduct } from "../../services/product";
 
 export const useFetchProduct = (page, perPage) => {
   return useQuery({
@@ -13,6 +13,7 @@ export const useFetchMetaProduct = (page, perPage) => {
     queryKey: ["ProductMeta", page, perPage]
   });
 }
+
 
 export const useFetchSingleProduct = (id) => {
   return useQuery({
