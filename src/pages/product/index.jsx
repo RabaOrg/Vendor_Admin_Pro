@@ -6,8 +6,8 @@ import Button from '../../components/shared/button';
 
 function Product() {
     const [currentPage, setCurrentPage] = useState(1);
-    const [allProducts, setAllProducts] = useState([]); // Store original products
-    const [product, setProduct] = useState([]); // Displayed (filtered) products
+    const [allProducts, setAllProducts] = useState([]);
+    const [product, setProduct] = useState([]);
     const [productMeta, setMetaProduct] = useState([]);
     const itemsPerPage = 10;
     const [search, setSearch] = useState("");
@@ -27,7 +27,7 @@ function Product() {
         setSearch(query);
 
         if (query === "") {
-            setProduct(allProducts); // Reset to full list when search is cleared
+            setProduct(allProducts);
         } else {
             const filteredProducts = allProducts.filter((item) =>
                 item.name.toLowerCase().includes(query)

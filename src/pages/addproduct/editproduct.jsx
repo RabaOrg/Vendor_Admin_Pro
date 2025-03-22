@@ -86,20 +86,50 @@ function EditProduct() {
         shipping_days_max: singleProduct.shipping_days_max ?? null,
         category_id: singleProduct.category_id || '',
         price: singleProduct.price || '',
-        specifications: singleProduct.specifications || [],
+        specifications: singleProduct.specifications || {},
         interest_rule: normalizedInterest,
         isArchived: singleProduct.is_archived ?? false,
         repayment_policies: {
 
           ...singleProduct.repayment_policies,
-          tenure_unit: Array.isArray(singleProduct.repayment_policies.tenure_unit)
-            ? singleProduct.repayment_policies.tenure_unit[0]
-            : singleProduct.repayment_policies.tenure_unit
+          tenure_unit:
+            singleProduct.repayment_policies.tenure_unit
         }
       });
     }
   }, [singleProduct]);
+  const addSpecification = () => {
+    setNewSpecifications([...newSpecifications, { attribute: "", value: "" }]);
+  };
 
+  const handleExistingSpecChange = (oldAttribute, field, newValue) => {
+    setProduct((prevProduct) => {
+      const specs = { ...prevProduct.specifications };
+      if (field === "attribute") {
+
+        if (!newValue) return prevProduct;
+        const currentValue = specs[oldAttribute];
+
+        delete specs[oldAttribute];
+        specs[newValue] = currentValue;
+      } else if (field === "value") {
+        specs[oldAttribute] = newValue;
+      }
+      return { ...prevProduct, specifications: specs };
+    });
+  };
+
+
+  const handleNewSpecChange = (index, e) => {
+    const { name, value } = e.target;
+    const updatedSpecs = [...newSpecifications];
+    updatedSpecs[index][name] = value;
+    setNewSpecifications(updatedSpecs);
+  };
+
+  const removeNewSpecification = (index) => {
+    setNewSpecifications(newSpecifications.filter((_, i) => i !== index));
+  };
   const handleRepaymentPlanSelect = (e) => {
     const { name, value } = e.target;
 
@@ -204,48 +234,7 @@ function EditProduct() {
   };
 
 
-  const addSpecification = () => {
-    setNewSpecifications([...newSpecifications, { attribute: "", value: "" }]);
-  };
 
-  const handleExistingChange = (specIndex, subIndex, field, newValue) => {
-    setProduct((prevProduct) => {
-      const updatedSpecifications = (singleProduct.specifications || []).map((spec, index) => {
-        if (index === specIndex) {
-          const entries = Object.entries(spec);
-          const [oldKey, oldValue] = entries[subIndex];
-
-          const updatedSpec = { ...spec };
-
-          if (field === "attribute") {
-            delete updatedSpec[oldKey];
-            updatedSpec[newValue] = oldValue;
-          } else {
-            updatedSpec[oldKey] = newValue;
-          }
-
-          return updatedSpec;
-        }
-        return spec;
-      });
-
-      return {
-        ...prevProduct,
-        specifications: updatedSpecifications,
-      };
-    });
-  };
-
-  const handleNewSpecChange = (index, e) => {
-    const { name, value } = e.target;
-    const updatedSpecs = [...newSpecifications];
-    updatedSpecs[index][name] = value;
-    setNewSpecifications(updatedSpecs);
-  };
-
-  const removeNewSpecification = (index) => {
-    setNewSpecifications(newSpecifications.filter((_, i) => i !== index));
-  };
   const handleChangeInterest = (index, e) => {
     const updatedRules = [...product.interest_rule];
     updatedRules[index][e.target.name] = e.target.value;
@@ -269,20 +258,6 @@ function EditProduct() {
       interest_rule: prevProduct.interest_rule.filter((_, i) => i !== index)
     }));
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   const handleImageChange = (event) => {
@@ -425,13 +400,10 @@ function EditProduct() {
     }, { weekly: [], monthly: [] });
 
 
-    const existingSpecifications = product.specifications?.map(spec => {
-      const attribute = Object.keys(spec)[0];
-      const value = spec[attribute];
-      return { attribute, value };
-    }) || [];
+    const existingSpecifications = Object.entries(product.specifications || {}).map(
+      ([attribute, value]) => ({ attribute, value })
+    );
     const updatedSpecifications = [...existingSpecifications, ...newSpecifications];
-
     const payload = {
       id: id,
       name: product.name || singleProduct?.name,
@@ -440,13 +412,17 @@ function EditProduct() {
       shipping_days_max: Number(product.shipping_days_max) || singleProduct?.shipping_days_max,
       category_id: Number(product.category_id),
       price: product.price || singleProduct?.price,
-      specifications: updatedSpecifications
-        .map(spec => spec.attribute && spec.value ? { [spec.attribute]: spec.value } : null)
-        .filter(Boolean),
+      specifications: updatedSpecifications.reduce((acc, spec) => {
+        if (spec.attribute && spec.value) {
+          acc[spec.attribute] = spec.value;
+        }
+        return acc;
+      }, {}),
+
       interest_rule: groupedInterest,
       repayment_policies: {
         description: product.repayment_policies.description,
-        tenure_unit: product.repayment_policies.tenure_unit,
+        tenure_unit: "week",
         weekly_tenure: {
           min: Number(product.repayment_policies.weekly_tenure.min),
           max: Number(product.repayment_policies.weekly_tenure.max)
@@ -669,41 +645,54 @@ function EditProduct() {
 
 
                   <div className="flex flex-col lg:flex-row gap-12 px-7 pb-14 mt-5">
-                    {singleProduct?.specifications?.length > 0 ? (
-                      singleProduct.specifications.map((spec, index) => (
-                        <div key={index} className="flex flex-col lg:flex-row gap-4 w-full">
-                          {Object.entries(spec || {}).map(([attribute, value], subIndex) => (
-                            <div key={subIndex} className="flex flex-col lg:flex-row gap-4 w-full">
+                    {singleProduct?.specifications && typeof singleProduct?.specifications === "object" ? (
+                      <div className="mt-8">
+                        <h4 className="text-lg font-semibold text-[#212C25] mb-4">
+                          Product Specifications
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {Object.entries(product.specifications).map(([attribute, value]) => (
+                            <div key={attribute} className="flex flex-col lg:flex-row gap-4 w-full">
                               <div className="flex-1">
-                                <label className="text-[#212C25] text-xs font-[500]">Attribute</label>
+                                <label className="text-[#212C25] text-xs font-[500]">
+                                  Attribute
+                                </label>
                                 <input
                                   type="text"
-                                  onChange={(e) => handleExistingChange(index, subIndex, "attribute", e.target.value)}
+                                  value={attribute}
+                                  onChange={(e) =>
+                                    handleExistingSpecChange(attribute, "attribute", e.target.value)
+                                  }
                                   className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                   placeholder="Enter attribute (e.g., Weight, Colour)"
-                                  defaultValue={attribute}
                                 />
                               </div>
 
                               <div className="flex-1">
-                                <label className="text-[#212C25] text-xs font-[500]">Value</label>
+                                <label className="text-[#212C25] text-xs font-[500]">
+                                  Value
+                                </label>
                                 <input
-                                  onChange={(e) => handleExistingChange(index, subIndex, "value", e.target.value)}
                                   type="text"
+                                  value={value}
+                                  onChange={(e) =>
+                                    handleExistingSpecChange(attribute, "value", e.target.value)
+                                  }
                                   className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                   placeholder="Enter value (e.g., 0.15 kg, white)"
-                                  defaultValue={value}
                                 />
                               </div>
                             </div>
                           ))}
                         </div>
-                      ))
+                      </div>
                     ) : (
                       <div className="p-10 flex justify-center items-center text-center text-gray-500">
                         No specifications added yet
                       </div>
                     )}
+
+
                   </div>
 
 
@@ -893,7 +882,7 @@ function EditProduct() {
                           value={product.repayment_policies.tenure_unit ?? ""}
                           onChange={handleRepaymentPlanSelect}
                         >
-                          <option value="">Select a Repayment Plan</option>
+
                           {isPending ? (
                             <option disabled>Loading...</option>
                           ) : isError ? (

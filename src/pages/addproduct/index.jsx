@@ -118,6 +118,21 @@ function Addproduct() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const weeklyRules = product.interest_rule
+            .filter(rule => rule.interval === 'weekly')
+            .map(rule => ({
+                min: rule.min ? Number(rule.min) : 0,
+                max: rule.max ? Number(rule.max) : 0,
+                rate: rule.rate ? Number(rule.rate) : 0,
+            }));
+
+        const monthlyRules = product.interest_rule
+            .filter(rule => rule.interval === 'monthly')
+            .map(rule => ({
+                min: rule.min ? Number(rule.min) : 0,
+                max: rule.max ? Number(rule.max) : 0,
+                rate: rule.rate ? Number(rule.rate) : 0,
+            }));
         const payload = {
             name: product.name,
             description: product.description,
@@ -125,24 +140,21 @@ function Addproduct() {
             shipping_days_max: Number(product.shipping_days_max),
             category_id: product.category_id,
             price: product.price,
-            specifications: product.specifications.map(spec => ({
-                [spec.attribute]: spec.value
-            })),
+            specifications: product.specifications.reduce((acc, spec) => {
+                if (spec.attribute) {
+
+                    acc[spec.attribute.toLowerCase()] = spec.value;
+                }
+                return acc;
+            }, {}),
             interest_rule: {
-                weekly: product.interest_rule.filter(rule => rule.interval === 'weekly').map(rule => ({
-                    min: rule.min ? Number(rule.min) : 0,
-                    max: rule.max ? Number(rule.max) : 0,
-                    rate: rule.rate ? Number(rule.rate) : 0,
-                })),
-                monthly: product.interest_rule.filter(rule => rule.interval === 'monthly').map(rule => ({
-                    min: rule.min ? Number(rule.min) : 0,
-                    max: rule.max ? Number(rule.max) : 0,
-                    rate: rule.max ? Number(rule.rate) : 0,
-                }))
+
+                weekly: weeklyRules.length > 0 ? weeklyRules : { min: 0, max: 0, rate: 0 },
+                monthly: monthlyRules.length > 0 ? monthlyRules : [{ min: 0, max: 0, rate: 0 }],
             },
             repayment_policies: {
                 description: product.repayment_policies.description,
-                tenure_unit: product.repayment_policies.tenure_unit,
+                tenure_unit: "week",
                 weekly_tenure: {
                     min: Number(product.repayment_policies.weekly_tenure.min),
                     max: Number(product.repayment_policies.weekly_tenure.max)
@@ -552,22 +564,7 @@ function Addproduct() {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col gap-4 w-full lg:w-1/3">
-                                                    <div>
-                                                        <div className="mb-2 block">
-                                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor={`interest-rule-rate-${index}`} value="Rate" />
-                                                        </div>
-                                                        <input
-                                                            style={{ color: "#202224", borderRadius: "8px" }}
-                                                            id={`interest-rule-rate-${index}`}
-                                                            type="number"
-                                                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                                            name="rate"
-                                                            value={rule.rate || ''}
-                                                            onChange={(e) => handleChangeInterest(index, e)}
-                                                        />
-                                                    </div>
-                                                </div>
+
                                                 <div className="flex flex-col gap-4 w-full lg:w-1/3">
                                                     <div>
                                                         <div className="mb-2 block">
@@ -580,6 +577,22 @@ function Addproduct() {
                                                             className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                                                             name="max"
                                                             value={rule.max || ''}
+                                                            onChange={(e) => handleChangeInterest(index, e)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-4 w-full lg:w-1/3">
+                                                    <div>
+                                                        <div className="mb-2 block">
+                                                            <Label className="text-[#212C25] text-xs font-[500]" htmlFor={`interest-rule-rate-${index}`} value="Rate" />
+                                                        </div>
+                                                        <input
+                                                            style={{ color: "#202224", borderRadius: "8px" }}
+                                                            id={`interest-rule-rate-${index}`}
+                                                            type="number"
+                                                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
+                                                            name="rate"
+                                                            value={rule.rate || ''}
                                                             onChange={(e) => handleChangeInterest(index, e)}
                                                         />
                                                     </div>
