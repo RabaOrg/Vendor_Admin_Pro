@@ -37,7 +37,7 @@ function Addcustomer() {
             email: "",
             gender: "",
             dob: "",
-            bvn: ""
+            bvn: "",
         },
 
         validationSchema: Yup.object({
