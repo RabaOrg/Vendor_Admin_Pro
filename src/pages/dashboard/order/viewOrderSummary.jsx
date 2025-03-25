@@ -64,6 +64,7 @@ function ViewOrderSummary() {
     payment_initiated_at,
     reference,
     updated_at,
+    shipping_address,
   } = singleOrder;
   const getStatusBadgeClasses = (status) => {
     if (!status) return 'bg-gray-100 text-gray-800';
@@ -167,6 +168,15 @@ function ViewOrderSummary() {
                   type="text"
                   disabled
                   value={payment_provider}
+                  className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600">Shipping Address</label>
+                <input
+                  type="text"
+                  disabled
+                  value={shipping_address}
                   className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
