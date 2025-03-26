@@ -3,6 +3,6 @@ import { handleInsights } from "../services/insights";
 export const useFetchDashboardInsights = () => {
   return useQuery({
     queryFn: () => handleInsights(),
-    queryKey: ["Product"]
+    queryKey: ["Dashboard"]
   });
 }

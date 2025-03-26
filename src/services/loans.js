@@ -14,6 +14,11 @@ export const handleGetloanApplication = async () => {
      
     return data.data
 }
+export const handleGetBankStatement = async (id) => {
+     const  data  = await axiosInstance.get(`/admin/users/${id}/bank-statements`);
+     
+    return data.data
+}
 export const handleGetSingleLoan = async (id) => {
   const { data } = await axiosInstance.get(`/admin/loan-applications/${id}`)
   return data.data;

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useQueryClient } from "@tanstack/react-query";
-import { useFetchSingleLoan } from '../../../../hooks/queries/loan';
+import { useFetchBankStatement, useFetchSingleLoan } from '../../../../hooks/queries/loan';
 import Button from '../../../../components/shared/button';
 import axiosInstance from '../../../../../store/axiosInstance';
 import { handleUpdateStatus } from '../../../../services/loans';
@@ -13,7 +13,13 @@ function SingleApplication() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
   const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
+  const [showPreview, setShowPreview] = useState(false);
+  const [bankId, setBankId] = useState('')
   const [selectedStatus, setSelectedStatus] = useState(singleLoan?.status || "");
+  const { data: bankStatement } = useFetchBankStatement(bankId)
+
+
+  console.log(bankStatement)
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
   };
@@ -23,6 +29,8 @@ function SingleApplication() {
       try {
         const response = await axiosInstance.get(`/admin/loan-applications/${id}`);
         setLoanData(response.data.data);
+        console.log(response.data.data.customer.id)
+        setBankId(response.data.data.customer.id)
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -86,6 +94,19 @@ function SingleApplication() {
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+  const handleViewStatement = async () => {
+    try {
+      const statementUrl = bankStatement.data[0].statement_url;
+      const response = await axiosInstance.get(statementUrl, { responseType: 'blob' });
+      const fileBlob = new Blob([response.data], { type: response.data.type || 'application/pdf' });
+      const localUrl = URL.createObjectURL(fileBlob);
+      setPreviewUrl(localUrl);
+      setShowPreview(true);
+    } catch (error) {
+      console.error("Error fetching statement for preview:", error);
+      toast.error("Unable to load statement preview.");
     }
   };
 
@@ -358,6 +379,55 @@ function SingleApplication() {
 
             </select>
           </div>
+          {bankStatement?.data?.length > 0 && (
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
+              <h3 className="text-xl font-semibold text-gray-700 mb-4">Bank Statement</h3>
+              <div className="mb-4 space-y-2">
+                <p className="text-sm text-gray-600">
+                  <strong>Filename:</strong> {bankStatement.data[0].metadata.original_filename}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Uploaded On:</strong>
+                  <strong>Filename:</strong> {new Date(bankStatement.data[0].metadata.upload_date).toLocaleString()}
+
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>File Size:</strong> {(bankStatement.data[0].metadata.file_size / 1024).toFixed(2)} KB
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Status:</strong> {bankStatement.data[0].status}
+                </p>
+              </div>
+              <div className="flex gap-4">
+                {/* <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="bg-black text-white text-sm px-4 py-2 rounded"
+                >
+                  {showPreview ? "Hide Preview" : "View Statement"}
+                </button> */}
+                <a
+                  href={bankStatement.data[0].statement_url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <button className="bg-[#0f5D30] text-white text-sm px-4 py-2 rounded">
+                    Download Statement
+                  </button>
+                </a>
+              </div>
+              {showPreview && (
+                <div className="mt-4">
+                  <iframe
+                    src={bankStatement.data[0].statement_url}
+                    width="100%"
+                    height="600px"
+                    title="Bank Statement Preview"
+                  ></iframe>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="p-6">
