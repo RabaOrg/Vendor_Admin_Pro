@@ -20,6 +20,7 @@ function ViewActivation() {
     setSelectedStatus(e.target.value);
   };
   const handleUpdateStatus = async () => {
+
     setIsLoading(true)
     try {
       const response = await handleUpdateLoanStatus(id, {

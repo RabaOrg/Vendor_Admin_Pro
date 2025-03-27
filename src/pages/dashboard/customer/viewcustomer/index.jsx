@@ -10,6 +10,7 @@ function ViewCustomerDetails() {
   const { data: oneFinance } = useFetchBusinessFinancialDetails(id)
   const { data: oneGuarantor } = useFetchGuarantorDetails(id)
   console.log(oneCustomer)
+
   return (
     <div className="px-6">
       <div className="inline-block min-w-full rounded-lg overflow-hidden">
@@ -20,7 +21,7 @@ function ViewCustomerDetails() {
         </div>
 
 
-        <div className='p-4'>
+        <div className="p-4">
           {/* CUSTOMER KYC DETAILS */}
           <div className="w-full h-full bg-white shadow-md rounded-lg p-6">
             <h4 className="text-lg font-semibold pb-3">CUSTOMER KYC DETAILS</h4>
@@ -31,11 +32,10 @@ function ViewCustomerDetails() {
                 <DetailItem label="Customer ID" value={oneCustomer?.id} />
                 <DetailItem label="Full Name" value={oneCustomer?.full_name} />
                 <DetailItem label="Age" value={oneCustomer?.age} />
-                <DetailItem label="Age" value={oneCustomer?.phone_number} />
+                <DetailItem label="Phone Number" value={oneCustomer?.phone_number} />
               </div>
 
               <div className="flex flex-col gap-4">
-                <DetailItem label="Phone Number" value={oneCustomer?.phone_number} />
                 <DetailItem label="Email" value={oneCustomer?.email} />
                 <DetailItem label="BVN" value={oneCustomer?.bvn} />
               </div>
@@ -44,7 +44,6 @@ function ViewCustomerDetails() {
                 <DetailItem label="Gender" value={oneCustomer?.gender} />
                 <DetailItem label="Date of Birth" value={oneCustomer?.dob} />
                 <DetailItem label="KYC Status" value={oneCustomer?.kyc_completed ? "Completed" : "Pending"} />
-
               </div>
             </div>
           </div>
@@ -61,7 +60,6 @@ function ViewCustomerDetails() {
                   <DetailItem label="Business Name" value={oneBusiness?.name} />
                   <DetailItem label="Category" value={oneBusiness?.category} />
                   <DetailItem label="CAC Number" value={oneBusiness?.cac_number} />
-
                 </div>
 
                 <div className="flex flex-col gap-4">
@@ -76,12 +74,12 @@ function ViewCustomerDetails() {
                   <DetailItem label="Equipment of Interest" value={oneBusiness?.equipment_of_interest} />
                   <DetailItem label="Time in Business (Years)" value={oneBusiness?.time_in_business} />
                   <DetailItem label="Registered" value={oneBusiness?.isCompleted ? "Yes" : "No"} />
-
-
                 </div>
               </div>
             </div>
           )}
+
+          {/* FINANCIAL DETAILS */}
           {oneFinance && (
             <div className="w-full h-full bg-white shadow-md rounded-lg p-6 mt-6">
               <h4 className="text-lg font-semibold pb-3">FINANCIAL DETAILS</h4>
@@ -108,6 +106,8 @@ function ViewCustomerDetails() {
               </div>
             </div>
           )}
+
+          {/* GUARANTOR DETAILS */}
           {oneGuarantor && (
             <div className="w-full h-full bg-white shadow-md rounded-lg p-6 mt-6">
               <h4 className="text-lg font-semibold pb-3">GUARANTOR DETAILS</h4>
@@ -130,17 +130,32 @@ function ViewCustomerDetails() {
                 </div>
               </div>
             </div>
-
-
+          )}
+          {oneCustomer?.Attachments && oneCustomer.Attachments.length > 0 && (
+            <div className="mb-6 mt-5 pt-2">
+              <h4 className="text-lg font-semibold mb-4">Attachments</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {oneCustomer?.Attachments.map((attachment) => {
+                  console.log("Rendering attachment:", attachment)
+                  return (
+                    <Card key={attachment.id} className="rounded-lg shadow-lg">
+                      <img
+                        src={attachment.url}
+                        alt={attachment.filename}
+                        className="w-full h-48 object-cover rounded-t-lg"
+                      />
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
           )}
         </div>
-
       </div>
     </div>
-
-
   )
 }
+
 const DetailItem = ({ label, value }) => (
   <div>
     <label className="text-[#212C25] text-xs font-semibold">{label}</label>
@@ -148,6 +163,6 @@ const DetailItem = ({ label, value }) => (
       {value || "N/A"}
     </p>
   </div>
-);
+)
 
 export default ViewCustomerDetails

@@ -15,7 +15,7 @@ function SingleApplication() {
   const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
   const [showPreview, setShowPreview] = useState(false);
   const [bankId, setBankId] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState(singleLoan?.status || "");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const { data: bankStatement } = useFetchBankStatement(bankId)
 
 
@@ -59,6 +59,11 @@ function SingleApplication() {
       </div>
     );
   const handleUpdateLoanStatus = async () => {
+    if (selectedStatus === singleLoan?.status) {
+      toast.error("Please select a different status to update");
+      return;
+    }
+
     setIsLoading(true)
     try {
       const response = await handleUpdateStatus(id, {
