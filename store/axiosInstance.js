@@ -5,7 +5,7 @@ import { useAuthStore } from "./store";
 
 
 const axiosInstance = axios.create({
-  baseURL: "https://rabaserver-staging-1a3786c0ee16.herokuapp.com",
+   baseURL: import.meta.env.VITE_API_URL,
 });
 
 
