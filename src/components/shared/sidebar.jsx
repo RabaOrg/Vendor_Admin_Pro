@@ -26,8 +26,8 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Activations", icon: <Icons.Activation />, path: "/activation" },
         { name: "Applications", icon: <Icons.Application />, path: "/application" },
         { name: "Repayment Plans", icon: <Icons.RepaymentPlan />, path: "/repayment-plan" },
-        { name: "Orders", icon: <Icons.RepaymentPlan />, path: "/orders" },
-        { name: "Category", icon: <Icons.RepaymentPlan />, path: "/category" },
+        { name: "Orders", icon: <Icons.Order />, path: "/orders" },
+        { name: "Category", icon: <Icons.Category />, path: "/category" },
 
 
     ];
