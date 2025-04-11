@@ -118,6 +118,16 @@ function EditProduct() {
       return { ...prevProduct, specifications: specs };
     });
   };
+  const handleRemoveSpec = (attributeToRemove) => {
+    setProduct((prev) => {
+      const updatedSpecs = { ...prev.specifications };
+      delete updatedSpecs[attributeToRemove];
+      return {
+        ...prev,
+        specifications: updatedSpecs
+      };
+    });
+  };
 
 
   const handleNewSpecChange = (index, e) => {
@@ -233,8 +243,6 @@ function EditProduct() {
     }
   };
 
-
-
   const handleChangeInterest = (index, e) => {
     const updatedRules = [...product.interest_rule];
     updatedRules[index][e.target.name] = e.target.value;
@@ -258,7 +266,6 @@ function EditProduct() {
       interest_rule: prevProduct.interest_rule.filter((_, i) => i !== index)
     }));
   };
-
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -344,9 +351,6 @@ function EditProduct() {
     }
   };
 
-
-
-
   const handleInput = (e) => {
     const { name, value } = e.target
     setProduct((prevProduct) => ({
@@ -373,10 +377,6 @@ function EditProduct() {
       return updatedProduct;
     });
   };
-
-
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -643,18 +643,17 @@ function EditProduct() {
 
                   <div className="w-full border-t-2 border-gray-200"></div>
 
-
                   <div className="flex flex-col lg:flex-row gap-12 px-7 pb-14 mt-5">
                     {singleProduct?.specifications && typeof singleProduct?.specifications === "object" ? (
-                      <div className="mt-8">
+                      <div className="mt-8 w-full">
                         <h4 className="text-lg font-semibold text-[#212C25] mb-4">
                           Product Specifications
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-6">
                           {Object.entries(product.specifications).map(([attribute, value]) => (
-                            <div key={attribute} className="flex flex-col lg:flex-row gap-4 w-full">
-                              <div className="flex-1">
-                                <label className="text-[#212C25] text-xs font-[500]">
+                            <div key={attribute} className="flex flex-col md:flex-row items-start md:items-end gap-4 w-full">
+                              <div className="w-full md:w-1/2">
+                                <label className="text-[#212C25] text-xs font-[500] mb-1 block">
                                   Attribute
                                 </label>
                                 <input
@@ -668,8 +667,8 @@ function EditProduct() {
                                 />
                               </div>
 
-                              <div className="flex-1">
-                                <label className="text-[#212C25] text-xs font-[500]">
+                              <div className="w-full md:w-1/2">
+                                <label className="text-[#212C25] text-xs font-[500] mb-1 block">
                                   Value
                                 </label>
                                 <input
@@ -682,6 +681,13 @@ function EditProduct() {
                                   placeholder="Enter value (e.g., 0.15 kg, white)"
                                 />
                               </div>
+
+                              <button
+                                onClick={() => handleRemoveSpec(attribute)}
+                                className="bg-red-400 hover:bg-red-600 text-white px-4 py-2 rounded"
+                              >
+                                Remove
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -691,18 +697,19 @@ function EditProduct() {
                         No specifications added yet
                       </div>
                     )}
-
-
                   </div>
 
 
+
+
+
                   {newSpecifications.length > 0 && (
-                    <div className="px-7">
-                      <h4 className="text-lg font-semibold text-gray-800">New Specifications</h4>
+                    <div className="px-7 mt-[-20px]">
+
                       {newSpecifications.map((spec, index) => (
                         <div
                           key={`new-${index}`}
-                          className="flex flex-col lg:flex-row gap-4 w-full items-center p-3 border rounded shadow-sm"
+                          className="flex flex-col lg:flex-row gap-4 w-full items-center border-0"
                         >
                           <div className="flex-1">
                             <label className="text-[#212C25] text-xs font-[500]">Attribute</label>
@@ -728,11 +735,11 @@ function EditProduct() {
                             />
                           </div>
 
-                          <div className="py-4">
+                          <div className="py-4 mt-5">
                             <button
                               onClick={() => removeNewSpecification(index)}
                               type="button"
-                              className="bg-red-400 text-white px-4 py-2 rounded"
+                              className="bg-red-400 hover:bg-red-600 text-white px-4 py-2 rounded"
                             >
                               Remove
                             </button>
