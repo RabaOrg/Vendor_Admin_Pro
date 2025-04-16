@@ -88,7 +88,7 @@ function EditProduct() {
         price: singleProduct.price || '',
         specifications: singleProduct.specifications || {},
         interest_rule: normalizedInterest,
-        isArchived: singleProduct.is_archived ?? false,
+        isArchived: singleProduct.is_archived,
         repayment_policies: {
 
           ...singleProduct.repayment_policies,
@@ -436,8 +436,10 @@ function EditProduct() {
           max: Number(product.repayment_policies.down_percentage.max)
         }
       },
-      is_archived: product.isArchived ?? singleProduct?.isArchived ?? false,
-      isActive: product.isActive ?? singleProduct?.isActive ?? true,
+      is_archived: product.isArchived !== undefined
+        ? (product.isArchived === true ? "true" : "false")
+        : (singleProduct?.is_archived ? true : "false"),
+
     };
 
     console.log(payload);
