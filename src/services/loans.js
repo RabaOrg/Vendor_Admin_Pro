@@ -57,3 +57,9 @@ export const handleGetSingleloanApplication = async (id) => {
      
     return data.data.data
 }
+export const handleGetPaymentOrder = async () => {
+     const  data  = await axiosInstance.get(`/admin/payment-analytics`);
+     
+    return data
+}
+

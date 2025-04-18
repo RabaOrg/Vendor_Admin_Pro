@@ -26,6 +26,7 @@ import RepaymentMainPlan from "../pages/dashboard/repaymentMainPlan";
 import ViewProductDetails from "../pages/product/viewProductDetails";
 import SingleApplication from "../pages/dashboard/application/viewsingleapplication";
 import CategoryDashboard from "../pages/dashboard/category";
+import PaymentOrder from "../pages/dashboard/payment/paymentOrder";
 
 
 
@@ -136,6 +137,11 @@ export const router = createBrowserRouter([
             {
                 path: "/loan_application/:id",
                 element: <SingleApplication />
+
+            },
+            {
+                path: "/payment_orders",
+                element: <PaymentOrder />
 
             },
             { path: "/order_summary/:id", element: <ViewOrderSummary /> },

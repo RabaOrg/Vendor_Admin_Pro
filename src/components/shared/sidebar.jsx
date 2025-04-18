@@ -28,6 +28,7 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Repayment Plans", icon: <Icons.RepaymentPlan />, path: "/repayment-plan" },
         { name: "Orders", icon: <Icons.Order />, path: "/orders" },
         { name: "Category", icon: <Icons.Category />, path: "/category" },
+        { name: "Payment Order Summary", icon: <Icons.Category />, path: "/payment_orders" },
 
 
     ];
@@ -67,7 +68,7 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
                             </li>
                         ))}
                     </ul>
-                    <hr className="mt-40" />
+                    <hr className="mt-10" />
                     <div onClick={() => logOut()} className="flex gap-3 py-14 px-5">
                         <FaSignOutAlt className="mt-1" />
                         <p >Logout</p>
