@@ -29,7 +29,7 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Orders", icon: <Icons.Order />, path: "/orders" },
         { name: "Category", icon: <Icons.Category />, path: "/category" },
         { name: "Payment Order Summary", icon: <Icons.Category />, path: "/payment_orders" },
-
+        { name: "Bulk Upload", icon: <Icons.RepaymentPlan />, path: "/product_bulkupload" },
 
     ];
     const [activeItem, setActiveItem] = useState(() => {

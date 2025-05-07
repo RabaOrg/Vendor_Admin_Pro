@@ -27,6 +27,7 @@ import ViewProductDetails from "../pages/product/viewProductDetails";
 import SingleApplication from "../pages/dashboard/application/viewsingleapplication";
 import CategoryDashboard from "../pages/dashboard/category";
 import PaymentOrder from "../pages/dashboard/payment/paymentOrder";
+import BulkProductUpload from "../pages/product/bulkUpload/bulkUpload";
 
 
 
@@ -142,6 +143,11 @@ export const router = createBrowserRouter([
             {
                 path: "/payment_orders",
                 element: <PaymentOrder />
+
+            },
+            {
+                path: "/product_bulkupload",
+                element: <BulkProductUpload />
 
             },
             { path: "/order_summary/:id", element: <ViewOrderSummary /> },
