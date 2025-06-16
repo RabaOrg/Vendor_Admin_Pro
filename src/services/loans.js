@@ -9,18 +9,33 @@ export const handleGetRepayment = async () => {
      
     return data.data
 }
-export const handleGetloanApplication = async () => {
-     const  data  = await axiosInstance.get("/admin/loan-applications");
+export const handleDeleteApplication= async (id, forminfo) => {
+  const { data } = await axiosInstance.delete(`/api/admin/applications/${id}`, {
+         data: forminfo,
+     });
      
     return data.data
 }
+export const handleGetloanApplication = async () => {
+     const  data  = await axiosInstance.get("/api/admin/applications?page=1&limit=20");
+     
+    return data.data
+}
+export const handleGetApplicationStatistics = async () => {
+     const  data  = await axiosInstance.get("/api/admin/applications/stats");
+     
+    return data.data
+}
+
+
+
 export const handleGetBankStatement = async (id) => {
      const  data  = await axiosInstance.get(`/admin/users/${id}/bank-statements`);
      
     return data.data
 }
 export const handleGetSingleLoan = async (id) => {
-  const { data } = await axiosInstance.get(`/admin/loan-applications/${id}`)
+  const { data } = await axiosInstance.get(`/api/admin/applications/${id}`)
   return data.data;
 }
 export const handleGetActivation = async () => {
@@ -38,7 +53,7 @@ export const  handleRepayment = async (formInfo) => {
 };
 export const  handleUpdateStatus = async (id, formInfo) => {
   return axiosInstance.patch(
-   `/admin/loan-applications/${id}/status`, formInfo
+   `/api/admin/applications/${id}/status`, formInfo
   );
 };
 export const  handleUpdateLoanStatus = async (id, formInfo) => {

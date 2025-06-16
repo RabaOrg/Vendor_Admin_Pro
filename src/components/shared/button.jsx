@@ -20,6 +20,8 @@ const Button = ({
 
     const variantClass = {
         solid: "bg-[#0f5D30] text-white hover:bg-[#0a3e20]",
+        delete: "bg-red text-white hover:bg-red",
+
         outline: "text-[#0f5D30] border border-[#0f5D30] hover:bg-[#f0f0f0]",
         transparent: "bg-transparent text-[#0f5D30] border border-green-600 hover:bg-green-50 hover:text-green-700",
     }[variant];
@@ -69,7 +71,7 @@ const Button = ({
 Button.propTypes = {
     label: PropTypes.string.isRequired,
     onClick: PropTypes.func,
-    variant: PropTypes.oneOf(["solid", "outline", "transparent"]),
+    variant: PropTypes.oneOf(["solid", "outline", "transparent", "delete"]),
     size: PropTypes.oneOf(["sm", "md", "lg"]),
     disabled: PropTypes.bool,
     icon: PropTypes.elementType,

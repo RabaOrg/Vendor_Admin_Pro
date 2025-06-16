@@ -11,7 +11,7 @@ import { useAuthStore } from '../../../store/store';
 
 function Login() {
     const [user, setUsers] = useState({
-        email: "",
+        username: "",
         password: "",
     });
     const { login } = useAuthStore()
@@ -28,19 +28,20 @@ function Login() {
         console.log("go")
 
 
-        if (!user.email || !user.password) {
+        if (!user.username || !user.password) {
             toast.error("All fields are required")
             return;
         }
         try {
             setLoading(true)
-            const { data } = await axiosInstance.post("/admin/auth/login", {
-                email: user.email,
+            const { data } = await axiosInstance.post("/api/admin/auth/login", {
+                username: user.username,
                 password: user.password
             })
 
             console.log(data)
-            login(data.token)
+            console.log(data.data.token)
+            login(data.data.token)
             Navigate("/")
             toast.success(data.message)
         } catch (error) {
@@ -76,7 +77,7 @@ function Login() {
                     <div>
                         <div className="mb-2 block">
 
-                            <Label className="text-gray-600 font-medium" htmlFor="email2" value="Email Address" />
+                            <Label className="text-gray-600 font-medium" htmlFor="email2" value="Username" />
                         </div>
                         <TextInput style={{
                             backgroundColor: "#f1f4f9",
@@ -85,12 +86,12 @@ function Login() {
 
                         }} id="email2"
                             onChange={(e) => handleInput(e)}
-                            type="email"
-                            name='email'
-                            value={user.email}
+                            type="text"
+                            name='username'
+                            value={user.username}
                             className="bg-[#f1f4f9]!important text-sm text-gray-700 border 
                                 rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none"
-                            placeholder="name@raba.com" required shadow />
+                            placeholder="username" required shadow />
                     </div>
                     <div>
                         <div className="mb-2 block mt-2">

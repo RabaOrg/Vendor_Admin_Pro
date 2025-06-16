@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from "@tanstack/react-query";
-import { useFetchBankStatement, useFetchSingleLoan } from '../../../../hooks/queries/loan';
+import { useFetchSingleLoan } from '../../../../hooks/queries/loan';
 import Button from '../../../../components/shared/button';
 import axiosInstance from '../../../../../store/axiosInstance';
-import { handleUpdateStatus } from '../../../../services/loans';
+import { handleDeleteApplication, handleUpdateStatus } from '../../../../services/loans';
 
 function SingleApplication() {
   const { id } = useParams();
+  const Navigate = useNavigate()
   const [loanData, setLoanData] = useState(null);
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
@@ -16,10 +18,10 @@ function SingleApplication() {
   const [showPreview, setShowPreview] = useState(false);
   const [bankId, setBankId] = useState('')
   const [selectedStatus, setSelectedStatus] = useState("");
-  const { data: bankStatement } = useFetchBankStatement(bankId)
+  // const { data: bankStatement } = useFetchBankStatement(bankId)
 
 
-  console.log(bankStatement)
+  console.log(singleLoan)
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
   };
@@ -27,10 +29,12 @@ function SingleApplication() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/admin/loan-applications/${id}`);
-        setLoanData(response.data.data);
-        console.log(response.data.data.customer.id)
-        setBankId(response.data.data.customer.id)
+        const response = await axiosInstance.get(`/api/admin/applications/${id}`,);
+        console.log(response.data)
+
+        setLoanData(response.data);
+        // console.log(response.data.data.customer.id)
+        setBankId(response.data.customer)
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -39,7 +43,24 @@ function SingleApplication() {
     fetchData();
   }, [id]);
 
+  const handleDelete = async () => {
+    try {
+      console.log(id)
+      const response = await handleDeleteApplication(id, {
+        reason: "Invalid application data"
+      })
+      if (response) {
+        toast.success("Application deleted successfully")
+        Navigate("application")
+      }
+    } catch (error) {
+      console.log(error)
+      const errorMessage =
+        error?.response?.data?.message || "Failed to delete application";
 
+      toast.error(errorMessage);
+    }
+  }
   if (isPending)
     return (
       <div className="flex justify-center items-center h-screen text-xl">
@@ -84,8 +105,8 @@ function SingleApplication() {
     }
   }
 
-  const { id: loanId, customer, product, loan_details, repayment_dates, status, created_at } =
-    loanData;
+  const { id: ID, Customer, Product, application_data, repayment_dates, status, created_at } =
+    singleLoan;
   const getStatusBadgeClasses = (status) => {
     if (!status) return 'bg-gray-100 text-gray-800';
     switch (status.toLowerCase()) {
@@ -101,26 +122,26 @@ function SingleApplication() {
         return 'bg-gray-100 text-gray-800';
     }
   };
-  const handleViewStatement = async () => {
-    try {
-      const statementUrl = bankStatement.data[0].statement_url;
-      const response = await axiosInstance.get(statementUrl, { responseType: 'blob' });
-      const fileBlob = new Blob([response.data], { type: response.data.type || 'application/pdf' });
-      const localUrl = URL.createObjectURL(fileBlob);
-      setPreviewUrl(localUrl);
-      setShowPreview(true);
-    } catch (error) {
-      console.error("Error fetching statement for preview:", error);
-      toast.error("Unable to load statement preview.");
-    }
-  };
+  // const handleViewStatement = async () => {
+  //   try {
+  //     const statementUrl = bankStatement.data[0].statement_url;
+  //     const response = await axiosInstance.get(statementUrl, { responseType: 'blob' });
+  //     const fileBlob = new Blob([response.data], { type: response.data.type || 'application/pdf' });
+  //     const localUrl = URL.createObjectURL(fileBlob);
+  //     setPreviewUrl(localUrl);
+  //     setShowPreview(true);
+  //   } catch (error) {
+  //     console.error("Error fetching statement for preview:", error);
+  //     toast.error("Unable to load statement preview.");
+  //   }
+  // };
 
   return (
     <div className="max-w-6xl mx-auto p-10">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="p-6 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <h2 className="text-3xl font-bold text-gray-800">
-            Loan Application Details ({customer?.name})
+            View Application Details ({Customer?.full_name})
           </h2>
           <span
             className={`inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
@@ -134,19 +155,37 @@ function SingleApplication() {
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Basic Information */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Basic Information</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer Information</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Loan ID</label>
+                <label className="block text-sm text-gray-600 mb-1">Vendor_id</label>
                 <input
                   type="text"
                   disabled
-                  value={loanId}
+                  value={Customer?.vendor_id}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Status</label>
+                <label className="block text-sm text-gray-600 mb-1">Customer Name</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.full_name}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Address</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.address}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Customer Status</label>
                 <input
                   type="text"
                   disabled
@@ -155,11 +194,29 @@ function SingleApplication() {
                 />
               </div>
               <div>
+                <label className="block text-sm text-gray-600 mb-1">Customer Email</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.email}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Customer Status</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.phone_number}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
                 <label className="block text-sm text-gray-600 mb-1">Created At</label>
                 <input
                   type="text"
                   disabled
-                  value={new Date(created_at).toLocaleDateString()}
+                  value={new Date(Customer?.created_at).toLocaleDateString()}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -168,165 +225,200 @@ function SingleApplication() {
 
           {/* Customer Information */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer Information</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Product Information</h3>
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">ID</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Product?.id}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Category</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Product?.category}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Description</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Product?.description}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Name</label>
                 <input
                   type="text"
                   disabled
-                  value={customer?.name}
+                  value={Product?.name}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Email</label>
+                <label className="block text-sm text-gray-600 mb-1">Price</label>
                 <input
                   type="text"
                   disabled
-                  value={customer?.email}
+                  value={Product?.price}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Phone</label>
+                <label className="block text-sm text-gray-600 mb-1">Shipping_days_min</label>
                 <input
                   type="text"
                   disabled
-                  value={customer?.phone}
+                  value={Product?.shipping_days_min}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Shipping_days_max</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Product?.shipping_days_max}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Status</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Product?.status}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
           </div>
 
-          {/* Product Information */}
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Product Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex justify-center items-center">
-                <img
-                  src={product?.display_attachment_url}
-                  alt={product?.name}
-                  className="w-full h-auto object-cover rounded-lg shadow-md"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Product Name</label>
-                    <input
-                      type="text"
-                      disabled
-                      value={product?.name}
-                      className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Product Price</label>
-                    <input
-                      type="text"
-                      disabled
-                      value={product?.price}
-                      className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm text-gray-700 mb-1">Description</label>
-                    <textarea
-                      disabled
-                      value={product?.description}
-                      rows="3"
-                      className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Loan Details */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Loan Details</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Application_type</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Down Payment (%)</label>
+                <label className="block text-sm text-gray-600 mb-1">Account_Number</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.down_payment_percent}
+                  value={application_data?.account_number}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Down Payment Amount</label>
+                <label className="block text-sm text-gray-600 mb-1">Link Token</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.down_payment_amount}
+                  value={application_data?.application_link_token}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Principal Amount</label>
+                <label className="block text-sm text-gray-600 mb-1">Aplication Source</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.principal}
+                  value={application_data?.application_source}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Interest Rate</label>
+                <label className="block text-sm text-gray-600 mb-1">Bank Name</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.interest_rate}
+                  value={application_data?.bank_name}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Interest Amount</label>
+                <label className="block text-sm text-gray-600 mb-1">Customer Email</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.interest_amount}
+                  value={application_data?.customer_email}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Total Amount To Repay</label>
+                <label className="block text-sm text-gray-600 mb-1">Customer Name</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.total_amount_to_repay}
+                  value={application_data?.customer_name}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Repayment Amount</label>
+                <label className="block text-sm text-gray-600 mb-1">Customer Phone</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.repayment_amount}
+                  value={application_data?.customer_phone}
+
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Tenure Unit</label>
+                <label className="block text-sm text-gray-600 mb-1">Guarantor's Address</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.tenure_unit}
+                  value={application_data?.guarantor_address}
+
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Repayment Interval</label>
+                <label className="block text-sm text-gray-600 mb-1">Guarantor's Name</label>
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.repayment_interval}
+                  value={application_data?.guarantor_name}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Guarantor's Phone</label>
+                <input
+                  type="text"
+                  disabled
+                  value={application_data?.guarantor_phone}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Product Description</label>
+                <input
+                  type="text"
+                  disabled
+                  value={application_data?.product_description}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Product Name</label>
+                <input
+                  type="text"
+                  disabled
+                  value={application_data?.product_name}
+
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -335,15 +427,16 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={loan_details?.tenure_value}
+                  value={application_data?.product_price}
+
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
             </div>
           </div>
 
-          {/* Repayment Schedule */}
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
+
+          {/* <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Repayment Schedule</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -365,7 +458,7 @@ function SingleApplication() {
                 />
               </div>
             </div>
-          </div>
+          </div> */}
           <div className="bg-gray-50 p-6 rounded-lg shadow md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Status Update</h3>
             <label className="block text-sm text-gray-600 mb-1">
@@ -378,68 +471,28 @@ function SingleApplication() {
             >
               <option value="">Select an option</option>
               <option value="approved">approved</option>
-              <option value="in_review">in_review</option>
+              {/* <option value="in_review">in_review</option>
               <option value="pending">pending</option>
-              <option value="rejected">rejected</option>
+              <option value="rejected">rejected</option> */}
 
             </select>
           </div>
-          {bankStatement?.data?.length > 0 && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-              <h3 className="text-xl font-semibold text-gray-700 mb-4">Bank Statement</h3>
-              <div className="mb-4 space-y-2">
-                <p className="text-sm text-gray-600">
-                  <strong>Filename:</strong> {bankStatement.data[0].metadata.original_filename}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>Uploaded On:</strong>
-                  <strong>Filename:</strong> {new Date(bankStatement.data[0].metadata.upload_date).toLocaleString()}
 
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>File Size:</strong> {(bankStatement.data[0].metadata.file_size / 1024).toFixed(2)} KB
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>Status:</strong> {bankStatement.data[0].status}
-                </p>
-              </div>
-              <div className="flex gap-4">
-                {/* <button
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="bg-black text-white text-sm px-4 py-2 rounded"
-                >
-                  {showPreview ? "Hide Preview" : "View Statement"}
-                </button> */}
-                <a
-                  href={bankStatement.data[0].statement_url}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <button className="bg-[#0f5D30] text-white text-sm px-4 py-2 rounded">
-                    Download Statement
-                  </button>
-                </a>
-              </div>
-              {showPreview && (
-                <div className="mt-4">
-                  <iframe
-                    src={bankStatement.data[0].statement_url}
-                    width="100%"
-                    height="600px"
-                    title="Bank Statement Preview"
-                  ></iframe>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        <div className="p-6">
+        <div className="p-6 flex justify-items-end gap-10">
           <Button
             label="Update Status"
             onClick={handleUpdateLoanStatus}
             variant="solid"
+            size="md"
+            className="text-sm px-6 py-3"
+            loading={isLoading}
+          />
+          <Button
+            label="Delete Application"
+            onClick={handleDelete}
+            variant="transparent"
             size="md"
             className="text-sm px-6 py-3"
             loading={isLoading}

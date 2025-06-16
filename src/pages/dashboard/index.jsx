@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Card, Button, Spinner } from 'flowbite-react'
-import { useFetchDashboardInsights } from '../../hooks/insights'
+import { useFetchDashboardAnalytics, useFetchDashboardInsights } from '../../hooks/insights'
 import { Icons } from '../../components/icons/icon'
 
 const periodOptions = [
@@ -14,12 +14,15 @@ function Dashboard() {
     const [period, setPeriod] = useState('30days')
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
+    const { data: dashboardInsights } = useFetchDashboardAnalytics()
 
     const { data: dashboardData, isPending, isError, refetch } = useFetchDashboardInsights({
         period,
         startDate,
         endDate,
     })
+    console.log(dashboardInsights)
+    console.log(dashboardData)
 
     const handlePeriodChange = (value) => {
         setPeriod(value)
@@ -36,38 +39,75 @@ function Dashboard() {
             refetch()
         }
     }
+    const { data: datar } = dashboardData || {}
 
+    console.log(dashboardData)
     const dataCards = [
         {
-            label: 'Successful Transactions',
-            value: dashboardData?.successfulTrasactionsCount,
+            label: 'Daily Active Vendors',
+            value: datar?.metrics?.daily_active_vendors,
             icon: '/Icon.png',
         },
         {
-            label: 'Transaction Volume',
-            value: `₦${dashboardData?.volumeOfTransactions}`,
+            label: 'Pending Application Count',
+            value: datar?.metrics?.pending_applications_count,
             icon: '/iconn.png',
         },
         {
-            label: 'Total Transactions',
-            value: dashboardData?.totalTransactionsCount,
+            label: 'Recent Error',
+            value: datar?.metrics?.recent_errors,
             icon: '/iconn1.png',
         },
         {
-            label: 'Pending Transactions',
-            value: dashboardData?.pendingTransactionCount,
+            label: 'Stuck Applications Count',
+            value: datar?.metrics?.system_uptime_seconds,
+            icon: '/Icon.png',
+        },
+
+    ]
+    console.log(dashboardInsights)
+    const { data: datas } = dashboardInsights || {}
+    const dataCardMain = [
+        {
+            label: 'Approval Rate',
+            value: datas?.conversion_funnel?.approval_rate,
             icon: '/Icon.png',
         },
         {
-            label: 'Loan Applications',
-            value: dashboardData?.productLoanApplicationCount,
+            label: 'Completed Applications',
+            value: datas?.conversion_funnel?.completed_applications,
             icon: '/iconn.png',
         },
         {
-            label: 'Active Loans',
-            value: dashboardData?.productLoanCount,
+            label: 'Approved Application',
+            value: datas?.conversion_funnel?.approved_applications,
             icon: '/iconn1.png',
         },
+        {
+            label: 'Submission Rate',
+            value: datas?.conversion_funnel?.submission_rate,
+
+            icon: '/Icon.png',
+        },
+        {
+            label: 'Submitted Applications',
+            value: datas?.conversion_funnel?.submitted_applications,
+
+            icon: '/Icon.png',
+        },
+        {
+            label: 'Total Applications',
+            value: datas?.conversion_funnel?.total_applications,
+
+            icon: '/Icon.png',
+        },
+        {
+            label: 'Total Applications',
+            value: datas?.conversion_funnel?.completion_rate,
+
+            icon: '/Icon.png',
+        },
+
     ]
 
     return (
@@ -75,7 +115,7 @@ function Dashboard() {
             <h1 className="text-3xl font-bold text-black mb-8">Dashboard</h1>
 
             {/* Period Filter Options */}
-            <div className="mb-6 flex flex-wrap gap-4">
+            {/* <div className="mb-6 flex flex-wrap gap-4">
                 {periodOptions.map((option) => (
                     <Button
                         key={option.value}
@@ -86,9 +126,9 @@ function Dashboard() {
                         {option.label}
                     </Button>
                 ))}
-            </div>
+            </div> */}
 
-            {/* Custom Date Range Inputs */}
+
             {period === 'custom' && (
                 <div className="flex gap-4 mb-6 items-center">
                     <input
@@ -121,7 +161,9 @@ function Dashboard() {
             {isError && <p className="text-red-500">Error fetching dashboard data.</p>}
 
             {/* Dashboard Data Cards */}
+
             {dashboardData && (
+
                 <div className="flex flex-wrap justify-start gap-6">
                     {dataCards.map((card, index) => (
                         <Card
@@ -143,7 +185,35 @@ function Dashboard() {
                         </Card>
                     ))}
                 </div>
+
             )}
+            <div className='mt-4'>
+
+                {dashboardInsights && (
+                    <div className="flex flex-wrap justify-start gap-6">
+                        {dataCardMain.map((card, index) => (
+                            <Card
+                                key={index}
+                                extra="!flex-row flex-grow items-center rounded-[20px]"
+                                className="card-dashboard w-[262px] h-[161px]"
+                            >
+                                <div className="flex justify-between">
+                                    <div>
+                                        <p className="font-medium text-sm text-[#202224]">
+                                            {card.label}
+                                        </p>
+                                        <h4 className="text-2xl font-semibold text-navy-700 mt-4">
+                                            {card.value}
+                                        </h4>
+                                    </div>
+                                    <img className="w-10 h-10" src={card.icon} alt="" />
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+
+                )}
+            </div>
         </div>
     )
 }

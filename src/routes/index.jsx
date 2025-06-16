@@ -106,7 +106,7 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/create_application/:id",
+                path: "/create_application",
                 element: <CreateApplication />
 
             },
@@ -136,7 +136,7 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/loan_application/:id",
+                path: "/application-statistics/:id",
                 element: <SingleApplication />
 
             },

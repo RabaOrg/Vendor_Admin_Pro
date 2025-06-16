@@ -1,9 +1,9 @@
 import axiosInstance from "../../store/axiosInstance";
 
 export const handleInsights = async ({ period = '30days', startDate, endDate } = {}) => {
-  let url = "/admin/insight";
+  let url = "/api/admin/dashboard/health";
   
-  // For default 30 days, no query parameters are needed.
+  
   if (period !== '30days') {
     if (period === 'custom') {
       if (!startDate || !endDate) {
@@ -11,7 +11,7 @@ export const handleInsights = async ({ period = '30days', startDate, endDate } =
       }
       url += `?start_date=${startDate}&end_date=${endDate}`;
     } else {
-      // For 90 days or lifetime scenarios.
+     
       url += `?period=${period}`;
     }
   }
@@ -19,3 +19,9 @@ export const handleInsights = async ({ period = '30days', startDate, endDate } =
   const { data } = await axiosInstance.get(url);
   return data;
 }
+export const handleGetAnalytics = async () => {
+     const  data  = await axiosInstance.get("/api/admin/dashboard/analytics?period=30");
+     
+    return data.data
+}
+
