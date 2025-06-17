@@ -59,7 +59,7 @@ function Customer() {
                     </div>
                     <Link to="/addcustomer">
                         <Button
-                            label="Create Customer"
+                            label="View Customer Statistics"
                             variant="solid"
                             size="md"
                             className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
@@ -71,7 +71,7 @@ function Customer() {
                 <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <thead className="bg-white-100 text-black-700">
                         <tr>
-                            {["ID", "Name", "Business Name", "Date Created", "State", "Edit", "View", "Loan Application"].map((header, index) => (
+                            {["ID", "Name", "Address", "Email", "Created At", "Phone No", "View",].map((header, index) => (
                                 <th key={index} className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
                                     {header}
                                 </th>
@@ -86,21 +86,13 @@ function Customer() {
                                 return (
                                     <tr key={index} className="hover:bg-gray-50 transition">
                                         <td className="px-6 py-4 text-xs border-b border-gray-200">{id}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{full_name}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{Business?.name || "N/A"}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.first_name}{item?.last_name}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.address || "N/A"}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.email || "N/A"}</td>
                                         <td className="px-6 py-4 text-xs border-b border-gray-200">{new Date(created_at).toLocaleString()}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{Business?.state || "N/A"}</td>
+                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.phone_number || "N/A"}</td>
 
-                                        {/* Edit Button */}
-                                        <td className="px-6 py-4 border-b border-gray-200 text-center">
-                                            <button
-                                                className="w-9 h-9 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none"
-                                                aria-label="Edit"
-                                                onClick={() => handleCustomer(id)}
-                                            >
-                                                <FaEdit className="text-gray-600 text-base" />
-                                            </button>
-                                        </td>
+
 
                                         {/* View Button */}
                                         <td className="px-6 py-4 border-b border-gray-200 text-center">
@@ -113,17 +105,7 @@ function Customer() {
                                             </button>
                                         </td>
 
-                                        {/* Loan Application Button */}
-                                        <td className="px-6 py-4 border-b border-gray-200 text-center">
-                                            <Link to={`/create_application/${id}`}>
-                                                <Button
-                                                    label="Create Application"
-                                                    variant="solid"
-                                                    size="md"
-                                                    className="text-xs px-4 py-2 rounded-md"
-                                                />
-                                            </Link>
-                                        </td>
+
                                     </tr>
                                 );
                             })}

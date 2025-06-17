@@ -20,6 +20,7 @@ export const handleFinancialDetailsForm = async (Id, formInfo) => {
     formInfo
   );
 };
+
 export const handleGuarantorDetailsForm = async (Id ,formInfo) => {
   return axiosInstance.post(
    `/admin/add-guarantor/${Id}`,
@@ -56,6 +57,11 @@ export const handleGetCustomerBusinessDetails = async (Id) => {
      const { data } = await axiosInstance.get(`/admin/user/${Id}`);
      
     return data.data.Business
+}
+export const handleGetCustomerStat= async (Id) => {
+     const { data } = await axiosInstance.get(`/api/admin/customers/stats`);
+     
+    return data.data
 }
 export const handleCustomerImage = async (id, formInfo) => {
   return axiosInstance.post(
