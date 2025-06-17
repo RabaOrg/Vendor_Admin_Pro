@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import { useQueryClient } from "@tanstack/react-query";
 import { useFetchSingleActivation, useFetchSingleVendorData } from '../../../hooks/queries/loan'
 import { useFetchOneCustomer } from '../../../hooks/queries/customer'
-import { handleUpdateLoanStatus, handleUpdateVendorStatus } from '../../../services/loans'
+import { handleDeleteVendor, handleUpdateLoanStatus, handleUpdateVendorStatus } from '../../../services/loans'
 
 function ViewActivation() {
   const { id } = useParams()
@@ -21,7 +21,10 @@ function ViewActivation() {
   };
   console.log(vendor)
   const handleUpdateStatus = async () => {
-
+    if (selectedStatus === "") {
+      toast.error("Please select the active status to proceed")
+      return
+    }
     setIsLoading(true)
     try {
       const response = await handleUpdateVendorStatus(id,
@@ -40,6 +43,24 @@ function ViewActivation() {
       setIsLoading(false)
     }
 
+  }
+  const handleDelete = async () => {
+    try {
+      console.log(id)
+      const response = await handleDeleteVendor(id, {
+        force_delete: false
+      })
+
+      toast.success("Vendor deactivated successfully")
+
+
+    } catch (error) {
+      console.log(error)
+      const errorMessage =
+        error?.response?.data?.message || "Failed to delete application";
+
+      toast.error(errorMessage);
+    }
   }
   const getStatusBadgeClasses = (status) => {
     if (!status) return 'bg-gray-100 text-gray-800';
@@ -80,7 +101,7 @@ function ViewActivation() {
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-          {/* Personal Information */}
+
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Personal Information</h3>
             <div className="space-y-4">
@@ -92,7 +113,7 @@ function ViewActivation() {
             </div>
           </div>
 
-          {/* Business Info */}
+
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Business Information</h3>
             <div className="space-y-4">
@@ -105,7 +126,7 @@ function ViewActivation() {
             </div>
           </div>
 
-          {/* Address Info */}
+
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Address</h3>
             <div className="space-y-4">
@@ -115,7 +136,7 @@ function ViewActivation() {
             </div>
           </div>
 
-          {/* Stats */}
+
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Statistics</h3>
             <div className="space-y-4">
@@ -136,7 +157,7 @@ function ViewActivation() {
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select an option</option>
-              <option value="pending">Approved</option>
+              <option value="pending">Active</option>
 
 
 
@@ -146,11 +167,19 @@ function ViewActivation() {
         </div>
 
 
-        <div className="p-6">
+        <div className="p-6 flex justify-start gap-10">
           <Button
             label="Update Status"
             onClick={handleUpdateStatus}
             variant="solid"
+            size="md"
+            className="text-sm px-6 py-3"
+            loading={isLoading}
+          />
+          <Button
+            label="Delete Vendor"
+            onClick={handleDelete}
+            variant="transparent"
             size="md"
             className="text-sm px-6 py-3"
             loading={isLoading}

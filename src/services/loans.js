@@ -16,6 +16,13 @@ export const handleDeleteApplication= async (id, forminfo) => {
      
     return data.data
 }
+export const handleDeleteVendor= async (id, forminfo) => {
+  const { data } = await axiosInstance.delete(`/api/admin/vendors/${id}`, {
+         data: forminfo,
+     });
+     
+    return data.data
+}
 export const handleGetloanApplication = async () => {
      const  data  = await axiosInstance.get("/api/admin/applications?page=1&limit=20");
      

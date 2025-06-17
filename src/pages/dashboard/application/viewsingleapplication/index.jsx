@@ -51,7 +51,7 @@ function SingleApplication() {
       })
       if (response) {
         toast.success("Application deleted successfully")
-        Navigate("application")
+        Navigate("/application")
       }
     } catch (error) {
       console.log(error)
