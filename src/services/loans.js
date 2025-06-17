@@ -23,6 +23,13 @@ export const handleDeleteVendor= async (id, forminfo) => {
      
     return data.data
 }
+export const handleDeleteCustomer= async (id, forminfo) => {
+  const { data } = await axiosInstance.delete(`/api/admin/customers/${id}`, {
+         data: forminfo,
+     });
+     
+    return data.data
+}
 export const handleGetloanApplication = async () => {
      const  data  = await axiosInstance.get("/api/admin/applications?page=1&limit=20");
      
@@ -83,6 +90,16 @@ export const  handleUpdateVendorStatus = async (id, formInfo) => {
    `/api/admin/vendors/${id}/status`, formInfo
   );
 };
+export const  handleUpdateverification = async (id, formInfo) => {
+  return axiosInstance.patch(
+   `/api/admin/vendors/${id}/verification/approve`, formInfo
+  );
+};
+export const  handleUpdateCustomerStatus = async (id, formInfo) => {
+  return axiosInstance.patch(
+   `/api/admin/customers/${id}/status`, formInfo
+  );
+}
 
 export const  handleCreateLoanApplication = async (formInfo) => {
   return axiosInstance.post(

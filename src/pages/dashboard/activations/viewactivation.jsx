@@ -6,18 +6,25 @@ import { toast } from 'react-toastify'
 import { useQueryClient } from "@tanstack/react-query";
 import { useFetchSingleActivation, useFetchSingleVendorData } from '../../../hooks/queries/loan'
 import { useFetchOneCustomer } from '../../../hooks/queries/customer'
-import { handleDeleteVendor, handleUpdateLoanStatus, handleUpdateVendorStatus } from '../../../services/loans'
+import { handleDeleteVendor, handleUpdateLoanStatus, handleUpdateVendorStatus, handleUpdateverification } from '../../../services/loans'
 
 function ViewActivation() {
   const { id } = useParams()
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
+  const [isverfied, setisVerified] = useState(false)
+  const [isLoad, setIsLoad] = useState(false)
+
 
   const { data: vendor, isPending, isError } = useFetchSingleVendorData(id)
 
   const [selectedStatus, setSelectedStatus] = useState(vendor?.status || "");
+  const [selectedVerificationStatus, setSelectedVerificationStatus] = useState(vendor?.verification_status || "");
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
+  };
+  const handleChangeVerificationStatus = (e) => {
+    setSelectedVerificationStatus(e.target.value);
   };
   console.log(vendor)
   const handleUpdateStatus = async () => {
@@ -29,8 +36,8 @@ function ViewActivation() {
     try {
       const response = await handleUpdateVendorStatus(id,
         {
-          account_status: "active",
-          notes: "Approved by admin after verification"
+          account_status: selectedStatus,
+
         }
       )
       if (response) {
@@ -44,7 +51,36 @@ function ViewActivation() {
     }
 
   }
+  const handleUpdateVerificationStatus = async () => {
+    if (selectedVerificationStatus === "") {
+      toast.error("Please select the active status to proceed")
+      return
+    }
+
+    setisVerified(true)
+    try {
+      const response = await handleUpdateverification(id,
+        {
+          verification_status: selectedVerificationStatus,
+
+        }
+      )
+      if (response) {
+        toast.success("Verification Status updated successfully")
+        queryClient.invalidateQueries(["getsinglevendors", id]);
+      }
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "Failed to delete application";
+
+      toast.error(errorMessage);
+    } finally {
+      setisVerified(false)
+    }
+
+  }
   const handleDelete = async () => {
+    setIsLoad(true)
     try {
       console.log(id)
       const response = await handleDeleteVendor(id, {
@@ -60,6 +96,8 @@ function ViewActivation() {
         error?.response?.data?.message || "Failed to delete application";
 
       toast.error(errorMessage);
+    } finally {
+      setIsLoad(false)
     }
   }
   const getStatusBadgeClasses = (status) => {
@@ -67,16 +105,13 @@ function ViewActivation() {
     switch (status.toLowerCase()) {
       case 'active':
         return 'bg-green-100 text-green-800';
-      case 'repaid':
-        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-red-100 text-red-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'pending_delivery':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'outstanding':
-        return 'bg-purple-100 text-purple-800';
-      case 'awaiting_downpayment':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'suspended':
+        return 'bg-red-300 text-red-800';
+
       case 'deleted':
         return 'bg-red-100 text-red-800';
       case 'default':
@@ -148,7 +183,7 @@ function ViewActivation() {
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Status Update
+              Account Status Update
             </h3>
             <label className="block text-sm text-gray-600 mb-1">Select Status to be updated</label>
             <select
@@ -157,35 +192,79 @@ function ViewActivation() {
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select an option</option>
-              <option value="pending">Active</option>
+              <option value="pending">Pending</option>
+              <option value="active">active</option>
+
+              <option value="suspended">suspended</option>
+              <option value="inactive">inactive</option>
 
 
 
             </select>
+            <div className="mt-5">
+              <Button
+                label="Update Status"
+                onClick={handleUpdateStatus}
+                variant="solid"
+                size="md"
+                className="text-sm px-6 py-3"
+                loading={isLoading}
+              />
+            </div>
+          </div>
+
+
+
+          <div className="bg-gray-50 p-6 mt-5 rounded-lg shadow-sm md:col-span-2">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">
+              Verification Status Update
+            </h3>
+            <label className="block text-sm text-gray-600 mb-1">Select Status to be updated</label>
+            <select
+              value={selectedVerificationStatus}
+              onChange={handleChangeVerificationStatus}
+              className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select an option</option>
+              <option value="pending">Pending</option>
+              <option value="under_review">under_review</option>
+
+              <option value="suspended">suspended</option>
+              <option value="inactive">inactive</option>
+
+
+
+
+            </select>
+            <div className="mt-5">
+
+              <Button
+                label="Update Verification Status"
+                onClick={handleUpdateVerificationStatus}
+                variant="solid"
+                size="md"
+                className="text-sm px-6 py-3"
+                loading={isverfied}
+              />
+
+            </div>
+          </div>
+          <div className="p-6 flex justify-start gap-10">
+
+            <Button
+              label="Delete Vendor"
+              onClick={handleDelete}
+              variant="transparent"
+              size="md"
+              className="text-sm px-6 py-3"
+              loading={isLoad}
+            />
           </div>
 
         </div>
 
-
-        <div className="p-6 flex justify-start gap-10">
-          <Button
-            label="Update Status"
-            onClick={handleUpdateStatus}
-            variant="solid"
-            size="md"
-            className="text-sm px-6 py-3"
-            loading={isLoading}
-          />
-          <Button
-            label="Delete Vendor"
-            onClick={handleDelete}
-            variant="transparent"
-            size="md"
-            className="text-sm px-6 py-3"
-            loading={isLoading}
-          />
-        </div>
       </div>
+
     </div >
   )
 }

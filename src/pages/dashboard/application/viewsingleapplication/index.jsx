@@ -112,11 +112,23 @@ function SingleApplication() {
     switch (status.toLowerCase()) {
       case 'approved':
         return 'bg-green-100 text-green-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'submitted':
+        return 'bg-green-100 text-green-800';
+      case 'processing':
+        return 'bg-purple-100 text-purple-800';
       case 'in_review':
         return 'bg-yellow-100 text-yellow-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
+      case 'awaiting_downpayment':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'awaiting_delivery':
+        return 'bg-yellow-100 text-yellow-800';
       case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -471,9 +483,14 @@ function SingleApplication() {
             >
               <option value="">Select an option</option>
               <option value="approved">approved</option>
-              {/* <option value="in_review">in_review</option>
+              <option value="submitted">submitted</option>
               <option value="pending">pending</option>
-              <option value="rejected">rejected</option> */}
+              <option value="completed">completed</option>
+              <option value="cancelled">cancelled</option>
+              <option value="rejected">rejected</option>
+              <option value="awaiting_downpayment">awaiting downpayment</option>
+              <option value="awaiting_delivery">awaiting delivery</option>
+              <option value="processing">processing</option>
 
             </select>
           </div>

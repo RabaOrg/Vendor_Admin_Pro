@@ -100,16 +100,32 @@ function ActivationLists() {
 
               <td className="px-4 py-4 border-b border-gray-200 bg-white text-xs">
                 <button
-                  className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
+                  className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.account_status === 'approved'
                     ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold'
-                    : item.status === 'pending'
+                    : item.account_status === 'pending'
                       ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                      : item.status === 'Rejected'
-                        ? 'bg-red-300 text-[#EF3826] font-semibold'
-                        : 'bg-gray-200 text-gray-700'
+                      : item.account_status === 'submitted'
+                        ? 'bg-green-100 text-green-700 font-semibold'
+                        : item.account_status === 'active'
+                          ? 'bg-green-100 text-green-600 font-semibold'
+                          : item.account_status === 'awaiting downpayment'
+                            ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                            : item.account_status === 'awaiting delivery'
+                              ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                              : item.account_status === 'processing'
+                                ? 'bg-purple-100 text-purple-700 font-semibold'
+                                : item.account_status === 'cancelled'
+                                  ? 'bg-red-100 text-red-600 font-semibold'
+
+                                  : item.account_status === 'completed'
+
+                                    ? 'bg-green-100 text-green-800 font-semibold'
+                                    : item.account_status === 'Rejected'
+                                      ? 'bg-red-300 text-[#EF3826] font-semibold'
+                                      : 'bg-gray-200 text-gray-700'
                     }`}
                 >
-                  {item.status}
+                  {item.account_status}
                 </button>
               </td>
               <td className="px-4 py-4 border-b border-gray-200 bg-white flex">
