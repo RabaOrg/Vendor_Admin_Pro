@@ -6,7 +6,7 @@ import { useFetchBusinessCustomerDetails, useFetchCustomer } from '../../../hook
 import { useNavigate } from 'react-router-dom';
 
 function Customer() {
-    const perPage = 10;
+    const perPage = 20;
     const { id } = useParams()
     const [page, setPage] = useState(1);
     const navigate = useNavigate()

@@ -47,8 +47,8 @@ export const handleOneCustomer = async (Id) => {
 }
 
 export const handleGetCustomer = async (page, perPage, search) => {
-    console.log(page, perPage, search, "from fetch")
-    const { data } = await axiosInstance.get(`/admin/user?page=${page}&perPage=${perPage}&search=${search || ""}`);
+   
+    const { data } = await axiosInstance.get(`/api/admin/customers?page=${page}&limit=${perPage}`);
     
     return data.data
 }

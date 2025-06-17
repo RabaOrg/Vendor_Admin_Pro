@@ -4,31 +4,35 @@ import { Card, Label } from 'flowbite-react'
 import Button from '../../../components/shared/button'
 import { toast } from 'react-toastify'
 import { useQueryClient } from "@tanstack/react-query";
-import { useFetchSingleActivation } from '../../../hooks/queries/loan'
+import { useFetchSingleActivation, useFetchSingleVendorData } from '../../../hooks/queries/loan'
 import { useFetchOneCustomer } from '../../../hooks/queries/customer'
-import { handleUpdateLoanStatus } from '../../../services/loans'
+import { handleUpdateLoanStatus, handleUpdateVendorStatus } from '../../../services/loans'
 
 function ViewActivation() {
   const { id } = useParams()
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
 
-  const { data: singleLoanList, isPending, isError } = useFetchSingleActivation(id)
-  console.log(singleLoanList)
-  const [selectedStatus, setSelectedStatus] = useState(singleLoanList?.status || "");
+  const { data: vendor, isPending, isError } = useFetchSingleVendorData(id)
+
+  const [selectedStatus, setSelectedStatus] = useState(vendor?.status || "");
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
   };
+  console.log(vendor)
   const handleUpdateStatus = async () => {
 
     setIsLoading(true)
     try {
-      const response = await handleUpdateLoanStatus(id, {
-        status: selectedStatus,
-      })
+      const response = await handleUpdateVendorStatus(id,
+        {
+          account_status: "active",
+          notes: "Approved by admin after verification"
+        }
+      )
       if (response) {
-        toast.success("Status updated successfully")
-        queryClient.invalidateQueries(["activations", id]);
+        toast.success("Vendor Status updated successfully")
+        queryClient.invalidateQueries(["getsinglevendors", id]);
       }
     } catch (error) {
       console.log(error)
@@ -40,7 +44,7 @@ function ViewActivation() {
   const getStatusBadgeClasses = (status) => {
     if (!status) return 'bg-gray-100 text-gray-800';
     switch (status.toLowerCase()) {
-      case 'awaiting_mandate':
+      case 'active':
         return 'bg-green-100 text-green-800';
       case 'repaid':
         return 'bg-green-100 text-green-800';
@@ -65,127 +69,62 @@ function ViewActivation() {
       <div className="min-w-full rounded-lg overflow-hidden bg-white shadow-md">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 border-b">
           <h2 className="text-3xl font-bold text-gray-800">
-            Loan Activation Details ({singleLoanList?.customer_name})
+            Vendor Details ({vendor?.full_name})
           </h2>
           <span
             className={`ml-0 md:ml-4 mt-2 md:mt-0 inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
-              singleLoanList?.status
+              vendor?.account_status
             )}`}
           >
-            {singleLoanList?.status}
+            {vendor?.account_status}
           </span>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-          {/* Customer & Product Information */}
+          {/* Personal Information */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Customer & Product Information
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Personal Information</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Loan ID</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.customer_name}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Status</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.business_name}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Created At</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.repayment_period}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <Input label="Full Name" value={vendor?.full_name} />
+              <Input label="Phone Number" value={vendor?.phone_number} />
+              <Input label="Email" value={vendor?.email} />
+              <Input label="Account Status" value={vendor?.account_status} />
+              <Input label="Verification Status" value={vendor?.verification_status} />
             </div>
           </div>
 
-          {/* Loan Information */}
+          {/* Business Info */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Loan Information
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Business Information</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Down Payment</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.down_payment}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Interest Amount</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.interest_amount}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Total Repayment</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.total_repayment}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <Input label="Business Name" value={vendor?.Business?.name} />
+              <Input label="CAC Number" value={vendor?.Business?.cac_number} />
+              <Input label="Category" value={vendor?.Business?.category} />
+              <Input label="Sub Category" value={vendor?.Business?.sub_category} />
+              <Input label="Monthly Revenue" value={vendor?.Business?.monthly_revenue} />
+              <Input label="Time in Business" value={vendor?.Business?.time_in_business} />
             </div>
           </div>
 
-          {/* Product Information */}
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Product Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Product Name</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.product}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Product Amount</label>
-                <input
-                  type="text"
-                  disabled
-                  value={singleLoanList?.product_amount}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Created At</label>
-                <input
-                  type="text"
-                  disabled
-                  value={new Date(singleLoanList?.created_at).toLocaleDateString()}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+          {/* Address Info */}
+          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Address</h3>
+            <div className="space-y-4">
+              <Input label="Street Address" value={vendor?.Business?.street_address} />
+              <Input label="LGA" value={vendor?.Business?.lga} />
+              <Input label="State" value={vendor?.Business?.state} />
             </div>
-
-
           </div>
+
+          {/* Stats */}
+          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Statistics</h3>
+            <div className="space-y-4">
+              <Input label="Total Applications" value={vendor?.statistics?.total_applications} />
+              <Input label="Total Customers" value={vendor?.statistics?.total_customers} />
+              <Input label="Total Products" value={vendor?.statistics?.total_products} />
+            </div>
+          </div>
+
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
               Status Update
@@ -197,17 +136,15 @@ function ViewActivation() {
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select an option</option>
-              <option value="pending">Pending</option>
-              <option value="outstanding">Outstanding</option>
-              <option value="repaid">Repaid</option>
-              <option value="defaulted">Defaulted</option>
-              <option value="deleted">Deleted</option>
-              <option value="awaiting_downpayment">Awaiting Downpayment</option>
-              <option value="awaiting_mandate">Awaiting Mandate</option>
-              <option value="pending_delivery">Pending Delivery</option>
+              <option value="pending">Approved</option>
+
+
+
             </select>
           </div>
+
         </div>
+
 
         <div className="p-6">
           <Button
@@ -220,8 +157,19 @@ function ViewActivation() {
           />
         </div>
       </div>
-    </div>
+    </div >
   )
 }
 
+const Input = ({ label, value }) => (
+  <div>
+    <label className="block text-sm text-gray-600 mb-1">{label}</label>
+    <input
+      type="text"
+      disabled
+      value={value ?? '—'}
+      className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
+)
 export default ViewActivation

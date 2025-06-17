@@ -26,6 +26,11 @@ export const handleGetApplicationStatistics = async () => {
      
     return data.data
 }
+export const handleGetVendortatistics = async () => {
+     const  data  = await axiosInstance.get("/api/admin/vendors/stats");
+     
+    return data.data
+}
 
 
 
@@ -40,6 +45,11 @@ export const handleGetSingleLoan = async (id) => {
 }
 export const handleGetActivation = async () => {
      const data  = await axiosInstance.get("/admin/loans");
+     
+    return data.data
+}
+export const handleGetVendors= async () => {
+     const data  = await axiosInstance.get("/api/admin/vendors?page=1&limit=20");
      
     return data.data
 }
@@ -61,6 +71,12 @@ export const  handleUpdateLoanStatus = async (id, formInfo) => {
    `/admin/loans/${id}/status`, formInfo
   );
 };
+export const  handleUpdateVendorStatus = async (id, formInfo) => {
+  return axiosInstance.patch(
+   `/api/admin/vendors/${id}/status`, formInfo
+  );
+};
+
 export const  handleCreateLoanApplication = async (formInfo) => {
   return axiosInstance.post(
    "/admin/loanapplication/creation",
@@ -72,6 +88,12 @@ export const handleGetSingleloanApplication = async (id) => {
      
     return data.data.data
 }
+export const handleGetSingleVendor = async (id) => {
+     const  data  = await axiosInstance.get(`/api/admin/vendors/${id}`);
+     
+    return data.data.data
+}
+
 export const handleGetPaymentOrder = async () => {
      const  data  = await axiosInstance.get(`/admin/payment-analytics`);
      

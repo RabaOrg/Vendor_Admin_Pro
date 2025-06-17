@@ -21,9 +21,9 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
     const menuItems = [
         { name: "Dashboard", icon: <Icons.Dashboard />, path: "/" },
         // { name: "Product", icon: <Icons.Product />, path: "/product" },
-        // { name: "Customer", icon: <Icons.Customer />, path: "/customer" },
+        { name: "Customer", icon: <Icons.Customer />, path: "/customer" },
         // { name: "Transactions", icon: <Icons.Transaction />, path: "/transaction" },
-        // { name: "Activations", icon: <Icons.Activation />, path: "/activation" },
+        { name: "Vendor Management", icon: <Icons.Activation />, path: "/vendor_management" },
         { name: "Applications", icon: <Icons.Application />, path: "/application" },
         // { name: "Repayment Plans", icon: <Icons.RepaymentPlan />, path: "/repayment-plan" },
         // { name: "Orders", icon: <Icons.Order />, path: "/orders" },

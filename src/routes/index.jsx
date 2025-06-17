@@ -28,6 +28,7 @@ import SingleApplication from "../pages/dashboard/application/viewsingleapplicat
 import CategoryDashboard from "../pages/dashboard/category";
 import PaymentOrder from "../pages/dashboard/payment/paymentOrder";
 import BulkProductUpload from "../pages/product/bulkUpload/bulkUpload";
+import VendorManagement from "../pages/dashboard/activations/vendor";
 
 
 
@@ -91,7 +92,7 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/activation",
+                path: "/vendor_management",
                 element: <ActivationLists />
 
             },
@@ -123,6 +124,11 @@ export const router = createBrowserRouter([
             {
                 path: "/view_activation/:id",
                 element: <ViewActivation />
+
+            },
+            {
+                path: "/vendor_statistics",
+                element: <VendorManagement />
 
             },
             {
