@@ -16,6 +16,13 @@ export const handleDeleteApplication= async (id, forminfo) => {
      
     return data.data
 }
+export const handleDeleteGuarantorApplication= async (id, forminfo) => {
+  const { data } = await axiosInstance.delete(`/admin/guarantors/${id}`, {
+         data: forminfo,
+     });
+     
+    return data.data
+}
 export const handleDeleteVendor= async (id, forminfo) => {
   const { data } = await axiosInstance.delete(`/api/admin/vendors/${id}`, {
          data: forminfo,
@@ -35,6 +42,22 @@ export const handleGetloanApplication = async () => {
      
     return data.data
 }
+export const handleGetGuarantor = async () => {
+     const  data  = await axiosInstance.get("/api/admin/guarantors?page=1&limit=10");
+     
+    return data.data
+}
+export const handleGetGuarantorVerification = async () => {
+     const  data  = await axiosInstance.get("/api/admin/guarantor-verifications?page=1&limit=10");
+     
+    return data.data
+}
+export const handleGetSingleGuarantor = async (id) => {
+     const  data  = await axiosInstance.get(`/api/admin/guarantors/${id}`);
+     
+    return data.data
+}
+
 export const handleGetApplicationStatistics = async () => {
      const  data  = await axiosInstance.get("/api/admin/applications/stats");
      
@@ -42,6 +65,11 @@ export const handleGetApplicationStatistics = async () => {
 }
 export const handleGetVendortatistics = async () => {
      const  data  = await axiosInstance.get("/api/admin/vendors/stats");
+     
+    return data.data
+}
+export const handleGetGuarantortatistics = async () => {
+     const  data  = await axiosInstance.get("/api/admin/guarantors/stats");
      
     return data.data
 }
@@ -80,6 +108,13 @@ export const  handleUpdateStatus = async (id, formInfo) => {
    `/api/admin/applications/${id}/status`, formInfo
   );
 };
+export const  handleUpdateGuarantorStatus = async (id, formInfo) => {
+  return axiosInstance.patch(
+   `/api/admin/guarantors/${id}/status`, formInfo
+  );
+};
+
+
 export const  handleUpdateLoanStatus = async (id, formInfo) => {
   return axiosInstance.put(
    `/admin/loans/${id}/status`, formInfo

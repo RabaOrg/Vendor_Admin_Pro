@@ -29,6 +29,10 @@ import CategoryDashboard from "../pages/dashboard/category";
 import PaymentOrder from "../pages/dashboard/payment/paymentOrder";
 import BulkProductUpload from "../pages/product/bulkUpload/bulkUpload";
 import VendorManagement from "../pages/dashboard/activations/vendor";
+import GuarantorList from "../pages/dashboard/guarantor/guarantorlist";
+import ViewGuarantor from "../pages/dashboard/guarantor/viewguarantor";
+import GuarantorStatistics from "../pages/dashboard/guarantor/guarantorstatistics";
+import GuarantorVerification from "../pages/dashboard/guarantor/guarantorverification";
 
 
 
@@ -111,6 +115,27 @@ export const router = createBrowserRouter([
                 element: <CreateApplication />
 
             },
+            {
+                path: "/guarantor_list",
+                element: <GuarantorList />
+
+            },
+            {
+                path: "/guarantor_statistics",
+                element: <GuarantorStatistics />
+
+            },
+            {
+                path: "/guarantor_verification",
+                element: <GuarantorVerification />
+
+            },
+            {
+                path: "/view_guarantor/:id",
+                element: <ViewGuarantor />
+
+            },
+
             {
                 path: "/order_summary",
                 element: <ViewOrderSummary />

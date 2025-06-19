@@ -108,7 +108,7 @@ function ActivationLists() {
                         ? 'bg-green-100 text-green-700 font-semibold'
                         : item.account_status === 'active'
                           ? 'bg-green-100 text-green-600 font-semibold'
-                          : item.account_status === 'awaiting downpayment'
+                          : item.account_status === 'awaiting_downpayment'
                             ? 'bg-orange-100 text-[#FFA756] font-semibold'
                             : item.account_status === 'awaiting delivery'
                               ? 'bg-orange-100 text-[#FFA756] font-semibold'

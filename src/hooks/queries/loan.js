@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import {  handleGetloanApplication, handleGetRepayment, handleGetActivation, handleGetSingleloanApplication, handleGetSingleLoan, handleGetBankStatement, handleGetPaymentOrder, handleGetApplicationStatistics, handleGetVendortatistics, handleGetVendors, handleGetSingleVendor } from "../../services/loans"
+import {  handleGetloanApplication, handleGetRepayment, handleGetActivation, handleGetSingleloanApplication, handleGetSingleLoan, handleGetBankStatement, handleGetPaymentOrder, handleGetApplicationStatistics, handleGetVendortatistics, handleGetVendors, handleGetSingleVendor, handleGetGuarantor, handleGetSingleGuarantor, handleGetGuarantortatistics, handleGetGuarantorVerification } from "../../services/loans"
 
 
 export const useFetchRepayment = () => {
@@ -32,6 +32,37 @@ export const useFetchLoanApplication= (id) => {
     })
 
 }
+export const useFetchGuarantor= (id) => {
+   
+    return useQuery({
+        queryFn: () => handleGetGuarantor(id),
+        queryKey: ["Guarantor", id],
+        
+        
+    })
+
+}
+export const useFetchGuarantorVerification = (id) => {
+   
+    return useQuery({
+        queryFn: () => handleGetGuarantorVerification(id),
+        queryKey: ["Guarantorverification", id],
+        
+        
+    })
+
+}
+export const useFetchSingleGuarantor= (id) => {
+   
+    return useQuery({
+        queryFn: () => handleGetSingleGuarantor(id),
+        queryKey: ["singleguarantor", id],
+        
+        
+    })
+
+}
+
 export const useFetchApplication= () => {
    
     return useQuery({
@@ -47,6 +78,16 @@ export const useFetchVendor= () => {
     return useQuery({
         queryFn: () => handleGetVendortatistics(),
         queryKey: ["ApplicationStatistics"],
+        
+        
+    })
+
+}
+export const useFetchGuarantorVendor= () => {
+   
+    return useQuery({
+        queryFn: () =>handleGetGuarantortatistics(),
+        queryKey: ["guarantorStatistics"],
         
         
     })

@@ -3,25 +3,27 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from "@tanstack/react-query";
-import { useFetchSingleLoan } from '../../../../hooks/queries/loan';
-import Button from '../../../../components/shared/button';
-import axiosInstance from '../../../../../store/axiosInstance';
-import { handleDeleteApplication, handleUpdateStatus } from '../../../../services/loans';
 
-function SingleApplication() {
+import Button from '../../../components/shared/button'
+
+import axiosInstance from '../../../../store/axiosInstance';
+import { handleDeleteApplication, handleDeleteGuarantorApplication, handleUpdateGuarantorStatus, handleUpdateStatus } from '../../../services/loans';
+import { useFetchSingleGuarantor } from "../../../hooks/queries/loan"
+
+function ViewGuarantor() {
   const { id } = useParams();
   const Navigate = useNavigate()
   const [loanData, setLoanData] = useState(null);
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
-  const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
+  const { data: singleGuarantor, isPending, isError } = useFetchSingleGuarantor(id);
   const [showPreview, setShowPreview] = useState(false);
   const [bankId, setBankId] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState(singleGuarantor?.data?.verification_status || "");
   // const { data: bankStatement } = useFetchBankStatement(bankId)
 
 
-  console.log(singleLoan)
+  console.log(singleGuarantor)
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
   };
@@ -43,24 +45,24 @@ function SingleApplication() {
     fetchData();
   }, [id]);
 
-  const handleDelete = async () => {
-    try {
-      console.log(id)
-      const response = await handleDeleteApplication(id, {
-        reason: "Invalid application data"
-      })
-      if (response) {
-        toast.success("Application deleted successfully")
-        Navigate("/application")
-      }
-    } catch (error) {
-      console.log(error)
-      const errorMessage =
-        error?.response?.data?.message || "Failed to delete application";
+  // const handleDelete = async () => {
+  //   try {
+  //     console.log(id)
+  //     const response = await handleDeleteGuarantorApplication(id, {
+  //       reason: "Invalid application data"
+  //     })
+  //     if (response) {
+  //       toast.success("Application deleted successfully")
+  //       Navigate("/application")
+  //     }
+  //   } catch (error) {
+  //     console.log(error)
+  //     const errorMessage =
+  //       error?.response?.data?.message || "Failed to delete application";
 
-      toast.error(errorMessage);
-    }
-  }
+  //     toast.error(errorMessage);
+  //   }
+  // }
   if (isPending)
     return (
       <div className="flex justify-center items-center h-screen text-xl">
@@ -80,23 +82,23 @@ function SingleApplication() {
       </div>
     );
   const handleUpdateLoanStatus = async () => {
-    if (selectedStatus === singleLoan?.status) {
+    if (selectedStatus === singleGuarantor?.status) {
       toast.error("Please select a different status to update");
       return;
     }
 
     setIsLoading(true)
     try {
-      const response = await handleUpdateStatus(id, {
-        status: selectedStatus,
+      const response = await handleUpdateGuarantorStatus(id, {
+        verification_status: selectedStatus,
       })
       if (response) {
         toast.success("Status updated successfully")
         setLoanData((prevData) => ({
           ...prevData,
           status: selectedStatus,
-        }));
-        queryClient.invalidateQueries(["singleLoanApplication", id]);
+        }))
+        queryClient.invalidateQueries(["singleguarantor", id]);
       }
     } catch (error) {
       console.log(error)
@@ -105,8 +107,8 @@ function SingleApplication() {
     }
   }
 
-  const { id: ID, Customer, Product, application_data, repayment_dates, status, created_at } =
-    singleLoan;
+  const { id: ID, Customer, Product, application_data, repayment_dates, status: verification_status, created_at } =
+    singleGuarantor;
   const getStatusBadgeClasses = (status) => {
     if (!status) return 'bg-gray-100 text-gray-800';
     switch (status.toLowerCase()) {
@@ -153,14 +155,14 @@ function SingleApplication() {
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="p-6 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <h2 className="text-3xl font-bold text-gray-800">
-            View Application Details ({Customer?.full_name})
+            View Guarantor Details ({singleGuarantor?.data?.name})
           </h2>
           <span
             className={`inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
-              status
+              singleGuarantor?.data?.verification_status
             )}`}
           >
-            {status}
+            {singleGuarantor?.data?.verification_status}
           </span>
         </div>
 
@@ -170,11 +172,11 @@ function SingleApplication() {
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer Information</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Vendor_id</label>
+                <label className="block text-sm text-gray-600 mb-1">Email</label>
                 <input
                   type="text"
                   disabled
-                  value={Customer?.vendor_id}
+                  value={singleGuarantor?.data?.application?.customer?.id}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -183,25 +185,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={Customer?.full_name}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Address</label>
-                <input
-                  type="text"
-                  disabled
-                  value={Customer?.address}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Customer Status</label>
-                <input
-                  type="text"
-                  disabled
-                  value={status}
+                  value={singleGuarantor?.data?.application?.customer?.name}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -210,32 +194,25 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={Customer?.email}
+                  value={singleGuarantor?.data?.application?.customer?.email}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Customer Status</label>
+                <label className="block text-sm text-gray-600 mb-1">Customer Phone number</label>
                 <input
                   type="text"
                   disabled
-                  value={Customer?.phone_number}
+                  value={singleGuarantor?.data?.application?.customer?.phone_number}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Created At</label>
-                <input
-                  type="text"
-                  disabled
-                  value={new Date(Customer?.created_at).toLocaleDateString()}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+
+
             </div>
           </div>
 
-          {/* Customer Information */}
+
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Product Information</h3>
             <div className="space-y-4">
@@ -244,7 +221,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={Product?.id}
+                  value={singleGuarantor?.data?.application?.product?.id}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -253,7 +230,8 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={Product?.category}
+                  value={singleGuarantor?.data?.application?.product?.name}
+
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -262,7 +240,8 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={Product?.description}
+                  value={singleGuarantor?.data?.application?.product?.price}
+
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -271,246 +250,126 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={Product?.name}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Price</label>
-                <input
-                  type="text"
-                  disabled
-                  value={Product?.price}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Shipping_days_min</label>
-                <input
-                  type="text"
-                  disabled
-                  value={Product?.shipping_days_min}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Shipping_days_max</label>
-                <input
-                  type="text"
-                  disabled
-                  value={Product?.shipping_days_max}
+                  value={singleGuarantor?.data?.application?.product?.description}
+
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
+
+
+
+
+            </div>
+          </div>
+          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Guarantor's Details</h3>
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Status</label>
+                <label className="block text-sm text-gray-600 mb-1">Address</label>
                 <input
                   type="text"
                   disabled
-                  value={Product?.status}
+                  value={singleGuarantor?.data?.address}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Name</label>
+                <input
+                  type="text"
+                  disabled
+                  value={singleGuarantor?.data?.name}
+
+
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  disabled
+                  value={singleGuarantor?.data?.phone_number}
+
+
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Relationship</label>
+                <input
+                  type="text"
+                  disabled
+                  value={singleGuarantor?.data?.relationship}
+
+
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Verification Status</label>
+                <input
+                  type="text"
+                  disabled
+                  value={singleGuarantor?.data?.verifications_status}
+
+
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+
+
+
+
             </div>
           </div>
 
 
           {/* Loan Details */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Application_type</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Verifications</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Account_Number</label>
+                <label className="block text-sm text-gray-600 mb-1">Backup contact info</label>
                 <input
                   type="text"
                   disabled
-                  value={application_data?.account_number}
+                  value={singleGuarantor?.data?.verifications[0]?.backup_contact_info}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Link Token</label>
+                <label className="block text-sm text-gray-600 mb-1">Communication Method</label>
                 <input
                   type="text"
                   disabled
-                  value={application_data?.application_link_token}
+                  value={singleGuarantor?.data?.verifications[0]?.communication_method}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Aplication Source</label>
+                <label className="block text-sm text-gray-600 mb-1">Contact Info</label>
                 <input
                   type="text"
                   disabled
-                  value={application_data?.application_source}
+                  value={singleGuarantor?.data?.verifications[0]?.contact_info}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Bank Name</label>
+                <label className="block text-sm text-gray-600 mb-1">Status</label>
                 <input
                   type="text"
                   disabled
-                  value={application_data?.bank_name}
+                  value={singleGuarantor?.data?.verifications[0]?.status}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Customer Email</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.customer_email}
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Customer Name</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.customer_name}
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Customer Phone</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.customer_phone}
-
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Guarantor's Address</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.guarantor_address}
-
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Guarantor's Name</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.guarantor_name}
-
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Guarantor's Phone</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.guarantor_phone}
-
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Product Description</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.product_description}
-
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Product Name</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.product_name}
-
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Tenure</label>
-                <input
-                  type="text"
-                  disabled
-                  value={application_data?.product_price}
-
-                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
-                />
-              </div>
-            </div>
-          </div>
-          {/* Documents Section */}
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Uploaded Documents</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              {/* ID Card Preview */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">ID Card</label>
-                <div className="border rounded-md p-3 bg-white shadow-sm">
-                  {singleLoan?.documents?.id_card?.s3_key ? (
-                    <>
-                      <img
-                        src={`https://rabaserver-development.s3.amazonaws.com/${singleLoan?.documents?.id_card?.s3_key}`}
-                        alt="ID Card"
-                        className="w-full h-60 object-contain rounded-md mb-3"
-                      />
-                      <a
-                        href={`https://rabaserver-development.s3.amazonaws.com/${singleLoan?.documents?.id_card?.s3_key}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-red-600 text-sm underline"
-                        download
-                      >
-                        Download ID Card
-                      </a>
-                    </>
-                  ) : (
-                    <p className="text-sm text-gray-500">No ID card uploaded.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Bank Statement Preview */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Bank Statement</label>
-                <div className="border rounded-md p-4 bg-white shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-700 text-sm font-medium">
-                      {singleLoan?.documents?.bank_statement?.original_filename || 'Bank Statement'}
-                    </p>
-                    <p className="text-gray-500 text-xs">
-                      Uploaded on {new Date(singleLoan?.documents?.bank_statement?.upload_timestamp).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  {singleLoan?.documents?.bank_statement?.s3_key ? (
-                    <a
-                      href={`https://rabaserver-development.s3.amazonaws.com/${singleLoan?.documents?.bank_statement?.s3_key}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                      className="text-sm text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors"
-                    >
-                      Download
-                    </a>
-                  ) : (
-                    <p className="text-sm text-red-500">No file available</p>
-                  )}
-                </div>
-              </div>
-
 
             </div>
           </div>
-
 
 
           {/* <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
@@ -571,14 +430,14 @@ function SingleApplication() {
             className="text-sm px-6 py-3"
             loading={isLoading}
           />
-          <Button
+          {/* <Button
             label="Delete Application"
             onClick={handleDelete}
             variant="transparent"
             size="md"
             className="text-sm px-6 py-3"
             loading={isLoading}
-          />
+          /> */}
         </div>
       </div>
     </div>
@@ -586,4 +445,4 @@ function SingleApplication() {
   );
 }
 
-export default SingleApplication;
+export default ViewGuarantor;
