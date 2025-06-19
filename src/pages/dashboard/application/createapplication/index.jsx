@@ -44,7 +44,7 @@ const CreateApplication = () => {
 
   return (
     <div className="p-6 bg-white rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">📊 Application Statistics</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Application Statistics</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {stats.map((stat, index) => (

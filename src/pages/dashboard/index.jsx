@@ -15,7 +15,7 @@ function Dashboard() {
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
     const { data: dashboardInsights } = useFetchDashboardAnalytics()
-
+    const { data: datas } = dashboardInsights || {}
     const { data: dashboardData, isPending, isError, refetch } = useFetchDashboardInsights({
         period,
         startDate,
@@ -59,20 +59,17 @@ function Dashboard() {
             icon: '/iconn1.png',
         },
         {
-            label: 'Stuck Applications Count',
-            value: datar?.metrics?.system_uptime_seconds,
-            icon: '/Icon.png',
-        },
-
-    ]
-    console.log(dashboardInsights)
-    const { data: datas } = dashboardInsights || {}
-    const dataCardMain = [
-        {
             label: 'Approval Rate',
             value: datas?.conversion_funnel?.approval_rate,
             icon: '/Icon.png',
         },
+
+
+    ]
+    console.log(dashboardInsights)
+
+    const dataCardMain = [
+
         {
             label: 'Completed Applications',
             value: datas?.conversion_funnel?.completed_applications,

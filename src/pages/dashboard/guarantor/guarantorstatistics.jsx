@@ -59,7 +59,7 @@ const GuarantorStatistics = () => {
       </div>
 
       <div className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">📊 Monthly Registration Trend</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Registration Trend</h3>
         <div className="w-full h-64">
           {trend?.length ? (
             <ResponsiveContainer width="100%" height="100%">

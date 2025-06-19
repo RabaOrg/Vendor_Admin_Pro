@@ -54,7 +54,7 @@ const AddCustomer = () => {
             </div>
 
             <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">📊 Monthly Registration Trend</h3>
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Registration Trend</h3>
                 <div className="w-full h-64">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={trend}>
@@ -69,7 +69,7 @@ const AddCustomer = () => {
             </div>
 
             <div className="mt-10">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">🏆 Top Customers</h3>
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Top Customers</h3>
                 <div className="overflow-x-auto">
                     <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                         <thead>
