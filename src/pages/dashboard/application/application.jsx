@@ -20,6 +20,13 @@ function ApplicationList() {
     navigate(`/application-statistics/${id}`);
 
   };
+  const handleViewPayment = (id) => {
+
+    setSelectedId(id);
+
+    navigate(`/application_payment/${id}`);
+
+  };
   return (
     <div className='px-6'>
       <div className="inline-block min-w-full rounded-lg overflow-hidden">
@@ -38,7 +45,7 @@ function ApplicationList() {
 
         </div>
         <table className="min-w-full leading-normal mt-3">
-          <thead className='bg-[#D5D5D5]'>
+          <thead className="bg-[#D5D5D5]">
             <tr>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 ID
@@ -65,7 +72,10 @@ function ApplicationList() {
                 Status
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                View
+                View Application
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                View Payment
               </th>
             </tr>
           </thead>
@@ -75,10 +85,9 @@ function ApplicationList() {
                 <tr
                   key={item.id}
                   onClick={() => handleRowClick(item.id)}
-
-                  className={`cursor-pointer transition-all duration-200 
-                    ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'} 
-                    hover:bg-gray-200`}>
+                  className={`cursor-pointer transition-all duration-200 ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'
+                    } hover:bg-gray-200`}
+                >
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">{item.id}</p>
                   </td>
@@ -120,9 +129,7 @@ function ApplicationList() {
                                     ? 'bg-purple-100 text-purple-700 font-semibold'
                                     : item.status === 'cancelled'
                                       ? 'bg-red-100 text-red-600 font-semibold'
-
                                       : item.status === 'completed'
-
                                         ? 'bg-green-100 text-green-800 font-semibold'
                                         : item.status === 'Rejected'
                                           ? 'bg-red-300 text-[#EF3826] font-semibold'
@@ -131,22 +138,39 @@ function ApplicationList() {
                     >
                       {item.status}
                     </button>
-
                   </td>
-                  <td className="px-4 py-4 border-b border-gray-200 bg-white flex">
-                    <button
-                      className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
-                      aria-label="View"
 
+                  {/* View Application */}
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <button
+                      onClick={(e) => {
+                        handleRowClick(item.id)
+                      }}
+                      className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
+                      title="View Application"
                     >
-                      <FaEye className="text-gray-500 text-lg" onClick={handleRowClick} />
+                      <FaEye className="text-gray-500" />
                     </button>
                   </td>
 
+                  {/* View Payment */}
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewPayment(item.id);
+                      }}
+                      className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
+                      title="View Payment"
+                    >
+                      <FaEye className="text-gray-500" />
+                    </button>
+                  </td>
                 </tr>
               ))}
           </tbody>
         </table>
+
       </div>
     </div>
   )

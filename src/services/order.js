@@ -1,13 +1,13 @@
 import axiosInstance from "../../store/axiosInstance";
 
 export const handleGetOrder = async () => {
-     const { data } = await axiosInstance.get(`/admin/orders`);
+     const { data } = await axiosInstance.get(`/api/admin/payments/transactions?page=1&limit=20`);
      
     return data.data
 }
 
-export const handleGetSingleOrder = async (id) => {
-     const { data } = await axiosInstance.get(`/admin/orders/${id}`);
+export const handleGetSingleOrder = async () => {
+     const { data } = await axiosInstance.get(`/api/admin//payments/stats`);
      
     return data.data
 }

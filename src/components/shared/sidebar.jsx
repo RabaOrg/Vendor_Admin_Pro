@@ -26,8 +26,10 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Vendor Management", icon: <Icons.Activation />, path: "/vendor_management" },
         { name: "Applications", icon: <Icons.Application />, path: "/application" },
         { name: "Guarantor Management", icon: <Icons.RepaymentPlan />, path: "/guarantor_list" },
-        // { name: "Orders", icon: <Icons.Order />, path: "/orders" },
-        // { name: "Category", icon: <Icons.Category />, path: "/category" },
+        { name: "Payment Details", icon: <Icons.Order />, path: "/payment_details" },
+
+
+        { name: "Repayment Schedules", icon: <Icons.Category />, path: "/repayment-plan" },
         // { name: "Payment Order Summary", icon: <Icons.Category />, path: "/payment_orders" },
         // { name: "Bulk Upload", icon: <Icons.RepaymentPlan />, path: "/product_bulkupload" },
 

@@ -5,7 +5,7 @@ import axiosInstance from "../../store/axiosInstance";
 
 
 export const handleGetRepayment = async () => {
-     const { data } = await axiosInstance.get(`/admin/repayment_plans`);
+     const { data } = await axiosInstance.get(`/api/admin/payments/schedules?page=1&limit=20`);
      
     return data.data
 }
@@ -152,6 +152,12 @@ export const handleGetSingleVendor = async (id) => {
      
     return data.data.data
 }
+export const handleGetApplicationPayment= async (id) => {
+     const  data  = await axiosInstance.get(`api/admin/applications/${id}/payments`);
+     
+    return data.data.data
+}
+
 
 export const handleGetPaymentOrder = async () => {
      const  data  = await axiosInstance.get(`/admin/payment-analytics`);

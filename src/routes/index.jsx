@@ -33,6 +33,7 @@ import GuarantorList from "../pages/dashboard/guarantor/guarantorlist";
 import ViewGuarantor from "../pages/dashboard/guarantor/viewguarantor";
 import GuarantorStatistics from "../pages/dashboard/guarantor/guarantorstatistics";
 import GuarantorVerification from "../pages/dashboard/guarantor/guarantorverification";
+import ApplicationPayment from "../pages/dashboard/application/applicationPay/payment";
 
 
 
@@ -91,7 +92,7 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/orders",
+                path: "/payment_details",
                 element: <OrderList />
 
             },
@@ -137,8 +138,13 @@ export const router = createBrowserRouter([
             },
 
             {
-                path: "/order_summary",
+                path: "/payment_statistics",
                 element: <ViewOrderSummary />
+
+            },
+            {
+                path: "/application_payment/:id",
+                element: <ApplicationPayment />
 
             },
             {

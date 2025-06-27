@@ -30,8 +30,8 @@ function OrderList() {
               size="lg"
               className="text-sm w-[150px]"
             />
-            <Link to={'/'}> <Button
-              label="View order summary"
+            <Link to={'/payment_statistics'}> <Button
+              label="View payment statistics"
               variant="solid"
 
               size="md"
@@ -44,23 +44,26 @@ function OrderList() {
             <tr>
 
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase  tracking-wider">
-                Product Name
+                ID
               </th>
 
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Amount
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Customer Name
+                Customer's Name
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Phone Number
+                Vendor's Name
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                State
+                Created At
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Desired Delivery Date
+                Transaction type
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                Status
               </th>
 
 
@@ -80,24 +83,24 @@ function OrderList() {
 
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
-                    {Product.name}
+                    {item.id}
                   </p>
                 </td>
 
 
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
-                    {amount}
+                    {item.amount}
                   </p>
                 </td>
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
-                    {User.first_name} {User.last_name}
+                    {item.customer_name}
                   </p>
                 </td>
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
-                    {User.phone_number}
+                    {item.vendor_name}
                   </p>
                 </td>
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
@@ -107,8 +110,39 @@ function OrderList() {
                 </td>
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
-                    {new Date(item.updated_at).toLocaleDateString()}
+                    {item.transaction_type}
                   </p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                  <button
+                    className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
+                      ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold'
+                      : item.status === 'pending'
+                        ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                        : item.status === 'success'
+                          ? 'bg-green-100 text-green-700 font-semibold'
+                          : item.status === 'active'
+                            ? 'bg-green-100 text-green-600 font-semibold'
+                            : item.status === 'awaiting_downpayment'
+                              ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                              : item.status === 'awaiting delivery'
+                                ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                                : item.status === 'processing'
+                                  ? 'bg-purple-100 text-purple-700 font-semibold'
+                                  : item.status === 'cancelled'
+                                    ? 'bg-red-100 text-red-600 font-semibold'
+
+                                    : item.status === 'completed'
+
+                                      ? 'bg-green-100 text-green-800 font-semibold'
+                                      : item.status === 'Rejected'
+                                        ? 'bg-red-300 text-[#EF3826] font-semibold'
+                                        : 'bg-gray-200 text-gray-700'
+                      }`}
+                  >
+                    {item.status}
+                  </button>
+
                 </td>
 
 

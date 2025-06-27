@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import {  handleGetloanApplication, handleGetRepayment, handleGetActivation, handleGetSingleloanApplication, handleGetSingleLoan, handleGetBankStatement, handleGetPaymentOrder, handleGetApplicationStatistics, handleGetVendortatistics, handleGetVendors, handleGetSingleVendor, handleGetGuarantor, handleGetSingleGuarantor, handleGetGuarantortatistics, handleGetGuarantorVerification } from "../../services/loans"
+import {  handleGetloanApplication, handleGetRepayment, handleGetActivation, handleGetSingleloanApplication, handleGetSingleLoan, handleGetBankStatement, handleGetPaymentOrder, handleGetApplicationStatistics, handleGetVendortatistics, handleGetVendors, handleGetSingleVendor, handleGetGuarantor, handleGetSingleGuarantor, handleGetGuarantortatistics, handleGetGuarantorVerification, handleGetApplicationPayment } from "../../services/loans"
 
 
 export const useFetchRepayment = () => {
@@ -124,6 +124,16 @@ export const useFetchSingleVendorData = (id) => {
     return useQuery({
         queryFn: () => handleGetSingleVendor(id),
         queryKey: ["getsinglevendors"]
+        
+        
+    })
+
+}
+export const useFetchApplicationPayment = (id) => {
+   
+    return useQuery({
+        queryFn: () => handleGetApplicationPayment(id),
+        queryKey: ["getapplicationpayment"]
         
         
     })

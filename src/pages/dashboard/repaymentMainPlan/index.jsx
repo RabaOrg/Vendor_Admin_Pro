@@ -36,19 +36,25 @@ function RepaymentMainPlan() {
               </th>
 
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Tenure Unit
+                Customer's Name
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Max Downplay(%)
+                Vendor's Name
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Min Downplay(%)
+                down_paid_amount
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Created By
+                Amount_Due
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Updated AT
+                Created At
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                Due At
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                Status
               </th>
 
 
@@ -66,17 +72,22 @@ function RepaymentMainPlan() {
 
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                 <p className="font-[500] whitespace-no-wrap text-xs">
-                  {item.tenure_unit}
+                  {item.customer_name}
                 </p>
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                 <p className="font-[500] whitespace-no-wrap text-xs">
-                  {item.down_percent_max}
+                  {item.vendor_name}
                 </p>
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                 <p className="font-[500] whitespace-no-wrap text-xs">
-                  {item.down_percent_min}
+                  {item.paid_amount}
+                </p>
+              </td>
+              <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
+                <p className="font-[500] whitespace-no-wrap text-xs">
+                  {item.amount_due}
                 </p>
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
@@ -86,9 +97,38 @@ function RepaymentMainPlan() {
               </td>
               <td className="px-5 py-5 border-b border-gray-200 bg-white text-xs">
                 <p className="font-[500] whitespace-no-wrap text-xs">
-                  {new Date(item.updated_at).toLocaleDateString()}
+                  {new Date(item.due_date).toLocaleDateString()}
                 </p>
               </td>
+              <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                <button
+                  className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
+                    ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold'
+                    : item.status === 'pending'
+                      ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                      : item.status === 'submitted'
+                        ? 'bg-green-100 text-green-700 font-semibold'
+                        : item.status === 'active'
+                          ? 'bg-green-100 text-green-600 font-semibold'
+                          : item.status === 'awaiting_downpayment'
+                            ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                            : item.status === 'awaiting delivery'
+                              ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                              : item.status === 'processing'
+                                ? 'bg-purple-100 text-purple-700 font-semibold'
+                                : item.status === 'cancelled'
+                                  ? 'bg-red-100 text-red-600 font-semibold'
+                                  : item.status === 'completed'
+                                    ? 'bg-green-100 text-green-800 font-semibold'
+                                    : item.status === 'Rejected'
+                                      ? 'bg-red-300 text-[#EF3826] font-semibold'
+                                      : 'bg-gray-200 text-gray-700'
+                    }`}
+                >
+                  {item.status}
+                </button>
+              </td>
+
 
 
             </tr>
