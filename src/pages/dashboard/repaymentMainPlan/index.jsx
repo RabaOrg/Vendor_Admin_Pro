@@ -14,18 +14,9 @@ function RepaymentMainPlan() {
       <div className="inline-block min-w-full  rounded-lg overflow-hidden">
         <div className="flex items-center justify-between p-4 mt-3">
           <h1 className="text-3xl font-semibold">
-            Repayment <span className="text-black-400">{'>'}</span> Add Repayment-Plan
+            Repayment Schedule
           </h1>
-          <div className='flex gap-3'>
 
-            <Link to={'/create_repayment_plan'}> <Button
-              label="Create Repayment-plan"
-              variant="solid"
-
-              size="md"
-              className="text-sm px-6 py-5"
-            /></Link>
-          </div>
         </div>
         <table className="min-w-full leading-normal mt-3 ">
           <thead className='bg-[#D5D5D5]'>
