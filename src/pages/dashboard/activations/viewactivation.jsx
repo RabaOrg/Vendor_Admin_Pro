@@ -13,6 +13,7 @@ function ViewActivation() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
   const [isverfied, setisVerified] = useState(false)
+  const [interest, setInterest] = useState(0)
   const [isLoad, setIsLoad] = useState(false)
 
 
@@ -52,6 +53,10 @@ function ViewActivation() {
 
   }
   const handleUpdateVerificationStatus = async () => {
+    if (!interest) {
+      toast.error("interest rate is required")
+      return
+    }
     if (selectedVerificationStatus === "") {
       toast.error("Please select the active status to proceed")
       return
@@ -62,6 +67,8 @@ function ViewActivation() {
       const response = await handleUpdateverification(id,
         {
           verification_status: selectedVerificationStatus,
+          verification_notes: "Verification approved by admin",
+          interest_rate: Number(interest),
 
         }
       )
@@ -140,11 +147,11 @@ function ViewActivation() {
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Personal Information</h3>
             <div className="space-y-4">
-              <Input label="Full Name" value={vendor?.full_name} />
-              <Input label="Phone Number" value={vendor?.phone_number} />
-              <Input label="Email" value={vendor?.email} />
-              <Input label="Account Status" value={vendor?.account_status} />
-              <Input label="Verification Status" value={vendor?.verification_status} />
+              <Input label="Full Name" value={vendor?.full_name} disabled />
+              <Input label="Phone Number" value={vendor?.phone_number} disabled />
+              <Input label="Email" value={vendor?.email} disabled />
+              <Input label="Account Status" value={vendor?.account_status} disabled />
+              <Input label="Verification Status" value={vendor?.verification_status} disabled />
             </div>
           </div>
 
@@ -152,12 +159,12 @@ function ViewActivation() {
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Business Information</h3>
             <div className="space-y-4">
-              <Input label="Business Name" value={vendor?.Business?.name} />
-              <Input label="CAC Number" value={vendor?.Business?.cac_number} />
-              <Input label="Category" value={vendor?.Business?.category} />
-              <Input label="Sub Category" value={vendor?.Business?.sub_category} />
-              <Input label="Monthly Revenue" value={vendor?.Business?.monthly_revenue} />
-              <Input label="Time in Business" value={vendor?.Business?.time_in_business} />
+              <Input label="Business Name" value={vendor?.Business?.name} disabled />
+              <Input label="CAC Number" value={vendor?.Business?.cac_number} disabled />
+              <Input label="Category" value={vendor?.Business?.category} disabled />
+              <Input label="Sub Category" value={vendor?.Business?.sub_category} disabled />
+              <Input label="Monthly Revenue" value={vendor?.Business?.monthly_revenue} disabled />
+              <Input label="Time in Business" value={vendor?.Business?.time_in_business} disabled />
             </div>
           </div>
 
@@ -165,9 +172,9 @@ function ViewActivation() {
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Address</h3>
             <div className="space-y-4">
-              <Input label="Street Address" value={vendor?.Business?.street_address} />
-              <Input label="LGA" value={vendor?.Business?.lga} />
-              <Input label="State" value={vendor?.Business?.state} />
+              <Input label="Street Address" value={vendor?.Business?.street_address} disabled />
+              <Input label="LGA" value={vendor?.Business?.lga} disabled />
+              <Input label="State" value={vendor?.Business?.state} disabled />
             </div>
           </div>
 
@@ -175,10 +182,18 @@ function ViewActivation() {
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Statistics</h3>
             <div className="space-y-4">
-              <Input label="Total Applications" value={vendor?.statistics?.total_applications} />
-              <Input label="Total Customers" value={vendor?.statistics?.total_customers} />
-              <Input label="Total Products" value={vendor?.statistics?.total_products} />
+              <Input label="Total Applications" value={vendor?.statistics?.total_applications} disabled />
+              <Input label="Total Customers" value={vendor?.statistics?.total_customers} disabled />
+              <Input label="Total Products" value={vendor?.statistics?.total_products} disabled />
             </div>
+          </div>
+          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Interest Rate</h3>
+            <Input
+              label="Interest Rate (Please input the interest rate)"
+              value={interest}
+              onChange={(e) => setInterest(e.target.value)}
+            />
           </div>
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
@@ -215,6 +230,7 @@ function ViewActivation() {
 
 
 
+
           <div className="bg-gray-50 p-6 mt-5 rounded-lg shadow-sm md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
               Verification Status Update
@@ -228,6 +244,7 @@ function ViewActivation() {
               <option value="">Select an option</option>
               <option value="pending">Pending</option>
               <option value="under_review">under_review</option>
+              <option value="under_review">Approved</option>
 
               <option value="suspended">suspended</option>
               <option value="inactive">inactive</option>
@@ -269,12 +286,13 @@ function ViewActivation() {
   )
 }
 
-const Input = ({ label, value }) => (
+const Input = ({ label, value, onChange, disabled }) => (
   <div>
     <label className="block text-sm text-gray-600 mb-1">{label}</label>
     <input
       type="text"
-      disabled
+      disabled={disabled}
+      onChange={onChange}
       value={value ?? '—'}
       className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
     />
