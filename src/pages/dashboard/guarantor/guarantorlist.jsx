@@ -135,7 +135,7 @@ function GuarantorList() {
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     {new Date(item.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-4 border-b border-gray-200 bg-white flex">
+                  <td className="px-4 py-4 border-b border-gray-200 flex">
                     <button
                       className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
                       aria-label="View"

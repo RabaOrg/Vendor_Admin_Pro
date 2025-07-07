@@ -34,6 +34,7 @@ import ViewGuarantor from "../pages/dashboard/guarantor/viewguarantor";
 import GuarantorStatistics from "../pages/dashboard/guarantor/guarantorstatistics";
 import GuarantorVerification from "../pages/dashboard/guarantor/guarantorverification";
 import ApplicationPayment from "../pages/dashboard/application/applicationPay/payment";
+import SingleRecurring from "../pages/dashboard/transaction/singlerecurring";
 
 
 
@@ -87,8 +88,13 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/transaction",
+                path: "/recurring_debits",
                 element: <TransactionList />
+
+            },
+            {
+                path: "/recurring_debit/:id",
+                element: <SingleRecurring />
 
             },
             {

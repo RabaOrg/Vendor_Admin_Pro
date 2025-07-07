@@ -312,7 +312,7 @@ function ViewGuarantor() {
                 <input
                   type="text"
                   disabled
-                  value={singleGuarantor?.data?.verifications_status}
+                  value={singleGuarantor?.data?.verification_status}
 
 
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -406,15 +406,12 @@ function ViewGuarantor() {
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select an option</option>
-              <option value="approved">approved</option>
-              <option value="submitted">submitted</option>
+
               <option value="pending">pending</option>
-              <option value="completed">completed</option>
-              <option value="cancelled">cancelled</option>
+
               <option value="rejected">rejected</option>
-              <option value="awaiting_downpayment">awaiting downpayment</option>
-              <option value="awaiting_delivery">awaiting delivery</option>
-              <option value="processing">processing</option>
+              <option value="rejected">verified</option>
+
 
             </select>
           </div>

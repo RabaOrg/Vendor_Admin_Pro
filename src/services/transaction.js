@@ -5,9 +5,22 @@ export const handleGetAllTrnsaction = async (start_date, end_date, page, perPage
     
     return data.data
 }
+
 export const handleGetTrnsaction = async ( page, perPage) => {
    
     const { data } = await axiosInstance.get(`/admin/transaction?page=${page}&perPage=${perPage}`);
+    
+    return data.data
+}
+export const handleGetRecurring = async () => {
+   
+    const { data } = await axiosInstance.get(`/api/admin/payments/recurring-debits?page=1&limit=20`);
+    
+    return data.data
+}
+export const handleGetSingleRecurring = async (id) => {
+   
+    const { data } = await axiosInstance.get(`/api/admin/payments/recurring-debits/${id}`);
     
     return data.data
 }

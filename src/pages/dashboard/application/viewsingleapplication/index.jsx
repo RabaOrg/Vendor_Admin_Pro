@@ -215,7 +215,7 @@ function SingleApplication() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Customer Status</label>
+                <label className="block text-sm text-gray-600 mb-1">Customer Phone_Number</label>
                 <input
                   type="text"
                   disabled

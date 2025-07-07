@@ -22,11 +22,12 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Dashboard", icon: <Icons.Dashboard />, path: "/" },
         // { name: "Product", icon: <Icons.Product />, path: "/product" },
         { name: "Customer", icon: <Icons.Customer />, path: "/customer" },
-        // { name: "Transactions", icon: <Icons.Transaction />, path: "/transaction" },
+
         { name: "Vendor Management", icon: <Icons.Activation />, path: "/vendor_management" },
         { name: "Applications", icon: <Icons.Application />, path: "/application" },
         { name: "Guarantor Management", icon: <Icons.RepaymentPlan />, path: "/guarantor_list" },
         { name: "Payment Details", icon: <Icons.Order />, path: "/payment_details" },
+        { name: "Recurring Debits", icon: <Icons.Transaction />, path: "/recurring_debits" },
 
 
         { name: "Repayment Schedules", icon: <Icons.Category />, path: "/repayment-plan" },
@@ -48,10 +49,12 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
                 <div className="flex flex-col p-5">
                     <button
                         onClick={toggleSidebar}
-                        className="md:hidden mb-4 text-xl text-gray-700"
+                        className="md:hidden mb-4 p-2 text-2xl text-gray-700 hover:bg-gray-200 rounded focus:outline-none"
+                        aria-label="Close sidebar"
                     >
-                        Close
+                        &times;
                     </button>
+
                     <div>
                         <img src="/raba.png" alt="" />
                     </div>
