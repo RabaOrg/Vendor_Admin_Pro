@@ -572,7 +572,7 @@ function SingleApplication() {
             loading={isLoading}
           />
           <Button
-            label="Delete Application"
+            label="Deactivate Application"
             onClick={handleDelete}
             variant="transparent"
             size="md"

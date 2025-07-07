@@ -269,7 +269,7 @@ function ViewActivation() {
           <div className="p-6 flex justify-start gap-10">
 
             <Button
-              label="Delete Vendor"
+              label="Deactivate Vendor"
               onClick={handleDelete}
               variant="transparent"
               size="md"
