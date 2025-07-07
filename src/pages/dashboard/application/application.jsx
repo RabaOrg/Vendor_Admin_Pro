@@ -172,6 +172,8 @@ function ApplicationList() {
         </table>
 
       </div>
+      <br />
+      <br />
     </div>
   )
 }

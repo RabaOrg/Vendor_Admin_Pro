@@ -242,12 +242,12 @@ function ViewActivation() {
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select an option</option>
-              <option value="pending">Pending</option>
+              <option value="pending">pending</option>
               <option value="under_review">under_review</option>
-              <option value="under_review">Approved</option>
+              <option value="under_review">approved</option>
 
-              <option value="suspended">suspended</option>
-              <option value="inactive">inactive</option>
+              <option value="suspended">rejected</option>
+
 
 
 
