@@ -24,12 +24,7 @@ function OrderList() {
             Payment Details <span className="text-black-400"></span>
           </h1>
           <div className='flex gap-3'>
-            <Button
-              label="Cancel"
-              variant="transparent"
-              size="lg"
-              className="text-sm w-[150px]"
-            />
+
             <Link to={'/payment_statistics'}> <Button
               label="View payment statistics"
               variant="solid"
