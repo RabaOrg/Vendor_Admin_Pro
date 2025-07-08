@@ -138,7 +138,7 @@ function OrderList() {
                   colSpan={7}
                   className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
                 >
-                  No orders available at this time.
+                  No payment details available at this time.
                 </td>
               </tr>
             )}

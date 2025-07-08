@@ -109,11 +109,11 @@ export const useFetchSingleLoan= (id) => {
 
 
 
-export const useFetchVendorData = () => {
+export const useFetchVendorData = ({ page, limit  }) => {
    
     return useQuery({
-        queryFn: () => handleGetVendors(),
-        queryKey: ["getvendors"]
+        queryFn: () => handleGetVendors({ page, limit  }),
+        queryKey: ["getvendors",page, limit]
         
         
     })
@@ -123,7 +123,7 @@ export const useFetchSingleVendorData = (id) => {
    
     return useQuery({
         queryFn: () => handleGetSingleVendor(id),
-        queryKey: ["getsinglevendors"]
+        queryKey: ["getsinglevendors", id]
         
         
     })
@@ -133,7 +133,7 @@ export const useFetchApplicationPayment = (id) => {
    
     return useQuery({
         queryFn: () => handleGetApplicationPayment(id),
-        queryKey: ["getapplicationpayment"]
+        queryKey: ["getapplicationpayment", id]
         
         
     })

@@ -4,9 +4,11 @@ import { Link } from 'react-router-dom'
 import { FaEye, } from 'react-icons/fa'
 import Button from '../../../components/shared/button'
 import { useNavigate } from 'react-router-dom'
+import ApplicationList from '../application/application'
 
 function ActivationLists() {
-  const { data: activationList, isPending, isError } = useFetchVendorData()
+  const [page, setPage] = useState(1);
+  const { data: activationList, isPending, isError } = useFetchVendorData({ page, limit: 10 })
   console.log(activationList)
   const [selectedId, setSelectedId] = useState(null);
   const Navigate = useNavigate()
@@ -70,8 +72,8 @@ function ActivationLists() {
           </thead>
 
           <tbody>
-            {Array.isArray(activationList?.data) &&
-              activationList.data.map((item) => (
+            {Array.isArray(activationList?.data?.data) &&
+              activationList.data.data.map((item) => (
                 <tr
                   key={item.id}
                   onClick={() => handleRowClick(item.id)}
@@ -130,10 +132,30 @@ function ActivationLists() {
 
 
       </div>
+      {activationList?.data?.meta?.total_pages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={page === 1}
+            className={`px-4 py-2 text-white ${page === 1 ? 'bg-gray-400' : 'bg-green-700 hover:bg-green-700'} rounded-lg`}
+          >
+            Previous
+          </button>
+          <span className="text-sm font-medium">
+            Page {page} of {activationList?.data?.meta?.total_pages}
+          </span>
+          <button
+            onClick={() => setPage((prev) => Math.min(prev + 1, activationList?.data?.meta?.total_pages))}
+            disabled={page === activationList?.data?.meta?.total_pages}
+            className={`px-4 py-2 text-white ${page === activationList?.data?.meta?.total_pages ? 'bg-gray-400' : 'bg-green-800 hover:bg-green-700'} rounded-lg`}
+          >
+            Next
+          </button>
+        </div>
+      )}
       <br />
       <br />
-      <br />
-      <br />
+
     </div >
   )
 }

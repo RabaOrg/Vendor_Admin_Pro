@@ -9,7 +9,6 @@ import { useFetchLoanApplication } from '../../../hooks/queries/loan'
 
 function ApplicationList() {
   const [page, setPage] = useState(1);
-
   const { data: applicationData, isPending, isError } = useFetchLoanApplication({ page, limit: 10 })
   console.log(applicationData)
   const [selectedId, setSelectedId] = useState(null);

@@ -90,10 +90,10 @@ export const handleGetActivation = async () => {
      
     return data.data
 }
-export const handleGetVendors= async () => {
-     const data  = await axiosInstance.get("/api/admin/vendors?page=1&limit=20");
+export const handleGetVendors= async ({ page = 1, limit = 10 }) => {
+     const data  = await axiosInstance.get(`/api/admin/vendors?page=${page}&limit=${limit}`);
      
-    return data.data
+    return data
 }
 
 
