@@ -81,65 +81,56 @@ function GuarantorList() {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(guarantorList?.data?.data) &&
+            {Array.isArray(guarantorList?.data?.data) && guarantorList.data.data.length > 0 ? (
               guarantorList.data.data.map((item) => (
                 <tr
                   key={item.id}
                   onClick={() => handleRowClick(item.id)}
                   className={`cursor-pointer transition-all duration-200 
-            ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'} 
-            hover:bg-gray-200`}
+          ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'} 
+          hover:bg-gray-200`}
                 >
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">{item.id}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.application?.vendor?.name}</p>
+                    <p className="font-medium whitespace-no-wrap text-xs">{item.application?.vendor?.name || '—'}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.application?.customer?.name}</p>
+                    <p className="font-medium whitespace-no-wrap text-xs">{item.application?.customer?.name || '—'}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.application?.product?.name}</p>
+                    <p className="font-medium whitespace-no-wrap text-xs">{item.application?.product?.name || '—'}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">₦{Number(item.application?.amount).toLocaleString()}</p>
+                    <p className="font-medium whitespace-no-wrap text-xs">₦{Number(item.application?.amount || 0).toLocaleString()}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <button
-                      className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.application?.status === 'completed'
-                        ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold' :
-                        item.application?.status === 'approved'
-                          ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold' :
-                          item.application?.status === 'awaiting_delivery'
-                            ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                            : item.application?.status === 'submitted'
-
-
-
-                              ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold'
-                              : item.application?.status === 'pending'
-                                ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                                : item.application?.status === 'rejected'
-                                  ? 'bg-red-300 text-[#EF3826] font-semibold'
-                                  : 'bg-gray-200 text-gray-700'
-                        }`}
+                      className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.application?.status === 'completed' || item.application?.status === 'approved' || item.application?.status === 'submitted'
+                        ? 'bg-[#ccf0eb] text-[#00B69B]'
+                        : item.application?.status === 'awaiting_delivery' || item.application?.status === 'pending'
+                          ? 'bg-orange-100 text-[#FFA756]'
+                          : item.application?.status === 'rejected'
+                            ? 'bg-red-300 text-[#EF3826]'
+                            : 'bg-gray-200 text-gray-700'
+                        } font-semibold`}
                     >
-                      {item.application?.status}
+                      {item.application?.status || '—'}
                     </button>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <button
                       className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.verification_status === 'completed'
-                        ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold'
+                        ? 'bg-[#ccf0eb] text-[#00B69B]'
                         : item.verification_status === 'pending'
-                          ? 'bg-orange-100 text-[#FFA756] font-semibold'
+                          ? 'bg-orange-100 text-[#FFA756]'
                           : item.verification_status === 'rejected'
-                            ? 'bg-red-300 text-[#EF3826] font-semibold'
+                            ? 'bg-red-300 text-[#EF3826]'
                             : 'bg-gray-200 text-gray-700'
-                        }`}
+                        } font-semibold`}
                     >
-                      {item.verification_status}
+                      {item.verification_status || '—'}
                     </button>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
@@ -149,13 +140,25 @@ function GuarantorList() {
                     <button
                       className="flex items-center justify-center w-12 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none"
                       aria-label="View"
+                      onClick={() => handleRowClick(item.id)}
                     >
-                      <FaEye className="text-gray-500 text-lg" onClick={() => handleRowClick(item.id)} />
+                      <FaEye className="text-gray-500 text-lg" />
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={9}
+                  className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
+                >
+                  No guarantor records found at this time.
+                </td>
+              </tr>
+            )}
           </tbody>
+
         </table>
 
 

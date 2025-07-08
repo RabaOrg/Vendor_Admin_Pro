@@ -33,10 +33,7 @@ function Customer() {
         if (page > 1) setPage(page - 1);
     };
 
-    const handleSearch = (e) => {
-        setSearch(e.target.value);
-        setPage(1);
-    };
+
 
     return (
         <div className="px-6">
@@ -44,20 +41,8 @@ function Customer() {
                 <div className="flex justify-between flex-col md:flex-row w-full gap-4 py-6">
                     <h1 className="text-3xl font-semibold text-black mb-4 md:mb-0">Customer</h1>
 
-                    {/* <div className="relative w-full md:w-[700px]">
-                        <input
-                            type="text"
-                            name='search'
-                            placeholder="Search customer name"
-                            value={search}
-                            onChange={handleSearch}
-                            className="w-full px-3 py-2 pl-8 mt-1 text-xs font-[400] text-[#202224] rounded-full bg-white border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none"
-                        />
-                        <span className="absolute left-3 top-[22px] transform -translate-y-1/2 text-gray-400">
-                            <FaSearch />
-                        </span>
-                    </div> */}
-                    <Link to="/addcustomer">
+
+                    <Link to="/customer_statistics">
                         <Button
                             label="View Customer Statistics"
                             variant="solid"
@@ -79,37 +64,48 @@ function Customer() {
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.isArray(customerData) &&
-                            customerData.slice((page - 1) * perPage, page * perPage).map((item, index) => {
-                                const { id, full_name, created_at, Business } = item;
+                        {Array.isArray(customerData) && customerData.length > 0 ? (
+                            customerData
+                                .slice((page - 1) * perPage, page * perPage)
+                                .map((item, index) => {
+                                    const { id, full_name, created_at } = item;
 
-                                return (
-                                    <tr key={index} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{id}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.first_name}{item?.last_name}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.address || "N/A"}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.email || "N/A"}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{new Date(created_at).toLocaleString()}</td>
-                                        <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.phone_number || "N/A"}</td>
-
-
-
-                                        {/* View Button */}
-                                        <td className="px-6 py-4 border-b border-gray-200 text-center">
-                                            <button
-                                                className="w-9 h-9 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none"
-                                                aria-label="View"
-                                                onClick={() => handleViewCustomer(id)}
-                                            >
-                                                <FaEye className="text-gray-600 text-base" />
-                                            </button>
-                                        </td>
-
-
-                                    </tr>
-                                );
-                            })}
+                                    return (
+                                        <tr key={index} className="hover:bg-gray-50 transition">
+                                            <td className="px-6 py-4 text-xs border-b border-gray-200">{id}</td>
+                                            <td className="px-6 py-4 text-xs border-b border-gray-200">
+                                                {item?.first_name} {item?.last_name}
+                                            </td>
+                                            <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.address || "N/A"}</td>
+                                            <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.email || "N/A"}</td>
+                                            <td className="px-6 py-4 text-xs border-b border-gray-200">
+                                                {new Date(created_at).toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.phone_number || "N/A"}</td>
+                                            <td className="px-6 py-4 border-b border-gray-200 text-center">
+                                                <button
+                                                    className="w-9 h-9 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none"
+                                                    aria-label="View"
+                                                    onClick={() => handleViewCustomer(id)}
+                                                >
+                                                    <FaEye className="text-gray-600 text-base" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                        ) : (
+                            <tr>
+                                <td
+                                    colSpan={7}
+                                    className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
+                                >
+                                    No customer data available at the moment.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
+
                 </table>
 
 

@@ -65,83 +65,76 @@ function TransactionList() {
 
 
           <tbody>
-
-            {Array.isArray(repaymentPlan) && repaymentPlan.map((item, index) => (
-              <tr
-                key={item.id}
-                onClick={() => handleRowClick(item.id)}
-                className={`cursor-pointer transition-all duration-200 ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'
-                  } hover:bg-gray-200`}
-              >
-
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.id}
-                  </p>
+            {Array.isArray(repaymentPlan) && repaymentPlan.length > 0 ? (
+              repaymentPlan.map((item) => (
+                <tr
+                  key={item.id}
+                  onClick={() => handleRowClick(item.id)}
+                  className={`cursor-pointer transition-all duration-200 ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'
+                    } hover:bg-gray-200`}
+                >
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <p className="font-[500] whitespace-no-wrap text-xs">{item.id}</p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <p className="font-[500] whitespace-no-wrap text-xs">{item.customer_name}</p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <p className="font-[500] whitespace-no-wrap text-xs">{item.vendor_name}</p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <p className="font-[500] whitespace-no-wrap text-xs">{item.monthly_amount}</p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <p className="font-[500] whitespace-no-wrap text-xs">{item.failed_charges}</p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <p className="font-[500] whitespace-no-wrap text-xs">
+                      {new Date(item.next_charge_date).toLocaleDateString()}
+                    </p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <button
+                      className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
+                        ? 'bg-[#ccf0eb] text-[#00B69B]'
+                        : item.status === 'pending'
+                          ? 'bg-orange-100 text-[#FFA756]'
+                          : item.status === 'submitted'
+                            ? 'bg-green-100 text-green-700'
+                            : item.status === 'active'
+                              ? 'bg-green-100 text-green-600'
+                              : item.status === 'awaiting_downpayment'
+                                ? 'bg-orange-100 text-[#FFA756]'
+                                : item.status === 'awaiting delivery'
+                                  ? 'bg-orange-100 text-[#FFA756]'
+                                  : item.status === 'processing'
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : item.status === 'cancelled'
+                                      ? 'bg-red-100 text-red-600'
+                                      : item.status === 'completed'
+                                        ? 'bg-green-100 text-green-800'
+                                        : item.status === 'inactive'
+                                          ? 'bg-red-300 text-[#EF3826]'
+                                          : 'bg-gray-200 text-gray-700'
+                        } font-semibold`}
+                    >
+                      {item.status}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
+                >
+                  No repayment plans available at this time.
                 </td>
-
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.customer_name}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.vendor_name}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.monthly_amount}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.failed_charges}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {new Date(item.next_charge_date).toLocaleDateString()}
-                  </p>
-                </td>
-
-                <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                  <button
-                    className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
-                      ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold'
-                      : item.status === 'pending'
-                        ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                        : item.status === 'submitted'
-                          ? 'bg-green-100 text-green-700 font-semibold'
-                          : item.status === 'active'
-                            ? 'bg-green-100 text-green-600 font-semibold'
-                            : item.status === 'awaiting_downpayment'
-                              ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                              : item.status === 'awaiting delivery'
-                                ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                                : item.status === 'processing'
-                                  ? 'bg-purple-100 text-purple-700 font-semibold'
-                                  : item.status === 'cancelled'
-                                    ? 'bg-red-100 text-red-600 font-semibold'
-                                    : item.status === 'completed'
-                                      ? 'bg-green-100 text-green-800 font-semibold'
-                                      : item.status === 'inactive'
-                                        ? 'bg-red-300 text-[#EF3826] font-semibold'
-                                        : 'bg-gray-200 text-gray-700'
-                      }`}
-                  >
-                    {item.status}
-                  </button>
-                </td>
-
-
-
               </tr>
-            ))}
-
-
+            )}
           </tbody>
+
         </table>
 
 

@@ -82,7 +82,7 @@ function ApplicationList() {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(applicationData?.data) &&
+            {Array.isArray(applicationData?.data) && applicationData.data.length > 0 ? (
               applicationData.data.map((item) => (
                 <tr
                   key={item.id}
@@ -166,8 +166,19 @@ function ApplicationList() {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={11}
+                  className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
+                >
+                  No applications found at this time.
+                </td>
+              </tr>
+            )}
           </tbody>
+
 
         </table>
 

@@ -78,7 +78,7 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/addcustomer",
+                path: "/customer_statistics",
                 element: <Addcustomer />
 
             },

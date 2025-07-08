@@ -21,7 +21,7 @@ function OrderList() {
       <div className="inline-block min-w-full  rounded-lg overflow-hidden">
         <div className="flex items-center justify-between p-4 mt-3">
           <h1 className="text-3xl font-semibold">
-            Order <span className="text-black-400"></span>
+            Payment Details <span className="text-black-400"></span>
           </h1>
           <div className='flex gap-3'>
             <Button
@@ -70,94 +70,85 @@ function OrderList() {
             </tr>
           </thead>
 
-          {Array.isArray(OrderList) && OrderList.map((item, index) => {
-            const { Product, User, State, amount, id } = item
-            return (
-              <tr
-                key={id}
-                onClick={() => handleRowClick(id)}
 
-                className={`cursor-pointer transition-all duration-200 
-                    ${selectedId === id ? 'bg-blue-200' : 'bg-white'} 
-                    hover:bg-gray-200`}>
-
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.id}
-                  </p>
-                </td>
-
-
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.amount}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.customer_name}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.vendor_name}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {new Date(item.created_at).toLocaleDateString()}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200  text-xs">
-                  <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.transaction_type}
-                  </p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                  <button
-                    className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
-                      ? 'bg-[#ccf0eb] text-[#00B69B] font-semibold'
-                      : item.status === 'pending'
-                        ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                        : item.status === 'success'
-                          ? 'bg-green-100 text-green-700 font-semibold'
-                          : item.status === 'active'
-                            ? 'bg-green-100 text-green-600 font-semibold'
-                            : item.status === 'awaiting_downpayment'
-                              ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                              : item.status === 'awaiting delivery'
-                                ? 'bg-orange-100 text-[#FFA756] font-semibold'
-                                : item.status === 'processing'
-                                  ? 'bg-purple-100 text-purple-700 font-semibold'
-                                  : item.status === 'cancelled'
-                                    ? 'bg-red-100 text-red-600 font-semibold'
-
-                                    : item.status === 'completed'
-
-                                      ? 'bg-green-100 text-green-800 font-semibold'
-                                      : item.status === 'Rejected'
-                                        ? 'bg-red-300 text-[#EF3826] font-semibold'
-                                        : 'bg-gray-200 text-gray-700'
-                      }`}
-                  >
-                    {item.status}
-                  </button>
-
-                </td>
-
-
-              </tr>
-            )
-          })}
 
 
 
           <tbody>
-
-
-
-
+            {Array.isArray(OrderList) && OrderList.length > 0 ? (
+              OrderList.map((item, index) => {
+                const { Product, User, State, amount, id } = item;
+                return (
+                  <tr
+                    key={id}
+                    onClick={() => handleRowClick(id)}
+                    className={`cursor-pointer transition-all duration-200 
+            ${selectedId === id ? 'bg-blue-200' : 'bg-white'} 
+            hover:bg-gray-200`}
+                  >
+                    <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                      <p className="font-[500] whitespace-no-wrap text-xs">{id}</p>
+                    </td>
+                    <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                      <p className="font-[500] whitespace-no-wrap text-xs">{amount}</p>
+                    </td>
+                    <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                      <p className="font-[500] whitespace-no-wrap text-xs">{item.customer_name}</p>
+                    </td>
+                    <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                      <p className="font-[500] whitespace-no-wrap text-xs">{item.vendor_name}</p>
+                    </td>
+                    <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                      <p className="font-[500] whitespace-no-wrap text-xs">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </p>
+                    </td>
+                    <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                      <p className="font-[500] whitespace-no-wrap text-xs">{item.transaction_type}</p>
+                    </td>
+                    <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                      <button
+                        className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
+                          ? 'bg-[#ccf0eb] text-[#00B69B]'
+                          : item.status === 'pending'
+                            ? 'bg-orange-100 text-[#FFA756]'
+                            : item.status === 'success'
+                              ? 'bg-green-100 text-green-700'
+                              : item.status === 'active'
+                                ? 'bg-green-100 text-green-600'
+                                : item.status === 'awaiting_downpayment'
+                                  ? 'bg-orange-100 text-[#FFA756]'
+                                  : item.status === 'awaiting delivery'
+                                    ? 'bg-orange-100 text-[#FFA756]'
+                                    : item.status === 'processing'
+                                      ? 'bg-purple-100 text-purple-700'
+                                      : item.status === 'cancelled'
+                                        ? 'bg-red-100 text-red-600'
+                                        : item.status === 'completed'
+                                          ? 'bg-green-100 text-green-800'
+                                          : item.status === 'Rejected'
+                                            ? 'bg-red-300 text-[#EF3826]'
+                                            : 'bg-gray-200 text-gray-700'
+                          } font-semibold`}
+                      >
+                        {item.status}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
+                >
+                  No orders available at this time.
+                </td>
+              </tr>
+            )}
           </tbody>
+
         </table>
 
       </div>

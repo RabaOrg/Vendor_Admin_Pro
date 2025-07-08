@@ -21,6 +21,24 @@ function ActivationLists() {
   const handleViewCustomer = (id) => {
     Navigate(`/view_activation/${id}`)
   }
+  if (isPending)
+    return (
+      <div className="flex justify-center items-center h-screen text-xl">
+        Loading...
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="flex justify-center items-center h-screen text-red-500 text-xl">
+        Error loading application.
+      </div>
+    );
+  if (!activationList)
+    return (
+      <div className="flex justify-center items-center h-screen text-xl">
+        No vendor data found.
+      </div>
+    );
   return (
     <div className='px-6'>
 

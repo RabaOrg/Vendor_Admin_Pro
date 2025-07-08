@@ -76,6 +76,8 @@ const GuarantorStatistics = () => {
           )}
         </div>
       </div>
+      <br />
+      <br />
     </div>
   )
 }

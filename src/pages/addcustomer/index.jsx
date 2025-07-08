@@ -93,6 +93,8 @@ const AddCustomer = () => {
                     </table>
                 </div>
             </div>
+            <br />
+            <br />
         </div>
     )
 }
