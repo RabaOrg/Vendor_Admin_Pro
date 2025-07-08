@@ -13,7 +13,7 @@ function ViewActivation() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
   const [isverfied, setisVerified] = useState(false)
-  const [interest, setInterest] = useState(0)
+  const [interest, setInterest] = useState(null)
   const [isLoad, setIsLoad] = useState(false)
 
 
@@ -53,25 +53,23 @@ function ViewActivation() {
 
   }
   const handleUpdateVerificationStatus = async () => {
-    if (!interest) {
-      toast.error("interest rate is required")
-      return
-    }
+
     if (selectedVerificationStatus === "") {
       toast.error("Please select the active status to proceed")
       return
     }
+    const payload = {
+      verification_status: selectedVerificationStatus,
+      verification_notes: "Verification approved by admin",
+    };
+    if (interest && !isNaN(interest)) {
+      payload.interest_rate = Number(interest);
+    }
+
 
     setisVerified(true)
     try {
-      const response = await handleUpdateverification(id,
-        {
-          verification_status: selectedVerificationStatus,
-          verification_notes: "Verification approved by admin",
-          interest_rate: Number(interest),
-
-        }
-      )
+      const response = await handleUpdateverification(id, payload);
       if (response) {
         toast.success("Verification Status updated successfully")
         queryClient.invalidateQueries(["getsinglevendors", id]);
@@ -112,11 +110,15 @@ function ViewActivation() {
     switch (status.toLowerCase()) {
       case 'active':
         return 'bg-green-100 text-green-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
       case 'inactive':
         return 'bg-red-100 text-red-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'suspended':
+      case 'under_review':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'rejected':
         return 'bg-red-300 text-red-800';
 
       case 'deleted':
@@ -136,10 +138,10 @@ function ViewActivation() {
           </h2>
           <span
             className={`ml-0 md:ml-4 mt-2 md:mt-0 inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
-              vendor?.account_status
+              vendor?.verification_status
             )}`}
           >
-            {vendor?.account_status}
+            {vendor?.verification_status}
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
@@ -211,6 +213,7 @@ function ViewActivation() {
             <Input
               label="Interest Rate (Please input the interest rate)"
               value={interest}
+              type="number"
               onChange={(e) => setInterest(e.target.value)}
             />
           </div>
@@ -268,7 +271,7 @@ function ViewActivation() {
               <option value="under_review">under_review</option>
               <option value="approved">approved</option>
 
-              <option value="suspended">rejected</option>
+              <option value="rejected">rejected</option>
 
 
 
@@ -308,11 +311,11 @@ function ViewActivation() {
   )
 }
 
-const Input = ({ label, value, onChange, disabled }) => (
+const Input = ({ label, value, onChange, disabled, type }) => (
   <div>
     <label className="block text-sm text-gray-600 mb-1">{label}</label>
     <input
-      type="text"
+      type={type}
       disabled={disabled}
       onChange={onChange}
       value={value ?? '—'}
