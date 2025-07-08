@@ -187,6 +187,25 @@ function ViewActivation() {
               <Input label="Total Products" value={vendor?.statistics?.total_products} disabled />
             </div>
           </div>
+          {Array.isArray(vendor?.business_photos) && vendor.business_photos.length > 0 && (
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
+              <h3 className="text-xl font-semibold text-gray-700 mb-4">Uploaded Documents</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {vendor.business_photos.map((doc, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <img
+                      src={doc.url}
+                      alt={doc.label || `Document ${index + 1}`}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-3 bg-white border-t text-sm text-gray-600 font-medium text-center">
+                      {doc.label || `Document ${index + 1}`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Interest Rate</h3>
             <Input
@@ -195,6 +214,9 @@ function ViewActivation() {
               onChange={(e) => setInterest(e.target.value)}
             />
           </div>
+
+
+
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
