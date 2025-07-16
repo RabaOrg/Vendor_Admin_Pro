@@ -31,6 +31,8 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
 
 
         { name: "Repayment Schedules", icon: <Icons.Category />, path: "/repayment-plan" },
+        { name: "Notification", icon: <Icons.Category />, path: "/notification" },
+
         // { name: "Payment Order Summary", icon: <Icons.Category />, path: "/payment_orders" },
         // { name: "Bulk Upload", icon: <Icons.RepaymentPlan />, path: "/product_bulkupload" },
 

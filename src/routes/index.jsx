@@ -35,6 +35,7 @@ import GuarantorStatistics from "../pages/dashboard/guarantor/guarantorstatistic
 import GuarantorVerification from "../pages/dashboard/guarantor/guarantorverification";
 import ApplicationPayment from "../pages/dashboard/application/applicationPay/payment";
 import SingleRecurring from "../pages/dashboard/transaction/singlerecurring";
+import Notification from "../pages/dashboard/notification";
 
 
 
@@ -75,6 +76,11 @@ export const router = createBrowserRouter([
             {
                 path: "/addproduct",
                 element: <Addproduct />
+
+            },
+            {
+                path: "/notification",
+                element: <Notification />
 
             },
             {
