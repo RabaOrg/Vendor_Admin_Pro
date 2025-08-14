@@ -56,7 +56,7 @@ export default function PaymentAnalyticsDashboard() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Grid container spacing={3} sx={{ p: 3, bgcolor: 'background.default' }}>
-        {/* Reporting Period */}
+
         <Grid item xs={12}>
           <Typography variant="subtitle1" color="text.secondary">
             Reporting Period:{' '}
@@ -66,7 +66,7 @@ export default function PaymentAnalyticsDashboard() {
           </Typography>
         </Grid>
 
-        {/* Summary Cards */}
+
         {[
           ['Total Txns', dashboard.total],
           ['Successful', dashboard.success],
@@ -87,7 +87,7 @@ export default function PaymentAnalyticsDashboard() {
           </Grid>
         ))}
 
-        {/* Transactions Chart */}
+
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Transactions Breakdown</Typography>
