@@ -22,7 +22,7 @@ function CreateSmsApplication() {
       product_name: "",
       product_price: "",
       custom_message: "",
-      recipent_email: "",
+      recipient_email: "",
 
     },
     validationSchema: Yup.object({
@@ -31,27 +31,28 @@ function CreateSmsApplication() {
       product_name: Yup.string().required("Product name is required"),
       product_price: Yup.string().required("Product price is required"),
       custom_message: Yup.string().required("Custom message is required"),
-      recipent_email: Yup.string().required("recipent_email is required"),
+      recipient_email: Yup.string().required("recipient_email is required"),
 
 
     }),
     onSubmit: async (values) => {
       onMutate(values);
+      console.log(values)
     },
   });
 
   const { mutate: onMutate, isPending } = useMutation({
-    mutationFn: async (values) => handleAddSmsNotification(values),
-    onSuccess: ({ data }) => {
-      setApiResponse(data);
-      toast.success(data.message);
-      navigate("/vendor_management");
-    },
-    onError: (error) => {
-      const errMsg = error.response?.data?.message || error.message;
-      setApiResponse({ status: "error", message: errMsg });
-      toast.error(errMsg);
-    },
+    //   mutationFn: async (values) => handleAddSmsNotification(values),
+    //   onSuccess: ({ data }) => {
+    //     setApiResponse(data);
+    //     toast.success(data.message);
+    //     navigate("/vendor_management");
+    //   },
+    //   onError: (error) => {
+    //     const errMsg = error.response?.data?.message || error.message;
+    //     setApiResponse({ status: "error", message: errMsg });
+    //     toast.error(errMsg);
+    //   },
   });
 
   return (
@@ -149,19 +150,19 @@ function CreateSmsApplication() {
                 <Label
                   className="text-[#212C25] text-xs font-[500] mb-2 block"
                   htmlFor="product_name"
-                  value="Recipent_email"
+                  value="Recipient_email"
                 />
                 <input
                   type="text"
-                  name="recipent_email"
-                  value={formik.values.recipent_email}
+                  name="recipient_email"
+                  value={formik.values.recipient_email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                  placeholder="Enter  recipent_email"
+                  placeholder="Enter recipient email"
                 />
-                {formik.touched.recipent_email && formik.errors.recipent_email && (
-                  <small className="text-red-500">{formik.errors.recipent_email}</small>
+                {formik.touched.recipient_email && formik.errors.recipient_email && (
+                  <small className="text-red-500">{formik.errors.recipient_email}</small>
                 )}
               </div>
 
