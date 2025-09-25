@@ -40,6 +40,9 @@ import Notification from "../pages/dashboard/notification";
 import SmsApplication from "../pages/dashboard/notification/smsnotification/smsapplication";
 import EachSmsNotification from "../pages/dashboard/notification/smsnotification/eachsmsnotification";
 import CreateSmsApplication from "../pages/dashboard/notification/smsnotification/createsmsapplication";
+import TransactionDetails from "../pages/dashboard/transactiondetails/transactionList";
+import TransactionStatistics from "../pages/dashboard/transactiondetails/transactionstats";
+import SingleTransaction from "../pages/dashboard/transactiondetails/singletransaction";
 
 
 
@@ -90,6 +93,22 @@ export const router = createBrowserRouter([
             {
                 path: "/customer-details/:id",
                 element: <UpdateCustomer />
+
+            },
+
+            {
+                path: "/transaction_details",
+                element: <TransactionDetails />
+
+            },
+            {
+                path: "/transaction_statistics",
+                element: <TransactionStatistics />
+
+            },
+            {
+                path: "/single_transaction/:id",
+                element: <SingleTransaction />
 
             },
             {

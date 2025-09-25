@@ -1,7 +1,9 @@
 import React from "react";
 import { Navbar, Dropdown, Avatar } from "flowbite-react";
+import { useAuthStore } from "../../../store/store";
 
 const NavbarComponent = ({ toggleSidebar }) => {
+    const { logOut } = useAuthStore();
     return (
         <Navbar fluid rounded className="bg-white shadow-sm border-gray-200 p-4">
             <div className="flex items-center justify-between w-full">
@@ -32,7 +34,7 @@ const NavbarComponent = ({ toggleSidebar }) => {
                         <Dropdown.Item>Profile</Dropdown.Item>
                         <Dropdown.Item>Settings</Dropdown.Item>
                         <Dropdown.Divider />
-                        <Dropdown.Item>Logout</Dropdown.Item>
+                        <Dropdown.Item onClick={logOut}>Logout</Dropdown.Item>
                     </Dropdown>
 
                     <div>

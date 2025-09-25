@@ -18,6 +18,7 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Guarantor Management", icon: <Icons.RepaymentPlan />, path: "/guarantor_list" },
         // { name: "Payment Details", icon: <Icons.Order />, path: "/payment_details" },
         // { name: "Recurring Debits", icon: <Icons.Transaction />, path: "/recurring_debits" },
+        { name: "Transaction", icon: <Icons.Transaction />, path: "/transaction_details" },
         { name: "Repayment Schedules", icon: <Icons.Category />, path: "/repayment-plan" },
     ];
 
