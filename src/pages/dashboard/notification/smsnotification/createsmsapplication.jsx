@@ -37,22 +37,22 @@ function CreateSmsApplication() {
     }),
     onSubmit: async (values) => {
       onMutate(values);
-      console.log(values)
+
     },
   });
 
   const { mutate: onMutate, isPending } = useMutation({
-    //   mutationFn: async (values) => handleAddSmsNotification(values),
-    //   onSuccess: ({ data }) => {
-    //     setApiResponse(data);
-    //     toast.success(data.message);
-    //     navigate("/vendor_management");
-    //   },
-    //   onError: (error) => {
-    //     const errMsg = error.response?.data?.message || error.message;
-    //     setApiResponse({ status: "error", message: errMsg });
-    //     toast.error(errMsg);
-    //   },
+    mutationFn: async (values) => handleAddSmsNotification(values),
+    onSuccess: ({ data }) => {
+      setApiResponse(data);
+      toast.success(data.message);
+      navigate("/vendor_management");
+    },
+    onError: (error) => {
+      const errMsg = error.response?.data?.message || error.message;
+      setApiResponse({ status: "error", message: errMsg });
+      toast.error(errMsg);
+    },
   });
 
   return (
