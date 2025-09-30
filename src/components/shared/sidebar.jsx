@@ -19,6 +19,8 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         // { name: "Payment Details", icon: <Icons.Order />, path: "/payment_details" },
         // { name: "Recurring Debits", icon: <Icons.Transaction />, path: "/recurring_debits" },
         { name: "Transaction", icon: <Icons.Transaction />, path: "/transaction_details" },
+        { name: "Agent Management", icon: <Icons.Transaction />, path: "/agent_management" },
+
         { name: "Repayment Schedules", icon: <Icons.Category />, path: "/repayment-plan" },
     ];
 

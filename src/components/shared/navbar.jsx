@@ -4,6 +4,7 @@ import { useAuthStore } from "../../../store/store";
 
 const NavbarComponent = ({ toggleSidebar }) => {
     const { logOut } = useAuthStore();
+    const { isLoggedIn, user } = useAuthStore();
     return (
         <Navbar fluid rounded className="bg-white shadow-sm border-gray-200 p-4">
             <div className="flex items-center justify-between w-full">
@@ -38,8 +39,8 @@ const NavbarComponent = ({ toggleSidebar }) => {
                     </Dropdown>
 
                     <div>
-                        <p className="text-gray-700 font-semibold">Bola Kazeem</p>
-                        <p className="text-sm text-gray-500">Admin</p>
+                        <p className="text-gray-700 font-semibold">{user?.username}</p>
+                        <p className="text-sm text-gray-500">{user?.role}</p>
                     </div>
                 </div>
             </div>

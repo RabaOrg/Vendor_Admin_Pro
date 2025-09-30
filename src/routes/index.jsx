@@ -36,7 +36,10 @@ import GuarantorVerification from "../pages/dashboard/guarantor/guarantorverific
 import ApplicationPayment from "../pages/dashboard/application/applicationPay/payment";
 import SingleRecurring from "../pages/dashboard/transaction/singlerecurring";
 import Notification from "../pages/dashboard/notification";
-
+import AgentManagement from "../pages/dashboard/Agent";
+import SingleAgent from "../pages/dashboard/Agent/singleagent";
+import AgentStatistics from "../pages/dashboard/Agent/statistics";
+import CreateAgent from "../pages/dashboard/Agent/createagent";
 import SmsApplication from "../pages/dashboard/notification/smsnotification/smsapplication";
 import EachSmsNotification from "../pages/dashboard/notification/smsnotification/eachsmsnotification";
 import CreateSmsApplication from "../pages/dashboard/notification/smsnotification/createsmsapplication";
@@ -114,6 +117,26 @@ export const router = createBrowserRouter([
             {
                 path: "/recurring_debits",
                 element: <TransactionList />
+
+            },
+            {
+                path: "/agent_management",
+                element: <AgentManagement />
+
+            },
+            {
+                path: "/agent_statistics",
+                element: <AgentStatistics />
+
+            },
+            {
+                path: "/single_agent/:id",
+                element: <SingleAgent />
+
+            },
+            {
+                path: "create_agent",
+                element: <CreateAgent />
 
             },
             {
