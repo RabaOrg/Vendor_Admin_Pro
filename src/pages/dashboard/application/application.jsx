@@ -3,12 +3,18 @@ import { useState } from 'react'
 import Button from '../../../components/shared/button'
 import { Link } from 'react-router-dom'
 import { FaEye } from 'react-icons/fa'
+import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
+import { FaEdit } from 'react-icons/fa'
+import axiosInstance from '../../../../store/axiosInstance'
 import { useFetchLoanApplication } from '../../../hooks/queries/loan'
 
 
 function ApplicationList() {
   const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
+
   const { data: applicationData, isPending, isError } = useFetchLoanApplication({ page, limit: 10 })
   console.log(applicationData)
   const [selectedId, setSelectedId] = useState(null);
@@ -21,6 +27,42 @@ function ApplicationList() {
     navigate(`/application-statistics/${id}`);
 
   };
+  const handleUpdateApplication = async () => {
+    try {
+
+      if (editData.amount !== undefined) {
+        await axiosInstance.patch(`/api/admin/applications/${editData.id}/product-price`, {
+          newProductPrice: editData.amount
+        });
+      }
+
+
+
+      if (editData.monthly_repayment !== undefined) {
+        await axiosInstance.patch(`/api/admin/applications/${editData.id}/financing-data`, {
+          newMonthlyRepayment: Number(editData.monthly_repayment),
+          newInterestRate: Number(editData.interest_rate),
+          newLeaseTenure: Number(editData.lease_tenure),
+          newLeaseTenureUnit: editData.lease_tenure_unit,
+          newDownPaymentAmount: Number(editData.down_payment_amount)
+
+        });
+      }
+
+
+
+
+      toast.success('Application updated successfully!');
+      setIsModalOpen(false);
+
+
+    } catch (error) {
+      console.error('Error updating application:', error);
+      toast.error('Failed to update application. Please try again.');
+    }
+  }
+
+
   const handleViewPayment = (id) => {
 
     setSelectedId(id);
@@ -73,6 +115,9 @@ function ApplicationList() {
                 Status
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                Edit
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 View Application
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
@@ -112,6 +157,8 @@ function ApplicationList() {
                       {new Date(item.created_at).toLocaleDateString()}
                     </p>
                   </td>
+
+
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <button
                       className={`font-medium whitespace-no-wrap text-xs px-3 py-1 rounded ${item.status === 'approved'
@@ -144,6 +191,20 @@ function ApplicationList() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setEditData(item);
+                        setIsModalOpen(true);
+                      }}
+                      className="flex items-center justify-center w-10 h-10 bg-blue-100 border border-blue-300 rounded-lg hover:bg-blue-200"
+                      title="Edit Application"
+                    >
+                      <FaEdit className="text-blue-600" />
+                    </button>
+                  </td>
+
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleRowClick(item.id);
                       }}
                       className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
@@ -164,6 +225,7 @@ function ApplicationList() {
                       <FaEye className="text-gray-500" />
                     </button>
                   </td>
+
                 </tr>
               ))
             ) : (
@@ -204,7 +266,82 @@ function ApplicationList() {
             Next
           </button>
         </div>
+
       )}
+      {isModalOpen && editData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-lg font-bold mb-4">Edit Application</h2>
+
+            <label>Amount</label>
+            <input
+              type="number"
+              value={editData.amount || ''}
+              onChange={(e) => setEditData({ ...editData, amount: e.target.value })}
+              className="border p-2 w-full mb-3"
+            />
+
+            <label>Down Payment</label>
+            <input
+              type="number"
+              value={editData.down_payment_amount || ''}
+              onChange={(e) => setEditData({ ...editData, down_payment_amount: e.target.value })}
+              className="border p-2 w-full mb-3"
+            />
+
+            <label>Monthly Repayment</label>
+            <input
+              type="number"
+              value={editData.monthly_repayment || ''}
+              onChange={(e) => setEditData({ ...editData, monthly_repayment: e.target.value })}
+              className="border p-2 w-full mb-3"
+            />
+
+            <label>Interest Rate (%)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={editData.interest_rate || ''}
+              onChange={(e) => setEditData({ ...editData, interest_rate: e.target.value })}
+              className="border p-2 w-full mb-3"
+            />
+
+            <label>Lease Tenure</label>
+            <input
+              type="number"
+              value={editData.lease_tenure || ''}
+              onChange={(e) => setEditData({ ...editData, lease_tenure: e.target.value })}
+              className="border p-2 w-full mb-3"
+            />
+
+            <label>Lease Tenure Unit</label>
+            <select
+              value={editData.lease_tenure_unit || 'month'}
+              onChange={(e) => setEditData({ ...editData, lease_tenure_unit: e.target.value })}
+              className="border p-2 w-full mb-3"
+            >
+              <option value="month">Month</option>
+              <option value="week">Week</option>
+            </select>
+
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateApplication}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
     </div>
   )

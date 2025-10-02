@@ -135,7 +135,11 @@ export const  handleUpdateCustomerStatus = async (id, formInfo) => {
    `/api/admin/customers/${id}/status`, formInfo
   );
 }
-
+export const  handleEditFinance = async (id, formInfo) => {
+  return axiosInstance.patch(
+   `/api/admin/customers/${id}/status`, formInfo
+  );
+}
 export const  handleCreateLoanApplication = async (formInfo) => {
   return axiosInstance.post(
    "/admin/loanapplication/creation",
