@@ -16,6 +16,25 @@ export const handleDeleteApplication= async (id, forminfo) => {
      
     return data.data
 }
+export const handleEditApplication = async (id, forminfo) => {
+  const { data } = await axiosInstance.put(`/api/admin/applications/${id}`, {
+    data:forminfo
+  })
+  return data.data;
+}
+export const handleEditCustomerApp = async (id, forminfo) => {
+  const { data } = await axiosInstance.put(`/api/admin/customers/${id}`, {
+    data:forminfo
+  })
+  return data.data;
+}
+export const handleRestoreApplication= async (id) => {
+  const { data } = await axiosInstance.delete(`/api/admin/applications/${id}/restore`, {
+         data: forminfo,
+     });
+     
+    return data.data
+}
 export const handleDeleteGuarantorApplication= async (id, forminfo) => {
   const { data } = await axiosInstance.delete(`/admin/guarantors/${id}`, {
          data: forminfo,

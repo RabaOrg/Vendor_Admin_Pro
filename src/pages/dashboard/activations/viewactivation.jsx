@@ -15,7 +15,7 @@ function ViewActivation() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false)
   const [isverfied, setisVerified] = useState(false)
-  const [interest, setInterest] = useState(null)
+  const [interest, setInterest] = useState(0)
   const [isLoad, setIsLoad] = useState(false)
 
 
@@ -29,6 +29,13 @@ function ViewActivation() {
   const handleChangeVerificationStatus = (e) => {
     setSelectedVerificationStatus(e.target.value);
   };
+  const handleSms = (id) => {
+
+
+
+    navigate(`/create_sms_notification/${id}`);
+
+  }
   console.log(vendor)
   const handleUpdateStatus = async () => {
     if (selectedStatus === "") {
@@ -54,31 +61,29 @@ function ViewActivation() {
     }
 
   }
-  const handleSms = (id) => {
-
-
-
-    navigate(`/create_sms_notification/${id}`);
-
+  const handleEdit = () => {
+    navigate(`/edit_vendor/${id}`)
   }
   const handleUpdateVerificationStatus = async () => {
-
+    if (!interest) {
+      toast.error("interest rate is required")
+      return
+    }
     if (selectedVerificationStatus === "") {
       toast.error("Please select the active status to proceed")
       return
     }
-    const payload = {
-      verification_status: selectedVerificationStatus,
-      verification_notes: "Verification approved by admin",
-    };
-    if (interest && !isNaN(interest)) {
-      payload.interest_rate = Number(interest);
-    }
-
 
     setisVerified(true)
     try {
-      const response = await handleUpdateverification(id, payload);
+      const response = await handleUpdateverification(id,
+        {
+          verification_status: selectedVerificationStatus,
+          verification_notes: "Verification approved by admin",
+          interest_rate: Number(interest),
+
+        }
+      )
       if (response) {
         toast.success("Verification Status updated successfully")
         queryClient.invalidateQueries(["getsinglevendors", id]);
@@ -119,15 +124,11 @@ function ViewActivation() {
     switch (status.toLowerCase()) {
       case 'active':
         return 'bg-green-100 text-green-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
       case 'inactive':
         return 'bg-red-100 text-red-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'rejected':
+      case 'suspended':
         return 'bg-red-300 text-red-800';
 
       case 'deleted':
@@ -140,23 +141,33 @@ function ViewActivation() {
   };
   return (
     <div className="px-6">
-      <div className="min-w-full rounded-lg overflow-hidden bg-white shadow-md">
+      <div className='flex justify-end mt-2'>
+        <Button
+          label="Edit Vendor"
+          onClick={handleEdit}
+          variant="outline"
+          size="sm"
+          className="px-4 py-2 text-sm"
+        />
+      </div>
+      <div className="min-w-full rounded-lg overflow-hidden bg-white shadow-md mt-2">
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 border-b">
           <h2 className="text-3xl font-bold text-gray-800">
             Vendor Details ({vendor?.full_name})
           </h2>
           <span
             className={`ml-0 md:ml-4 mt-2 md:mt-0 inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
-              vendor?.verification_status
+              vendor?.account_status
             )}`}
           >
-            {vendor?.verification_status}
+            {vendor?.account_status}
           </span>
         </div>
         <div className="p-6 mt-4 bg-white rounded-xl">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">📈 Vendor Statistics</h2>
 
-          {/* Statistics Grid */}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {[
               { label: "Total Applications", value: vendor?.statistics?.total_applications },
@@ -177,7 +188,6 @@ function ViewActivation() {
 
 
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
@@ -219,6 +229,7 @@ function ViewActivation() {
                   />
                 </a>
               </div>
+
               <Input label="Category" value={vendor?.Business?.category} disabled />
               <Input label="Sub Category" value={vendor?.Business?.sub_category} disabled />
               <Input label="Monthly Revenue" value={vendor?.Business?.monthly_revenue} disabled />
@@ -326,7 +337,7 @@ function ViewActivation() {
               <option value="under_review">under_review</option>
               <option value="approved">approved</option>
 
-              <option value="rejected">rejected</option>
+              <option value="suspended">rejected</option>
 
 
 
@@ -346,7 +357,7 @@ function ViewActivation() {
 
             </div>
           </div>
-          <div className="p-6 flex justify-start gap-10">
+          <div className="p-6 flex gap-10">
 
             <Button
               label="Deactivate Vendor"
@@ -363,6 +374,7 @@ function ViewActivation() {
               size="md"
               className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
             />
+
           </div>
 
         </div>

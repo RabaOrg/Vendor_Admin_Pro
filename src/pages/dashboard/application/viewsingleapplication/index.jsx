@@ -6,13 +6,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFetchSingleLoan } from '../../../../hooks/queries/loan';
 import Button from '../../../../components/shared/button';
 import axiosInstance from '../../../../../store/axiosInstance';
-import { handleDeleteApplication, handleUpdateStatus } from '../../../../services/loans';
+import { handleDeleteApplication, handleUpdateStatus, handleRestoreApplication } from '../../../../services/loans';
 
 function SingleApplication() {
   const { id } = useParams();
   const Navigate = useNavigate()
   const [loanData, setLoanData] = useState(null);
   const queryClient = useQueryClient();
+  const [isLoads, setIsLoads] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
   const [showPreview, setShowPreview] = useState(false);
@@ -48,6 +49,16 @@ function SingleApplication() {
     fetchData();
   }, [id]);
 
+  const handleRestore = async () => {
+    try {
+      const response = await handleRestoreApplication
+    } catch (error) {
+
+    }
+  }
+  const handleEdit = () => {
+    Navigate(`/edit_application/${id}`)
+  }
   const handleDelete = async () => {
     try {
       console.log(id)
@@ -155,24 +166,37 @@ function SingleApplication() {
 
   return (
     <div className="max-w-6xl mx-auto p-10">
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className='flex justify-end'>
+        <Button
+          label="Edit Application"
+          onClick={handleEdit}
+          variant="outline"
+          size="sm"
+          className="px-4 py-2 text-sm"
+        />
+      </div>
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden mt-2">
+
         <div className="p-6 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <h2 className="text-3xl font-bold text-gray-800">
             View Application Details ({Customer?.full_name})
           </h2>
-          <span
-            className={`inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
-              status
-            )}`}
-          >
-            {status}
-          </span>
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(status)}`}
+            >
+              {status}
+            </span>
+
+          </div>
         </div>
+
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer Information</h3>
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Vendor_id</label>
@@ -650,7 +674,7 @@ function SingleApplication() {
 
         </div>
 
-        <div className="p-6 flex justify-items-end gap-10">
+        <div className="p-6 flex justify-end gap-10">
           <Button
             label="Update Status"
             onClick={handleUpdateLoanStatus}
@@ -664,10 +688,19 @@ function SingleApplication() {
             onClick={handleDelete}
             variant="transparent"
             size="md"
-            className="text-sm px-6 py-3"
+            className="text-sm px-6 py-3 text-red-600 hover:text-red-800"
             loading={isLoading}
           />
+          <Button
+            label="Restore Application"
+            onClick={handleRestore}
+            variant="outline"
+            size="md"
+            className="text-sm px-6 py-3 text-green-600 border-green-600 hover:bg-green-50"
+            loading={isLoads}
+          />
         </div>
+
       </div>
     </div>
 

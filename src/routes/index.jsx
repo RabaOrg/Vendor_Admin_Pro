@@ -36,16 +36,24 @@ import GuarantorVerification from "../pages/dashboard/guarantor/guarantorverific
 import ApplicationPayment from "../pages/dashboard/application/applicationPay/payment";
 import SingleRecurring from "../pages/dashboard/transaction/singlerecurring";
 import Notification from "../pages/dashboard/notification";
+
+import SmsApplication from "../pages/dashboard/notification/smsnotification/smsapplication";
+import EachSmsNotification from "../pages/dashboard/notification/smsnotification/eachsmsnotification";
+import CreateSmsApplication from "../pages/dashboard/notification/smsnotification/createsmsapplication";
 import AgentManagement from "../pages/dashboard/Agent";
 import SingleAgent from "../pages/dashboard/Agent/singleagent";
 import AgentStatistics from "../pages/dashboard/Agent/statistics";
 import CreateAgent from "../pages/dashboard/Agent/createagent";
-import SmsApplication from "../pages/dashboard/notification/smsnotification/smsapplication";
-import EachSmsNotification from "../pages/dashboard/notification/smsnotification/eachsmsnotification";
-import CreateSmsApplication from "../pages/dashboard/notification/smsnotification/createsmsapplication";
 import TransactionDetails from "../pages/dashboard/transactiondetails/transactionList";
-import TransactionStatistics from "../pages/dashboard/transactiondetails/transactionstats";
 import SingleTransaction from "../pages/dashboard/transactiondetails/singletransaction";
+import TransactionStatistics from "../pages/dashboard/transactiondetails/transactionstats";
+
+
+import EditApplication from "../pages/dashboard/application/editapplication/editapplication";
+import EditCustomer from "../pages/dashboard/customer/editcustomer";
+import EditCustomerApplication from "../pages/dashboard/customer/editcustomerapplication/editcustomerapplication";
+import EditGuarantorApplication from "../pages/dashboard/guarantor/editguarantor/editguarantorapplication";
+import EditVendor from "../pages/dashboard/activations/editvendor/editvendor";
 
 
 
@@ -73,52 +81,13 @@ export const router = createBrowserRouter([
                 element: <Customer />
 
             },
-            {
-                path: "/product",
-                element: <Product />
 
-            },
             {
-                path: "/repayment-plan",
-                element: <RepaymentMainPlan />
-
-            },
-            {
-                path: "/addproduct",
-                element: <Addproduct />
-
-            },
-            {
-                path: "/addcustomer",
-                element: <Addcustomer />
-
-            },
-            {
-                path: "/customer-details/:id",
-                element: <UpdateCustomer />
+                path: "/customer",
+                element: <Customer />
 
             },
 
-            {
-                path: "/transaction_details",
-                element: <TransactionDetails />
-
-            },
-            {
-                path: "/transaction_statistics",
-                element: <TransactionStatistics />
-
-            },
-            {
-                path: "/single_transaction/:id",
-                element: <SingleTransaction />
-
-            },
-            {
-                path: "/recurring_debits",
-                element: <TransactionList />
-
-            },
             {
                 path: "/agent_management",
                 element: <AgentManagement />
@@ -137,6 +106,68 @@ export const router = createBrowserRouter([
             {
                 path: "create_agent",
                 element: <CreateAgent />
+
+            },
+            {
+                path: "/product",
+                element: <Product />
+
+            },
+            {
+                path: "/edit_customers/:id",
+                element: <EditCustomerApplication />
+
+            },
+            {
+                path: "/edit_guarantor/:id",
+                element: <EditGuarantorApplication />
+
+            },
+            {
+                path: "/repayment-plan",
+                element: <RepaymentMainPlan />
+
+            },
+
+
+            {
+                path: "/addproduct",
+                element: <Addproduct />
+
+            },
+            {
+                path: "/addcustomer",
+                element: <Addcustomer />
+
+            },
+            {
+                path: "/customer-details/:id",
+                element: <UpdateCustomer />
+
+            },
+            {
+                path: "/agent_statistics",
+                element: <AgentStatistics />
+
+            },
+            {
+                path: "/transaction_details",
+                element: <TransactionDetails />
+
+            },
+            {
+                path: "/transaction_statistics",
+                element: <TransactionStatistics />
+
+            },
+            {
+                path: "/single_transaction/:id",
+                element: <SingleTransaction />
+
+            },
+            {
+                path: "/recurring_debits",
+                element: <TransactionList />
 
             },
             {
@@ -160,8 +191,18 @@ export const router = createBrowserRouter([
 
             },
             {
+                path: "/edit_application/:id",
+                element: <EditApplication />
+
+            },
+            {
                 path: "/create_repayment_plan",
                 element: <RepaymentPlan />
+
+            },
+            {
+                path: "/edit_vendor/:id",
+                element: <EditVendor />
 
             },
             {
