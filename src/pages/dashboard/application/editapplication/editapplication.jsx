@@ -204,7 +204,7 @@ function EditApplication() {
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer Information</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer's Information</h3>
             <div className="space-y-4">
 
               <div>

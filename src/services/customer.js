@@ -99,9 +99,7 @@ export const handleEditFinancialDetails = async (Id, fid, forminfo) => {
 }
 
 export const handleDeleteCustomer= async (id, forminfo) => {
-  const { data } = await axiosInstance.delete(`/api/admin/applications/${id}/soft-delete`, {
-         data: forminfo,
-     });
+  const { data } = await axiosInstance.delete(`/api/admin/applications/${id}/soft-delete`,forminfo);
      
     return data.data
 }
@@ -116,9 +114,7 @@ export const handleEditGuarantorDetails = async (Id, Gid, payload) => {
     return data
 }
 export const handleDeleteGuarantor= async (id, forminfo) => {
-  const { data } = await axiosInstance.delete(`/api/admin/guarantors/${id}/soft-delete`, {
-         data: forminfo,
-     });
+  const { data } = await axiosInstance.delete(`/api/admin/guarantors/${id}/soft-delete`, forminfo);
      
     return data.data
 }
@@ -129,16 +125,12 @@ export const handleRestoreGuarantor= async (id) => {
 }
 
 export const handleEditGuarantorsApp = async (id, info) => {
-  const { data } = await axiosInstance.put(`/api/admin/guarantors/${id}`, {
-    data: info
-  });
+  const { data } = await axiosInstance.put(`/api/admin/guarantors/${id}`, info);
      
   return data.data
 }
 export const handleDeleteVendor= async (id, forminfo) => {
-  const { data } = await axiosInstance.delete(`/api/admin/vendors/${id}/soft-delete`, {
-         data: forminfo,
-     });
+  const { data } = await axiosInstance.delete(`/api/admin/vendors/${id}/soft-delete`, forminfo);
      
     return data.data
 }
@@ -149,9 +141,7 @@ export const handleRestoreVendor= async (id) => {
 }
 
 export const handleEditVendorApp = async (id, info) => {
-  const { data } = await axiosInstance.put(`/api/admin/vendors/${id}`, {
-    data: info
-  });
+  const { data } = await axiosInstance.put(`/api/admin/vendors/${id}`, info);
      
   return data.data
 }
