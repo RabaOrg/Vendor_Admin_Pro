@@ -121,7 +121,7 @@ function SingleApplication() {
     }
   }
 
-  const { id: ID, Customer, Product, application_data, repayment_dates, status, created_at } =
+  const { id: ID, Customer, Product, application_data, transactions, mandates, sms_link, repayment_dates, status, created_at } =
     singleLoan;
   const getStatusBadgeClasses = (status) => {
     if (!status) return 'bg-gray-100 text-gray-800';
@@ -217,6 +217,42 @@ function SingleApplication() {
                 />
               </div>
               <div>
+                <label className="block text-sm text-gray-600 mb-1">Customer Bvn</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.bvn}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Lga</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.lga}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Age</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.age}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">State</label>
+                <input
+                  type="text"
+                  disabled
+                  value={Customer?.state}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
                 <label className="block text-sm text-gray-600 mb-1">Address</label>
                 <input
                   type="text"
@@ -258,6 +294,15 @@ function SingleApplication() {
                   type="text"
                   disabled
                   value={new Date(Customer?.created_at).toLocaleDateString()}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Updated At</label>
+                <input
+                  type="text"
+                  disabled
+                  value={new Date(Customer?.updated_at).toLocaleDateString()}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -554,6 +599,369 @@ function SingleApplication() {
               </div>
             </div>
           </div>
+          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Mandates</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">id</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.id}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Amount</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.amount}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Authorization</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.authorizationUrl}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Created At</label>
+                <input
+                  type="text"
+                  disabled
+                  value={new Date(mandates?.createdAt).toLocaleDateString()}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Customer Email</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.customerEmail}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Expires At</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.expiresAt}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Failed Debits</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.failedDebits}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Failure Reason</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.failureReason}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Frequency</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.frequency}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Last Debit Date</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.lastDebitDate}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Mandate Id</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.mandateId}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">References</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.reference}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Status</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.status}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Successful Debits</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.successfulDebits}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Total Debits</label>
+                <input
+                  type="text"
+                  disabled
+                  value={mandates[0]?.totalDebits}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">UpdatedAt</label>
+                <input
+                  type="text"
+                  disabled
+                  value={new Date(mandates[0]?.updatedAt).toLocaleDateString()}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+
+            </div>
+          </div>
+          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Sms Link</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Status</label>
+                <input
+                  type="text"
+                  disabled
+                  value={sms_link.status}
+
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Token</label>
+                <input
+                  type="text"
+                  disabled
+                  value={sms_link.token}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Url</label>
+                <input
+                  type="text"
+                  disabled
+                  value={sms_link.url}
+                  className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
+                />
+              </div>
+
+
+            </div>
+          </div>
+          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Transactions</h3>
+
+            {transactions && transactions.length > 0 ? (
+              transactions.map((txn, index) => (
+                <div
+                  key={txn.id || index}
+                  className="border border-gray-200 rounded-lg p-6 mb-6 bg-white shadow-sm"
+                >
+                  <h4 className="text-lg font-medium text-gray-800 mb-4">
+                    Transaction #{txn.id}
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Amount</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={txn.amount}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Status</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={txn.status}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Transaction Type</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={txn.transactionType}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Payment Method</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={txn.paymentMethod}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Reference</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={txn.reference}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Paystack Reference</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={txn.paystackReference}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Created At</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={new Date(txn.createdAt).toLocaleString()}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Processed At</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={new Date(txn.processedAt).toLocaleString()}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Updated At</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={new Date(txn.updatedAt).toLocaleString()}
+                        className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                      />
+                    </div>
+                    {txn.metadata?.card_details && (
+                      <div className="md:col-span-3 mt-4 border-t border-gray-200 pt-4">
+                        <h5 className="font-semibold text-gray-700 mb-3">Card Details</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Bank</label>
+                            <input
+                              type="text"
+                              disabled
+                              value={txn.metadata.card_details.bank || "N/A"}
+                              className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Brand</label>
+                            <input
+                              type="text"
+                              disabled
+                              value={txn.metadata.card_details.brand || "N/A"}
+                              className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Card Type</label>
+                            <input
+                              type="text"
+                              disabled
+                              value={txn.metadata.card_details.card_type || "N/A"}
+                              className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Last 4</label>
+                            <input
+                              type="text"
+                              disabled
+                              value={txn.metadata.card_details.last4 || "N/A"}
+                              className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Expiry</label>
+                            <input
+                              type="text"
+                              disabled
+                              value={`${txn.metadata.card_details.exp_month || ""}/${txn.metadata.card_details.exp_year || ""}`}
+                              className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No transactions found.</p>
+            )}
+          </div>
+
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Uploaded Documents</h3>
