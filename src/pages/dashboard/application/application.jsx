@@ -30,13 +30,6 @@ function ApplicationList() {
   const handleUpdateApplication = async () => {
     try {
 
-      if (editData.amount !== undefined) {
-        await axiosInstance.patch(`/api/admin/applications/${editData.id}/product-price`, {
-          newProductPrice: editData.amount
-        });
-      }
-
-
 
       if (editData.monthly_repayment !== undefined) {
         await axiosInstance.patch(`/api/admin/applications/${editData.id}/financing-data`, {
