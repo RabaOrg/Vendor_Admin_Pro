@@ -12,6 +12,7 @@ const RecalculationModal = ({
   const [formData, setFormData] = useState({
     newProductPrice: '',
     newDownPayment: '',
+    newDownPaymentType: 'amount', // 'percentage' or 'amount'
     newInterestRate: '',
     newLeaseTenure: ''
   });
@@ -19,6 +20,7 @@ const RecalculationModal = ({
   const [originalData, setOriginalData] = useState({
     newProductPrice: '',
     newDownPayment: '',
+    newDownPaymentType: 'amount',
     newInterestRate: '',
     newLeaseTenure: ''
   });
@@ -33,6 +35,7 @@ const RecalculationModal = ({
       const initialData = {
         newProductPrice: application.amount || '',
         newDownPayment: application.down_payment_amount || '',
+        newDownPaymentType: 'amount',
         newInterestRate: application.interest_rate || '',
         newLeaseTenure: application.lease_tenure || ''
       };
@@ -59,6 +62,9 @@ const RecalculationModal = ({
     }
     if (formData.newDownPayment !== originalData.newDownPayment) {
       changedValues.newDownPayment = formData.newDownPayment;
+    }
+    if (formData.newDownPaymentType !== originalData.newDownPaymentType) {
+      changedValues.newDownPaymentType = formData.newDownPaymentType;
     }
     if (formData.newInterestRate !== originalData.newInterestRate) {
       changedValues.newInterestRate = formData.newInterestRate;
@@ -211,29 +217,40 @@ const RecalculationModal = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Down Payment (₦)
+                  Down Payment
                   {formData.newDownPayment !== originalData.newDownPayment && (
                     <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Modified</span>
                   )}
                 </label>
-                <input
-                  type="text"
-                  name="newDownPayment"
-                  value={formatNumberWithDelimiters(formData.newDownPayment)}
-                  onChange={(e) => {
-                    const rawValue = parseNumberFromDelimited(e.target.value);
-                    setFormData(prev => ({
-                      ...prev,
-                      newDownPayment: rawValue
-                    }));
-                  }}
-                  className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
-                    formData.newDownPayment !== originalData.newDownPayment 
-                      ? 'border-blue-500 focus:ring-blue-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                  placeholder="Enter down payment amount"
-                />
+                <div className="flex space-x-2 mb-2">
+                  <select
+                    name="newDownPaymentType"
+                    value={formData.newDownPaymentType}
+                    onChange={handleInputChange}
+                    className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="amount">Amount (₦)</option>
+                  </select>
+                  <input
+                    type="text"
+                    name="newDownPayment"
+                    value={formatNumberWithDelimiters(formData.newDownPayment)}
+                    onChange={(e) => {
+                      const rawValue = parseNumberFromDelimited(e.target.value);
+                      setFormData(prev => ({
+                        ...prev,
+                        newDownPayment: rawValue
+                      }));
+                    }}
+                    className={`flex-grow border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                      formData.newDownPayment !== originalData.newDownPayment 
+                        ? 'border-blue-500 focus:ring-blue-500' 
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                    placeholder={formData.newDownPaymentType === 'percentage' ? 'e.g., 20' : 'e.g., 200,000'}
+                  />
+                </div>
               </div>
 
               <div>
