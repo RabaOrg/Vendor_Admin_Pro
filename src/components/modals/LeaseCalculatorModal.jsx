@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import PropTypes from 'prop-types';
+import { calculateLease } from '../../services/leaseCalculation';
 
 const LeaseCalculatorModal = ({ 
   isOpen, 
@@ -40,7 +41,7 @@ const LeaseCalculatorModal = ({
     }));
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     // Validation
     if (!formData.productPrice) {
       toast.error('Product price is required');
@@ -68,17 +69,14 @@ const LeaseCalculatorModal = ({
       const productPrice = parseFloat(parseNumberFromDelimited(formData.productPrice));
       const interestRate = parseFloat(formData.interestRate);
       const leaseTenure = parseInt(formData.leaseTenure);
-      const leaseTenureUnit = formData.leaseTenureUnit;
 
-      // Calculate down payment
-      let downPaymentAmount;
+      // Calculate down payment percentage
       let downPaymentPercentage;
 
       if (formData.downPaymentType === 'percentage') {
         downPaymentPercentage = parseFloat(formData.downPaymentValue);
-        downPaymentAmount = (productPrice * downPaymentPercentage) / 100;
       } else {
-        downPaymentAmount = parseFloat(parseNumberFromDelimited(formData.downPaymentValue));
+        const downPaymentAmount = parseFloat(parseNumberFromDelimited(formData.downPaymentValue));
         downPaymentPercentage = (downPaymentAmount / productPrice) * 100;
       }
 
@@ -89,50 +87,35 @@ const LeaseCalculatorModal = ({
         return;
       }
 
-      // Calculate management fee (5% of product price)
-      const managementFee = (productPrice * 5) / 100;
-      const totalWithManagementFee = productPrice + managementFee;
+      // Call backend API for calculation
+      const response = await calculateLease({
+        product_price: productPrice,
+        down_payment_percentage: downPaymentPercentage,
+        lease_term_months: leaseTenure,
+        custom_interest_rate: interestRate
+      });
 
-      // Calculate financed amount
-      const financedAmount = totalWithManagementFee - downPaymentAmount;
-
-      // Calculate monthly payment using compound interest formula
-      const monthlyRate = interestRate / 100 / 12;
-      const totalPayments = leaseTenureUnit === 'month' ? leaseTenure : Math.ceil(leaseTenure / 30);
-      
-      let monthlyPayment;
-      if (monthlyRate === 0) {
-        // If no interest, just divide financed amount by number of payments
-        monthlyPayment = financedAmount / totalPayments;
-      } else {
-        // Compound interest formula
-        monthlyPayment = financedAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
-                        (Math.pow(1 + monthlyRate, totalPayments) - 1);
-      }
-
-      const totalLeaseValue = (monthlyPayment * totalPayments) + downPaymentAmount;
-      const totalInterest = (monthlyPayment * totalPayments) - financedAmount;
-
+      // Transform backend response to match frontend expectations
       const result = {
-        productPrice: productPrice,
-        downPaymentAmount: downPaymentAmount,
-        downPaymentPercentage: downPaymentPercentage,
-        financedAmount: financedAmount,
-        monthlyPayment: monthlyPayment,
-        totalLeaseValue: totalLeaseValue,
-        managementFee: managementFee,
-        totalInterest: totalInterest,
-        interestRate: interestRate,
+        productPrice: response.data.productPrice,
+        downPaymentAmount: response.data.downPaymentAmount,
+        downPaymentPercentage: response.data.downPaymentPercentage,
+        financedAmount: response.data.financedAmount,
+        monthlyPayment: response.data.monthlyPayment,
+        totalLeaseValue: response.data.totalLeaseCost,
+        managementFee: response.data.managementFee,
+        totalInterest: response.data.totalInterest,
+        interestRate: response.data.interestRate,
         leaseTenure: leaseTenure,
-        leaseTenureUnit: leaseTenureUnit,
-        totalPayments: totalPayments
+        leaseTenureUnit: 'month',
+        totalPayments: leaseTenure
       };
 
       setCalculatedData(result);
       toast.success('Lease calculation completed successfully');
     } catch (error) {
       console.error('Error calculating lease:', error);
-      toast.error('Error calculating lease. Please check your inputs.');
+      toast.error(error.response?.data?.message || 'Error calculating lease. Please check your inputs.');
     } finally {
       setIsCalculating(false);
     }
