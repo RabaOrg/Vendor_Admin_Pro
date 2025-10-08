@@ -109,6 +109,11 @@ const RecalculationModal = ({
           apiData[key] = changedValues[key];
         }
       });
+      
+      // Always include newDownPaymentType when newDownPayment is provided
+      if (apiData.newDownPayment !== undefined) {
+        apiData.newDownPaymentType = formData.newDownPaymentType;
+      }
 
       const response = await handleRecalculateApplication(application.id, apiData);
       setRecalculatedData(response.data);
@@ -145,6 +150,11 @@ const RecalculationModal = ({
           apiData[key] = changedValues[key];
         }
       });
+      
+      // Always include newDownPaymentType when newDownPayment is provided
+      if (apiData.newDownPayment !== undefined) {
+        apiData.newDownPaymentType = formData.newDownPaymentType;
+      }
 
       await handleApplyRecalculation(application.id, apiData);
       toast.success('Changes applied successfully');

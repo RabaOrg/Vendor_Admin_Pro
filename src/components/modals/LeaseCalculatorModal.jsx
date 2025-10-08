@@ -67,45 +67,32 @@ const LeaseCalculatorModal = ({
 
     try {
       const productPrice = parseFloat(parseNumberFromDelimited(formData.productPrice));
+      const downPaymentValue = formData.downPaymentType === 'amount' ? 
+        parseFloat(parseNumberFromDelimited(formData.downPaymentValue)) : 
+        parseFloat(formData.downPaymentValue);
       const interestRate = parseFloat(formData.interestRate);
       const leaseTenure = parseInt(formData.leaseTenure);
 
-      // Calculate down payment percentage
-      let downPaymentPercentage;
-
-      if (formData.downPaymentType === 'percentage') {
-        downPaymentPercentage = parseFloat(formData.downPaymentValue);
-      } else {
-        const downPaymentAmount = parseFloat(parseNumberFromDelimited(formData.downPaymentValue));
-        downPaymentPercentage = (downPaymentAmount / productPrice) * 100;
-      }
-
-      // Validate down payment percentage
-      if (downPaymentPercentage < 10 || downPaymentPercentage > 50) {
-        toast.error('Down payment percentage must be between 10% and 50%');
-        setIsCalculating(false);
-        return;
-      }
-
-      // Call backend API for calculation
+      // Use centralized backend API that handles all conversions
       const response = await calculateLease({
         product_price: productPrice,
-        down_payment_percentage: downPaymentPercentage,
+        down_payment_value: downPaymentValue,
+        down_payment_type: formData.downPaymentType,
         lease_term_months: leaseTenure,
         custom_interest_rate: interestRate
       });
 
       // Transform backend response to match frontend expectations
       const result = {
-        productPrice: response.data.productPrice,
-        downPaymentAmount: response.data.downPaymentAmount,
-        downPaymentPercentage: response.data.downPaymentPercentage,
-        financedAmount: response.data.financedAmount,
-        monthlyPayment: response.data.monthlyPayment,
-        totalLeaseValue: response.data.totalLeaseCost,
-        managementFee: response.data.managementFee,
-        totalInterest: response.data.totalInterest,
-        interestRate: response.data.interestRate,
+        productPrice: response.data.product_price,
+        downPaymentAmount: response.data.down_payment_amount,
+        downPaymentPercentage: response.data.down_payment_percentage,
+        financedAmount: response.data.calculation_details.final_financed_amount,
+        monthlyPayment: response.data.periodic_payment,
+        totalLeaseValue: response.data.total_lease_cost,
+        managementFee: response.data.calculation_details.management_fee,
+        totalInterest: response.data.calculation_details.total_interest,
+        interestRate: response.data.interest_rate,
         leaseTenure: leaseTenure,
         leaseTenureUnit: 'month',
         totalPayments: leaseTenure
