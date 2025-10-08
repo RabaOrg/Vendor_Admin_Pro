@@ -174,3 +174,14 @@ export const handleGetPaymentOrder = async () => {
     return data
 }
 
+// Application recalculation functions
+export const handleRecalculateApplication = async (id, formInfo) => {
+  const { data } = await axiosInstance.post(`/api/admin/applications/${id}/recalculate`, formInfo);
+  return data;
+};
+
+export const handleApplyRecalculation = async (id, formInfo) => {
+  const { data } = await axiosInstance.patch(`/api/admin/applications/${id}/apply-recalculation`, formInfo);
+  return data;
+};
+

@@ -54,6 +54,7 @@ import EditCustomer from "../pages/dashboard/customer/editcustomer";
 import EditCustomerApplication from "../pages/dashboard/customer/editcustomerapplication/editcustomerapplication";
 import EditGuarantorApplication from "../pages/dashboard/guarantor/editguarantor/editguarantorapplication";
 import EditVendor from "../pages/dashboard/activations/editvendor/editvendor";
+import LeaseCalculatorPage from "../pages/dashboard/leasecalculator/leasecalculator";
 
 
 
@@ -238,6 +239,11 @@ export const router = createBrowserRouter([
             {
                 path: "/notification",
                 element: <Notification />
+
+            },
+            {
+                path: "/lease-calculator",
+                element: <LeaseCalculatorPage />
 
             },
             {

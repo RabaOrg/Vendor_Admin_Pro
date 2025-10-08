@@ -146,6 +146,13 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
                                 <ul className="ml-6 mt-2 space-y-1 text-xs text-gray-700">
                                     <li
                                         className="hover:text-green-500 cursor-pointer"
+                                        onClick={() => handleItemClick("Lease Calculator", "/lease-calculator")}
+                                    >
+                                        Lease Calculator
+                                    </li>
+                                    <hr className="my-1 border-gray-300 w-5/6" />
+                                    <li
+                                        className="hover:text-green-500 cursor-pointer"
                                         onClick={() => handleItemClick("Notification", "/notification")}
                                     >
                                         Admin Notification Management

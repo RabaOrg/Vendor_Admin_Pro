@@ -1,20 +1,19 @@
-import React from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { useState } from 'react'
 import Button from '../../../../components/shared/button'
 import { Link } from 'react-router-dom'
-import { useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { useFetchSingleLoan } from '../../../../hooks/queries/loan'
 import { handleEditApplication } from '../../../../services/loans'
+import RecalculationModal from '../../../../components/modals/RecalculationModal'
 
 function EditApplication() {
   const { id } = useParams()
   const [isLoading, setIsLoading] = useState(false)
-  const [preview, setPreview] = useState(null);
   const [selectedDocType, setSelectedDocType] = useState("");
+  const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
 
-  const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
+  const { data: singleLoan } = useFetchSingleLoan(id);
   console.log(singleLoan)
   const [formData, setFormData] = useState({
     amount: 0,
@@ -98,7 +97,7 @@ function EditApplication() {
       },
     }));
 
-    setPreview(URL.createObjectURL(file));
+    // Preview functionality removed
   };
 
   const handleRemoveFile = (index) => {
@@ -110,7 +109,7 @@ function EditApplication() {
         documents: prev.metadata.documents.filter((_, i) => i !== index),
       },
     }));
-    setPreview(null);
+    // Preview functionality removed
   };
 
   useEffect(() => {
@@ -154,16 +153,12 @@ function EditApplication() {
 
   const {
     Customer,
-    Product,
     application_data,
-    repayment_dates,
     status,
-    created_at,
-    amount,
-    down_payment_percent,
-    interest_rate,
-    shipping_address,
-  } = singleLoan;
+  } = singleLoan || {};
+  
+  // Ensure Customer is not null before using it
+  const safeCustomer = Customer || {};
   const handleEdit = async () => {
     setIsLoading(true)
     try {
@@ -204,7 +199,7 @@ function EditApplication() {
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer's Information</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Customer&apos;s Information</h3>
             <div className="space-y-4">
 
               <div>
@@ -260,7 +255,7 @@ function EditApplication() {
                 <input
                   type="text"
 
-                  value={new Date(Customer.created_at).toLocaleDateString()}
+                  value={safeCustomer.created_at ? new Date(safeCustomer.created_at).toLocaleDateString() : ''}
                   className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -356,7 +351,7 @@ function EditApplication() {
 
 
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Guarantor's Address</label>
+                <label className="block text-sm text-gray-600 mb-1">Guarantor&apos;s Address</label>
                 <input
                   type="text"
 
@@ -366,7 +361,7 @@ function EditApplication() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Guarantor's Name</label>
+                <label className="block text-sm text-gray-600 mb-1">Guarantor&apos;s Name</label>
                 <input
                   type="text"
 
@@ -376,7 +371,7 @@ function EditApplication() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Guarantor's Phone</label>
+                <label className="block text-sm text-gray-600 mb-1">Guarantor&apos;s Phone</label>
                 <input
                   type="text"
 
@@ -386,7 +381,7 @@ function EditApplication() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Guarantor's   Email</label>
+                <label className="block text-sm text-gray-600 mb-1">Guarantor&apos;s Email</label>
                 <input
                   type="text"
 
@@ -646,7 +641,8 @@ function EditApplication() {
             </div>
           </div>
 
-
+          {/* Recalculation Section */}
+    
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2 mt-6">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
@@ -721,7 +717,13 @@ function EditApplication() {
 
         </div>
 
-        <div className="p-6 flex justify-items-end gap-10">
+        <div className="p-6 flex justify-end gap-4">
+          <button
+            onClick={() => setIsRecalculationModalOpen(true)}
+            className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+          >
+            Recalculate Application
+          </button>
           <Button
             label=" Edit Application"
             onClick={handleEdit}
@@ -733,6 +735,17 @@ function EditApplication() {
 
         </div>
       </div>
+
+      {/* Recalculation Modal */}
+      <RecalculationModal
+        isOpen={isRecalculationModalOpen}
+        onClose={() => setIsRecalculationModalOpen(false)}
+        application={singleLoan}
+        onSuccess={() => {
+          // Refetch the application data to show updated values
+          window.location.reload();
+        }}
+      />
     </div>
   )
 }
