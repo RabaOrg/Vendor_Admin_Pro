@@ -122,7 +122,7 @@ function SingleApplication() {
   }
 
   const { id: ID, Customer, Product, application_data, transactions, mandates, sms_link, repayment_dates, status, created_at } =
-    singleLoan;
+    singleLoan || {};
   const getStatusBadgeClasses = (status) => {
     if (!status) return 'bg-gray-100 text-gray-800';
     switch (status.toLowerCase()) {
@@ -607,7 +607,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.id}
+                  value={mandates?.[0]?.id || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -617,7 +617,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.amount}
+                  value={mandates?.[0]?.amount || ''}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -626,7 +626,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.authorizationUrl}
+                  value={mandates?.[0]?.authorizationUrl || ''}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -644,7 +644,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.customerEmail}
+                  value={mandates?.[0]?.customerEmail || ''}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -653,7 +653,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.expiresAt}
+                  value={mandates?.[0]?.expiresAt || ''}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -662,7 +662,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.failedDebits}
+                  value={mandates?.[0]?.failedDebits || ''}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -671,7 +671,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.failureReason}
+                  value={mandates?.[0]?.failureReason || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -681,7 +681,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.frequency}
+                  value={mandates?.[0]?.frequency || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -691,7 +691,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.lastDebitDate}
+                  value={mandates?.[0]?.lastDebitDate || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -701,7 +701,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.mandateId}
+                  value={mandates?.[0]?.mandateId || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -711,7 +711,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.reference}
+                  value={mandates?.[0]?.reference || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -721,7 +721,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.status}
+                  value={mandates?.[0]?.status || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -731,7 +731,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.successfulDebits}
+                  value={mandates?.[0]?.successfulDebits || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -741,7 +741,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={mandates[0]?.totalDebits}
+                  value={mandates?.[0]?.totalDebits || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -751,7 +751,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={new Date(mandates[0]?.updatedAt).toLocaleDateString()}
+                  value={mandates?.[0]?.updatedAt ? new Date(mandates[0].updatedAt).toLocaleDateString() : ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -767,7 +767,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={sms_link.status}
+                  value={sms_link?.status || ''}
 
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
@@ -777,7 +777,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={sms_link.token}
+                  value={sms_link?.token || ''}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -786,7 +786,7 @@ function SingleApplication() {
                 <input
                   type="text"
                   disabled
-                  value={sms_link.url}
+                  value={sms_link?.url || ''}
                   className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0f5d30]"
                 />
               </div>
@@ -813,7 +813,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={txn.amount}
+                        value={txn.amount || ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -823,7 +823,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={txn.status}
+                        value={txn.status || ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -833,7 +833,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={txn.transactionType}
+                        value={txn.transactionType || ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -843,7 +843,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={txn.paymentMethod}
+                        value={txn.paymentMethod || ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -853,7 +853,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={txn.reference}
+                        value={txn.reference || ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -863,7 +863,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={txn.paystackReference}
+                        value={txn.paystackReference || ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -873,7 +873,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={new Date(txn.createdAt).toLocaleString()}
+                        value={txn.createdAt ? new Date(txn.createdAt).toLocaleString() : ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -883,7 +883,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={new Date(txn.processedAt).toLocaleString()}
+                        value={txn.processedAt ? new Date(txn.processedAt).toLocaleString() : ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>
@@ -893,7 +893,7 @@ function SingleApplication() {
                       <input
                         type="text"
                         disabled
-                        value={new Date(txn.updatedAt).toLocaleString()}
+                        value={txn.updatedAt ? new Date(txn.updatedAt).toLocaleString() : ''}
                         className="w-full p-3 border border-[#A0ACA4] rounded-md bg-gray-50 text-sm text-gray-700"
                       />
                     </div>

@@ -1,21 +1,19 @@
-import React from 'react'
 import { useState } from 'react'
 import Button from '../../../components/shared/button'
 import { Link } from 'react-router-dom'
 import { FaEye } from 'react-icons/fa'
-import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 import { FaEdit } from 'react-icons/fa'
-import axiosInstance from '../../../../store/axiosInstance'
 import { useFetchLoanApplication } from '../../../hooks/queries/loan'
+import RecalculationModal from '../../../components/modals/RecalculationModal'
 
 
 function ApplicationList() {
   const [page, setPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editData, setEditData] = useState(null);
+  const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
 
-  const { data: applicationData, isPending, isError } = useFetchLoanApplication({ page, limit: 10 })
+  const { data: applicationData, refetch } = useFetchLoanApplication({ page, limit: 10 })
   console.log(applicationData)
   const [selectedId, setSelectedId] = useState(null);
   const navigate = useNavigate();
@@ -27,33 +25,14 @@ function ApplicationList() {
     navigate(`/application-statistics/${id}`);
 
   };
-  const handleUpdateApplication = async () => {
-    try {
+  const handleRecalculateClick = (application) => {
+    setSelectedApplication(application);
+    setIsRecalculationModalOpen(true);
+  };
 
-
-      if (editData.monthly_repayment !== undefined) {
-        await axiosInstance.patch(`/api/admin/applications/${editData.id}/product-price`, {
-          newMonthlyRepayment: Number(editData.monthly_repayment),
-          newProductPrice: Number(editData.amount),
-          newInterestRate: Number(editData.interest_rate),
-
-          newDownPaymentAmount: Number(editData.down_payment_amount)
-
-        });
-      }
-
-
-
-
-      toast.success('Application updated successfully!');
-      setIsModalOpen(false);
-
-
-    } catch (error) {
-      console.error('Error updating application:', error);
-      toast.error('Failed to update application. Please try again.');
-    }
-  }
+  const handleRecalculationSuccess = () => {
+    refetch(); // Refresh the application list
+  };
 
 
   const handleViewPayment = (id) => {
@@ -87,10 +66,10 @@ function ApplicationList() {
                 ID
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Vendor's Name
+                Vendor&apos;s Name
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Customer's Name
+                Customer&apos;s Name
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Amount
@@ -184,11 +163,10 @@ function ApplicationList() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setEditData(item);
-                        setIsModalOpen(true);
+                        handleRecalculateClick(item);
                       }}
                       className="flex items-center justify-center w-10 h-10 bg-blue-100 border border-blue-300 rounded-lg hover:bg-blue-200"
-                      title="Edit Application"
+                      title="Recalculate Application"
                     >
                       <FaEdit className="text-blue-600" />
                     </button>
@@ -261,63 +239,12 @@ function ApplicationList() {
         </div>
 
       )}
-      {isModalOpen && editData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-lg font-bold mb-4">Edit Application</h2>
-
-            <label>Amount</label>
-            <input
-              type="number"
-              value={editData.amount || ''}
-              onChange={(e) => setEditData({ ...editData, amount: e.target.value })}
-              className="border p-2 w-full mb-3"
-            />
-
-            <label>Down Payment</label>
-            <input
-              type="number"
-              value={editData.down_payment_amount || ''}
-              onChange={(e) => setEditData({ ...editData, down_payment_amount: e.target.value })}
-              className="border p-2 w-full mb-3"
-            />
-
-            <label>Monthly Repayment</label>
-            <input
-              type="number"
-              value={editData.monthly_repayment || ''}
-              onChange={(e) => setEditData({ ...editData, monthly_repayment: e.target.value })}
-              className="border p-2 w-full mb-3"
-            />
-
-            <label>Interest Rate (%)</label>
-            <input
-              type="number"
-
-              value={editData.interest_rate || ''}
-              onChange={(e) => setEditData({ ...editData, interest_rate: e.target.value })}
-              className="border p-2 w-full mb-3"
-            />
-
-
-
-            <div className="flex justify-end space-x-2 mt-4">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateApplication}
-                className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RecalculationModal
+        isOpen={isRecalculationModalOpen}
+        onClose={() => setIsRecalculationModalOpen(false)}
+        application={selectedApplication}
+        onSuccess={handleRecalculationSuccess}
+      />
 
 
     </div>
