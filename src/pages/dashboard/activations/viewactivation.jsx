@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +9,7 @@ import Button from '../../../components/shared/button'
 import CollapsibleSection from '../../../components/application/CollapsibleSection'
 import InfoGrid from '../../../components/application/InfoGrid'
 import { formatCurrency, formatDate, getStatusBadgeClasses } from '../../../utils/formatters'
+import { usePairedSections } from '../../../hooks/usePairedSections'
 import { 
   User, 
   Building, 
@@ -17,11 +18,6 @@ import {
   BarChart3, 
   Pencil,
   MapPin,
-  DollarSign,
-  Calendar,
-  Phone,
-  Mail,
-  Globe,
   Shield,
   TrendingUp
 } from 'lucide-react'
@@ -39,6 +35,21 @@ function ViewActivation() {
 
   const [selectedStatus, setSelectedStatus] = useState(vendorData?.account_status || "");
   const [selectedVerificationStatus, setSelectedVerificationStatus] = useState(vendorData?.verification_status || "");
+
+  // Define paired sections configuration for vendor view
+  const pairedSectionsConfig = [
+    { id: 'personal-info', pairedWith: 'business-info', defaultExpanded: true },
+    { id: 'business-info', pairedWith: 'personal-info', defaultExpanded: true },
+    { id: 'address-info', pairedWith: 'bank-details', defaultExpanded: false },
+    { id: 'bank-details', pairedWith: 'address-info', defaultExpanded: false },
+    { id: 'agent-info', pairedWith: 'settings-preferences', defaultExpanded: false },
+    { id: 'settings-preferences', pairedWith: 'agent-info', defaultExpanded: false },
+    { id: 'rating-reviews', pairedWith: 'uploaded-documents', defaultExpanded: false },
+    { id: 'uploaded-documents', pairedWith: 'rating-reviews', defaultExpanded: false },
+  ];
+
+  // Use the paired sections hook
+  const { toggleSection, getSectionState } = usePairedSections(pairedSectionsConfig);
 
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
@@ -112,7 +123,7 @@ function ViewActivation() {
     setIsLoad(true)
     try {
       console.log(id)
-      const response = await handleDeleteVendor(id, {
+      await handleDeleteVendor(id, {
         force_delete: false
       })
 
@@ -292,7 +303,8 @@ function ViewActivation() {
           icon={User}
           badge={vendor?.account_status}
           badgeColor={vendor?.account_status === 'active' ? 'green' : 'yellow'}
-          defaultExpanded={true}
+          defaultExpanded={getSectionState('personal-info')}
+          onToggle={(isExpanded) => toggleSection('personal-info', isExpanded)}
         >
           <InfoGrid 
             data={personalInfo}
@@ -306,7 +318,8 @@ function ViewActivation() {
           icon={Building}
           badge={business?.category}
           badgeColor="blue"
-          defaultExpanded={true}
+          defaultExpanded={getSectionState('business-info')}
+          onToggle={(isExpanded) => toggleSection('business-info', isExpanded)}
         >
           <InfoGrid 
             data={businessInfo}
@@ -318,7 +331,8 @@ function ViewActivation() {
         <CollapsibleSection
           title="Address Information"
           icon={MapPin}
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('address-info')}
+          onToggle={(isExpanded) => toggleSection('address-info', isExpanded)}
         >
           <InfoGrid 
             data={addressInfo}
@@ -332,7 +346,8 @@ function ViewActivation() {
           icon={CreditCard}
           badge={vendor?.account_verified ? 'Verified' : 'Unverified'}
           badgeColor={vendor?.account_verified ? 'green' : 'yellow'}
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('bank-details')}
+          onToggle={(isExpanded) => toggleSection('bank-details', isExpanded)}
         >
           <InfoGrid 
             data={bankInfo}
@@ -347,7 +362,8 @@ function ViewActivation() {
             icon={User}
             badge={agent?.status}
             badgeColor={agent?.status === 'active' ? 'green' : 'yellow'}
-            defaultExpanded={false}
+            defaultExpanded={getSectionState('agent-info')}
+            onToggle={(isExpanded) => toggleSection('agent-info', isExpanded)}
           >
             <InfoGrid 
               data={agentInfo}
@@ -360,7 +376,8 @@ function ViewActivation() {
         <CollapsibleSection
           title="Settings & Preferences"
           icon={Shield}
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('settings-preferences')}
+          onToggle={(isExpanded) => toggleSection('settings-preferences', isExpanded)}
         >
           <InfoGrid 
             data={settingsInfo}
@@ -373,7 +390,8 @@ function ViewActivation() {
           <CollapsibleSection
             title="Rating & Reviews"
             icon={TrendingUp}
-            defaultExpanded={false}
+            defaultExpanded={getSectionState('rating-reviews')}
+            onToggle={(isExpanded) => toggleSection('rating-reviews', isExpanded)}
           >
             <InfoGrid 
               data={ratingInfo}
@@ -389,7 +407,8 @@ function ViewActivation() {
             icon={FileText}
             badge={`${attachments.length}`}
             badgeColor="blue"
-            defaultExpanded={false}
+            defaultExpanded={getSectionState('uploaded-documents')}
+            onToggle={(isExpanded) => toggleSection('uploaded-documents', isExpanded)}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {attachments.map((doc, index) => (

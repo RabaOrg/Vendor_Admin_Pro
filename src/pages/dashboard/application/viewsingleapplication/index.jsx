@@ -22,6 +22,9 @@ import {
   getStatusBadgeClasses
 } from '../../../../utils/formatters';
 
+// Import custom hook for paired sections
+import { usePairedSections } from '../../../../hooks/usePairedSections';
+
 // Import icons
 import { 
   User, 
@@ -44,6 +47,21 @@ function SingleApplication() {
   const [isLoading, setIsLoading] = useState(false);
   const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
   const [selectedStatus, setSelectedStatus] = useState("");
+
+  // Define paired sections configuration
+  const pairedSectionsConfig = [
+    { id: 'customer-info', pairedWith: 'business-info', defaultExpanded: true },
+    { id: 'business-info', pairedWith: 'customer-info', defaultExpanded: true },
+    { id: 'vendor-info', pairedWith: 'product-details', defaultExpanded: false },
+    { id: 'product-details', pairedWith: 'vendor-info', defaultExpanded: false },
+    { id: 'bank-details', pairedWith: 'guarantor-info', defaultExpanded: false },
+    { id: 'guarantor-info', pairedWith: 'bank-details', defaultExpanded: false },
+    { id: 'uploaded-documents', pairedWith: 'payment-mandate', defaultExpanded: false },
+    { id: 'payment-mandate', pairedWith: 'uploaded-documents', defaultExpanded: false },
+  ];
+
+  // Use the paired sections hook
+  const { toggleSection, getSectionState } = usePairedSections(pairedSectionsConfig);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   useEffect(() => {
@@ -356,7 +374,8 @@ function SingleApplication() {
           icon={User}
           badge={Customer?.customer_status}
           badgeColor="green"
-          defaultExpanded={true}
+          defaultExpanded={getSectionState('customer-info')}
+          onToggle={(isExpanded) => toggleSection('customer-info', isExpanded)}
         >
           <InfoGrid 
             data={customerInfo}
@@ -368,7 +387,8 @@ function SingleApplication() {
         <CollapsibleSection
           title="Business Information"
           icon={Building}
-          defaultExpanded={true}
+          defaultExpanded={getSectionState('business-info')}
+          onToggle={(isExpanded) => toggleSection('business-info', isExpanded)}
         >
           <InfoGrid 
             data={businessInfo}
@@ -382,7 +402,8 @@ function SingleApplication() {
           icon={Building}
           badge={Vendor?.verification_status}
           badgeColor={Vendor?.verification_status === 'approved' ? 'green' : 'yellow'}
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('vendor-info')}
+          onToggle={(isExpanded) => toggleSection('vendor-info', isExpanded)}
         >
           <InfoGrid 
             data={vendorInfo}
@@ -396,7 +417,8 @@ function SingleApplication() {
           icon={ShoppingBag}
           badge={Product?.approval_status}
           badgeColor={Product?.approval_status === 'approved' ? 'green' : 'yellow'}
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('product-details')}
+          onToggle={(isExpanded) => toggleSection('product-details', isExpanded)}
         >
           <InfoGrid 
             data={productInfo}
@@ -408,7 +430,8 @@ function SingleApplication() {
         <CollapsibleSection
           title="Bank Details"
           icon={CreditCard}
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('bank-details')}
+          onToggle={(isExpanded) => toggleSection('bank-details', isExpanded)}
         >
           <InfoGrid 
             data={bankInfo}
@@ -420,7 +443,8 @@ function SingleApplication() {
         <CollapsibleSection
           title="Guarantor Information"
           icon={User}
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('guarantor-info')}
+          onToggle={(isExpanded) => toggleSection('guarantor-info', isExpanded)}
         >
           <InfoGrid 
             data={guarantorInfo}
@@ -434,7 +458,8 @@ function SingleApplication() {
           icon={FileText}
           badge={upload_summary?.total_documents || 0}
           badgeColor="blue"
-          defaultExpanded={false}
+          defaultExpanded={getSectionState('uploaded-documents')}
+          onToggle={(isExpanded) => toggleSection('uploaded-documents', isExpanded)}
         >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* ID Card */}
@@ -576,7 +601,8 @@ function SingleApplication() {
             icon={CreditCard}
             badge={mandates[0]?.status}
             badgeColor={mandates[0]?.status === 'active' ? 'green' : 'yellow'}
-            defaultExpanded={false}
+            defaultExpanded={getSectionState('payment-mandate')}
+            onToggle={(isExpanded) => toggleSection('payment-mandate', isExpanded)}
           >
             <div className="space-y-4">
               {mandates.map((mandate, index) => (

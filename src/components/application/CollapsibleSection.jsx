@@ -14,12 +14,20 @@ const CollapsibleSection = ({
   headerClassName = '',
   bodyClassName = '',
   onToggle,
+  pairedWith, // New prop for paired section
+  onPairedToggle, // New prop for handling paired toggle
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const handleToggle = () => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
+    
+    // If this section has a paired section, toggle it too
+    if (pairedWith && onPairedToggle) {
+      onPairedToggle(newExpanded);
+    }
+    
     if (onToggle) {
       onToggle(newExpanded);
     }
@@ -99,6 +107,8 @@ CollapsibleSection.propTypes = {
   headerClassName: PropTypes.string,
   bodyClassName: PropTypes.string,
   onToggle: PropTypes.func,
+  pairedWith: PropTypes.string, // ID of the paired section
+  onPairedToggle: PropTypes.func, // Function to handle paired toggle
 };
 
 export default CollapsibleSection;
