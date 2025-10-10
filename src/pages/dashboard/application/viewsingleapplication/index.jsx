@@ -667,8 +667,8 @@ function SingleApplication() {
                     </div>
                     <div className="text-sm text-gray-600">Overdue Installments</div>
                   </div>
-                </div>
-              </div>
+            </div>
+          </div>
 
               {/* Schedule Details */}
               <div className="space-y-3">

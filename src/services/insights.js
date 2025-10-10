@@ -25,3 +25,23 @@ export const handleGetAnalytics = async () => {
     return data.data
 }
 
+export const handleGetRepaymentAnalytics = async ({ period = '30' } = {}) => {
+  const { data } = await axiosInstance.get(`/api/admin/dashboard/repayment-analytics?period=${period}`);
+  return data;
+}
+
+export const handleGetAgentAnalytics = async ({ period = '30' } = {}) => {
+  const { data } = await axiosInstance.get(`/api/admin/dashboard/agent-analytics?period=${period}`);
+  return data;
+}
+
+export const handleGetVendorSalesAnalytics = async ({ period = '30' } = {}) => {
+  const { data } = await axiosInstance.get(`/api/admin/dashboard/vendor-sales-analytics?period=${period}`);
+  return data;
+}
+
+export const handleGetRevenueAnalytics = async ({ period = '30' } = {}) => {
+  const { data } = await axiosInstance.get(`/api/admin/dashboard/revenue-analytics?period=${period}`);
+  return data;
+}
+

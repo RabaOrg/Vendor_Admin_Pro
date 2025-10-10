@@ -1,236 +1,296 @@
-import React from 'react'
-import { useParams } from 'react-router-dom'
-import { useState } from 'react'
-import Button from '../../../../components/shared/button'
-import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
-import { useFetchVendorCustomer } from '../../../../hooks/queries/customer'
-import { handleDeleteCustomer, handleUpdateCustomerStatus } from '../../../../services/loans'
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
+
+import Button from '../../../../components/shared/button';
+import CollapsibleSection from '../../../../components/application/CollapsibleSection';
+import InfoGrid from '../../../../components/application/InfoGrid';
+import { useFetchVendorCustomer } from '../../../../hooks/queries/customer';
+import { handleDeleteCustomer, handleUpdateCustomerStatus } from '../../../../services/loans';
+import { formatCurrency, formatDate, formatPhoneNumber, getStatusBadgeClasses } from '../../../../utils/formatters';
+import { usePairedSections } from '../../../../hooks/usePairedSections';
+
+import { 
+  User, 
+  Building2, 
+  BarChart3, 
+  Edit, 
+  Trash2, 
+  Save,
+  ChevronDown,
+  ChevronRight
+} from 'lucide-react';
 
 function ViewCustomerDetails() {
-  const { id } = useParams()
-  const Navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoad, setIsLoad] = useState(false)
-  const { data: oneCustomer, isPending, isError } = useFetchVendorCustomer(id)
-  console.log(oneCustomer)
-  const oneBusiness = oneCustomer?.Vendor?.Business
-  const oneVendor = oneCustomer?.Vendor
-  const oneStats = oneCustomer?.statistics
-  const [selectedStatus, setSelectedStatus] = useState(oneCustomer?.customer_status || "");
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoad, setIsLoad] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  
+  const { data: oneCustomer, isPending, isError } = useFetchVendorCustomer(id);
+  
+  // Extract related data
+  const oneBusiness = oneCustomer?.Vendor?.Business;
+  const oneVendor = oneCustomer?.Vendor;
+  const oneStats = oneCustomer?.statistics;
+
+  // Define paired sections configuration
+  const pairedSectionsConfig = [
+    { id: 'personal-info', pairedWith: 'vendor-info', defaultExpanded: true },
+    { id: 'vendor-info', pairedWith: 'personal-info', defaultExpanded: true },
+    { id: 'business-info', pairedWith: 'statistics', defaultExpanded: false },
+    { id: 'statistics', pairedWith: 'business-info', defaultExpanded: false },
+  ];
+
+  // Use the paired sections hook
+  const { toggleSection, getSectionState } = usePairedSections(pairedSectionsConfig);
+
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
   };
 
   const handleUpdateStatus = async () => {
     if (selectedStatus === "") {
-      toast.error("Please select the active status to proceed")
-      return
+      toast.error("Please select the active status to proceed");
+      return;
     }
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const response = await handleUpdateCustomerStatus(id,
-        {
-          customer_status: selectedStatus,
-
-        }
-      )
+      const response = await handleUpdateCustomerStatus(id, {
+        customer_status: selectedStatus,
+      });
       if (response) {
-        toast.success("Vendor Status updated successfully")
+        toast.success("Customer Status updated successfully");
         queryClient.invalidateQueries(["singleCustomer", id]);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     } finally {
-      setIsLoading(false)
-    }
-
-  }
-  const handleEdit = () => {
-    Navigate(`/edit_customers/${id}`)
-  }
-  const handleDelete = async () => {
-    setIsLoad(true)
-    try {
-      console.log(id)
-      const response = await handleDeleteCustomer(id, {
-        force_delete: false
-      })
-
-      toast.success("Customer deactivated successfully")
-
-
-    } catch (error) {
-      console.log(error)
-      const errorMessage =
-        error?.response?.data?.message || "Failed to delete application";
-
-      toast.error(errorMessage);
-    } finally {
-      setIsLoad(false)
-    }
-  }
-  const getStatusBadgeClasses = (status) => {
-    if (!status) return 'bg-gray-100 text-gray-800';
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'suspended':
-        return 'bg-red-300 text-red-800';
-
-      case 'deleted':
-        return 'bg-red-100 text-red-800';
-      case 'default':
-        return 'bg-gray-500 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      setIsLoading(false);
     }
   };
-  if (isPending) return <p className="text-center py-10">Loading...</p>
-  if (isError) return <p className="text-center py-10 text-red-500">Error fetching customer details</p>
-  const { statistics, } = oneCustomer
-  return (
-    <div className="px-6">
 
-      <div className="inline-block min-w-full rounded-lg overflow-hidden">
-        <div className='flex justify-end mt-2'>
+  const handleEdit = () => {
+    navigate(`/edit_customers/${id}`);
+  };
+
+  const handleDelete = async () => {
+    setIsLoad(true);
+    try {
+      const response = await handleDeleteCustomer(id, {
+        force_delete: false
+      });
+      toast.success("Customer deactivated successfully");
+    } catch (error) {
+      console.log(error);
+      const errorMessage = error?.response?.data?.message || "Failed to delete customer";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoad(false);
+    }
+  };
+
+  if (isPending) return <p className="text-center py-10">Loading...</p>;
+  if (isError) return <p className="text-center py-10 text-red-500">Error fetching customer details</p>;
+  if (!oneCustomer) return <p className="text-center py-10">Customer not found</p>;
+
+  // Prepare data for sections
+  const personalInfo = [
+    { key: 'id', label: 'Customer ID', value: oneCustomer.id },
+    { key: 'full_name', label: 'Full Name', value: oneCustomer.full_name || 'N/A' },
+    { key: 'phone_number', label: 'Phone Number', value: oneCustomer.phone_number ? formatPhoneNumber(oneCustomer.phone_number) : 'N/A' },
+    { key: 'email', label: 'Email', value: oneCustomer.email || 'N/A' },
+    { key: 'bvn', label: 'BVN', value: oneCustomer.bvn || 'N/A' },
+    { key: 'dob', label: 'Date of Birth', value: oneCustomer.dob ? formatDate(oneCustomer.dob, 'short') : 'N/A' },
+    { key: 'address', label: 'Address', value: oneCustomer.address || 'N/A' },
+    { key: 'state', label: 'State', value: oneCustomer.state || 'N/A' },
+    { key: 'lga', label: 'LGA', value: oneCustomer.lga || 'N/A' },
+    { key: 'customer_status', label: 'Status', value: oneCustomer.customer_status || 'N/A' },
+    { key: 'created_at', label: 'Created At', value: oneCustomer.created_at ? formatDate(oneCustomer.created_at, 'datetime') : 'N/A' },
+  ];
+
+  const vendorInfo = oneVendor ? [
+    { key: 'vendor_id', label: 'Vendor ID', value: oneVendor.id },
+    { key: 'vendor_name', label: 'Vendor Name', value: `${oneVendor.first_name || ''} ${oneVendor.last_name || ''}`.trim() || 'N/A' },
+    { key: 'vendor_email', label: 'Vendor Email', value: oneVendor.email || 'N/A' },
+    { key: 'vendor_phone', label: 'Vendor Phone', value: oneVendor.phone_number ? formatPhoneNumber(oneVendor.phone_number) : 'N/A' },
+    { key: 'verification_status', label: 'Verification Status', value: oneVendor.verification_status || 'N/A' },
+    { key: 'account_status', label: 'Account Status', value: oneVendor.account_status || 'N/A' },
+    { key: 'interest_rate', label: 'Interest Rate', value: oneVendor.interest_rate ? `${oneVendor.interest_rate}%` : 'N/A' },
+    { key: 'rating', label: 'Rating', value: oneVendor.rating ? `${oneVendor.rating}/5` : 'N/A' },
+    { key: 'created_at', label: 'Vendor Created At', value: oneVendor.created_at ? formatDate(oneVendor.created_at, 'datetime') : 'N/A' },
+  ] : [];
+
+  const businessInfo = oneBusiness ? [
+    { key: 'business_id', label: 'Business ID', value: oneBusiness.id },
+    { key: 'business_name', label: 'Business Name', value: oneBusiness.name || 'N/A' },
+    { key: 'business_description', label: 'Description', value: oneBusiness.description || 'N/A' },
+    { key: 'website', label: 'Website', value: oneBusiness.website || 'N/A' },
+    { key: 'cac_registration', label: 'CAC Registration', value: oneBusiness.cac_registration_number || 'N/A' },
+    { key: 'tax_id', label: 'Tax ID', value: oneBusiness.tax_identification_number || 'N/A' },
+    { key: 'created_at', label: 'Business Created At', value: oneBusiness.created_at ? formatDate(oneBusiness.created_at, 'datetime') : 'N/A' },
+  ] : [];
+
+  const statisticsInfo = oneStats ? [
+    { key: 'total_applications', label: 'Total Applications', value: oneStats.total_applications || 0 },
+    { key: 'approved_applications', label: 'Approved Applications', value: oneStats.approved_applications || 0 },
+    { key: 'completed_applications', label: 'Completed Applications', value: oneStats.completed_applications || 0 },
+    { key: 'total_financed_amount', label: 'Total Financed Amount', value: oneStats.total_financed_amount ? formatCurrency(oneStats.total_financed_amount) : formatCurrency(0) },
+  ] : [];
+
+  return (
+    <div className="px-6 py-4">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Customer Details
+          </h1>
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClasses(oneCustomer.customer_status)}`}>
+            {oneCustomer.customer_status || 'Unknown'}
+          </span>
+        </div>
+        <div className="flex gap-2">
           <Button
             label="Edit Customer"
             onClick={handleEdit}
             variant="outline"
             size="sm"
-            className="px-4 py-2 text-sm"
-          />
-        </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 border-b">
-          <h2 className="text-3xl font-bold text-gray-800">
-            Customer Details ({oneCustomer?.full_name})
-          </h2>
-          <span
-            className={`ml-0 md:ml-4 mt-2 md:mt-0 inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
-              oneCustomer?.customer_status
-            )}`}
-          >
-            {oneCustomer?.customer_status
-            }
-          </span>
-        </div>
-
-        {/* KYC Section */}
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h4 className="text-lg font-semibold pb-3">CUSTOMER KYC DETAILS</h4>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 mt-5">
-            <DetailItem label="Customer ID" value={oneCustomer?.id ?? null} />
-            <DetailItem label="Full Name" value={oneCustomer?.full_name ?? null} />
-            <DetailItem label="Phone Number" value={oneCustomer?.phone_number ?? null} />
-            <DetailItem label="Email" value={oneCustomer?.email ?? null} />
-            <DetailItem label="BVN" value={oneCustomer?.bvn ?? null} />
-            <DetailItem label="Date of Birth" value={oneCustomer?.dob ?? null} />
-            <DetailItem label="Address" value={oneCustomer?.address ?? null} />
-            <DetailItem label="State" value={oneCustomer?.state ?? null} />
-            <DetailItem label="LGA" value={oneCustomer?.lga ?? null} />
-            <DetailItem label="Customer Status" value={oneCustomer?.customer_status ?? null} />
-            <DetailItem label="Created At" value={new Date(oneCustomer?.created_at ?? null).toLocaleDateString()} />
-          </div>
-        </div>
-
-        {/* VENDOR Section */}
-        {oneVendor && (
-          <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-            <h4 className="text-lg font-semibold pb-3">VENDOR DETAILS</h4>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 mt-5">
-              <DetailItem label="Vendor ID" value={oneVendor?.id} />
-
-              <DetailItem label="Vendor Name" value={`${oneVendor?.first_name} ${oneVendor?.last_name}`} />
-              <DetailItem label="Vendor Business" value={oneVendor?.Business?.name} />
-            </div>
-          </div>
-        )}
-
-
-        {/* STATISTICS Section */}
-        {oneStats && (
-          <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-            <h4 className="text-lg font-semibold pb-3">APPLICATION STATISTICS</h4>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 mt-5">
-              <DetailItem label="Total Applications" value={statistics?.total_applications ?? 0} />
-              <DetailItem label="Approved Applications" value={statistics?.approved_applications ?? 0} />
-              <DetailItem label="Completed Applications" value={statistics?.completed_applications ?? 0} />
-              <DetailItem label="Total Financed Amount" value={`₦${statistics?.total_financed_amount ?? 0}`} />
-            </div>
-          </div>
-        )}
-        <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-          <h3 className="text-xl font-semibold text-gray-700 mb-4">
-            Status Update
-          </h3>
-          <label className="block text-sm text-gray-600 mb-1">Select Status to be updated</label>
-          <select
-            value={selectedStatus}
-            onChange={handleChangeStatus}
-            className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select an option</option>
-            <option value="pending">Pending</option>
-            <option value="active">active</option>
-
-
-            <option value="inactive">inactive</option>
-
-
-
-          </select>
-        </div>
-
-        <div className="p-6 flex justify-start gap-10">
-          <Button
-            label="Update Status"
-            onClick={handleUpdateStatus}
-            variant="solid"
-            size="md"
-            className="text-sm px-6 py-3"
-            loading={isLoading}
-          />
-          <Button
-            label="Delete Vendor"
-            onClick={handleDelete}
-            variant="transparent"
-            size="md"
-            className="text-sm px-6 py-3"
-            loading={isLoad}
+            icon={Edit}
           />
         </div>
       </div>
-    </div>
 
-  )
+      {/* Customer Name */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold text-gray-700">
+          {oneCustomer.full_name || 'Unnamed Customer'}
+        </h2>
+        <p className="text-gray-600">
+          Customer ID: {oneCustomer.id}
+        </p>
+      </div>
 
-}
-const DetailItem = ({ label, value }) => {
-  let displayValue;
+      {/* Collapsible Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Personal Information */}
+        <CollapsibleSection
+          title="Personal Information"
+          icon={User}
+          badge={personalInfo.length}
+          badgeColor="blue"
+          defaultExpanded={getSectionState('personal-info')}
+          onToggle={(isExpanded) => toggleSection('personal-info', isExpanded)}
+        >
+          <InfoGrid 
+            data={personalInfo}
+            columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+          />
+        </CollapsibleSection>
 
-  if (value === null) {
-    displayValue = 'null';
-  } else if (value === undefined) {
-    displayValue = 'N/A';
-  } else {
-    displayValue = value;
-  }
+        {/* Vendor Information */}
+        {oneVendor && (
+          <CollapsibleSection
+            title="Vendor Information"
+            icon={Building2}
+            badge={vendorInfo.length}
+            badgeColor="green"
+            defaultExpanded={getSectionState('vendor-info')}
+            onToggle={(isExpanded) => toggleSection('vendor-info', isExpanded)}
+          >
+            <InfoGrid 
+              data={vendorInfo}
+              columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+            />
+          </CollapsibleSection>
+        )}
 
-  return (
-    <div>
-      <label className="text-[#212C25] text-xs font-semibold">{label}</label>
-      <p className="bg-gray-100 text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md w-full">
-        {displayValue}
-      </p>
+        {/* Business Information */}
+        {oneBusiness && (
+          <CollapsibleSection
+            title="Business Information"
+            icon={Building2}
+            badge={businessInfo.length}
+            badgeColor="purple"
+            defaultExpanded={getSectionState('business-info')}
+            onToggle={(isExpanded) => toggleSection('business-info', isExpanded)}
+          >
+            <InfoGrid 
+              data={businessInfo}
+              columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+            />
+          </CollapsibleSection>
+        )}
+
+        {/* Statistics */}
+        {oneStats && (
+          <CollapsibleSection
+            title="Application Statistics"
+            icon={BarChart3}
+            badge={statisticsInfo.length}
+            badgeColor="orange"
+            defaultExpanded={getSectionState('statistics')}
+            onToggle={(isExpanded) => toggleSection('statistics', isExpanded)}
+          >
+            <InfoGrid 
+              data={statisticsInfo}
+              columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+            />
+          </CollapsibleSection>
+        )}
+      </div>
+
+      {/* Status Update Section */}
+      <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow-sm">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">
+          Status Update
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-2">Select Status to be updated</label>
+            <select
+              value={selectedStatus}
+              onChange={handleChangeStatus}
+              className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select an option</option>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div className="flex items-end">
+            <Button
+              label="Update Status"
+              onClick={handleUpdateStatus}
+              variant="solid"
+              size="md"
+              icon={Save}
+              loading={isLoading}
+              className="w-full md:w-auto"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-start">
+        <Button
+          label="Delete Customer"
+          onClick={handleDelete}
+          variant="transparent"
+          size="md"
+          icon={Trash2}
+          loading={isLoad}
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+        />
+      </div>
     </div>
   );
-};
+}
 
-
-export default ViewCustomerDetails
+export default ViewCustomerDetails;
