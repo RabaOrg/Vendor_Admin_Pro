@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from "@tanstack/react-query";
 import { useFetchSingleVendorData } from '../../../hooks/queries/loan'
 import { handleDeleteVendor, handleUpdateVendorStatus, handleUpdateverification } from '../../../services/loans'
-import Button from '../../../components/shared/button'
+import Button from '../../../components/shared/button';
 import CollapsibleSection from '../../../components/application/CollapsibleSection'
 import InfoGrid from '../../../components/application/InfoGrid'
 import { formatCurrency, formatDate, getStatusBadgeClasses } from '../../../utils/formatters'

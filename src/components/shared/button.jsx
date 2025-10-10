@@ -1,17 +1,7 @@
 import React from "react";
-import PropTypes from "prop-types";
 
-const Button = ({
-    label,
-    onClick,
-    variant = "solid",
-    size = "md",
-    disabled = false,
-    icon: Icon,
-    loading = false,
-    type = "button",
-}) => {
-    const baseClass = `flex items-center justify-center rounded-md font-[600] text-xs transition duration-200 ease-in-out`;
+function Button({ label, onClick, variant = "solid", size = "md", disabled = false, icon: Icon, loading = false, type = "button", className = "" }) {
+    const baseClass = "flex items-center justify-center rounded-md font-[600] text-xs transition duration-200 ease-in-out";
     const sizeClass = {
         sm: "px-3 py-2 text-sm",
         md: "px-6 py-3 text-base",
@@ -21,7 +11,6 @@ const Button = ({
     const variantClass = {
         solid: "bg-[#0f5D30] text-white hover:bg-[#0a3e20]",
         delete: "bg-red text-white hover:bg-red",
-
         outline: "text-[#0f5D30] border border-[#0f5D30] hover:bg-[#f0f0f0]",
         transparent: "bg-transparent text-[#0f5D30] border border-green-600 hover:bg-green-50 hover:text-green-700",
     }[variant];
@@ -31,7 +20,7 @@ const Button = ({
             onClick={onClick}
             disabled={disabled || loading}
             type={type}
-            className={`${baseClass} ${sizeClass} ${variantClass} ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`${baseClass} ${sizeClass} ${variantClass} ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
         >
             {loading ? (
                 <div className="flex gap-2">
@@ -57,26 +46,14 @@ const Button = ({
                     </svg>
                     <h3>Processing</h3>
                 </div>
-
             ) : (
                 <>
-                    {Icon && <Icon className="mr-2" />}
+                    {Icon && <Icon className="w-4 h-4 mr-2" />}
                     {label}
                 </>
             )}
         </button>
     );
-};
-
-Button.propTypes = {
-    label: PropTypes.string.isRequired,
-    onClick: PropTypes.func,
-    variant: PropTypes.oneOf(["solid", "outline", "transparent", "delete"]),
-    size: PropTypes.oneOf(["sm", "md", "lg"]),
-    disabled: PropTypes.bool,
-    icon: PropTypes.elementType,
-    loading: PropTypes.bool,  // Added loading prop validation
-    type: PropTypes.oneOf(["button", "submit", "reset"]),  // Added type prop to specify form behavior
-};
+}
 
 export default Button;

@@ -41,6 +41,7 @@ const CollapsibleSection = ({
       yellow: 'bg-yellow-100 text-yellow-800',
       red: 'bg-red-100 text-red-800',
       purple: 'bg-purple-100 text-purple-800',
+      orange: 'bg-orange-100 text-orange-800',
     };
     return colors[color] || colors.gray;
   };
@@ -101,7 +102,7 @@ CollapsibleSection.propTypes = {
   children: PropTypes.node.isRequired,
   defaultExpanded: PropTypes.bool,
   badge: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  badgeColor: PropTypes.oneOf(['gray', 'green', 'blue', 'yellow', 'red', 'purple']),
+  badgeColor: PropTypes.oneOf(['gray', 'green', 'blue', 'yellow', 'red', 'purple', 'orange']),
   icon: PropTypes.elementType,
   className: PropTypes.string,
   headerClassName: PropTypes.string,

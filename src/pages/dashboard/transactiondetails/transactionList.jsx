@@ -68,7 +68,7 @@ function TransactionDetails() {
 
             </tr>
           </thead>
-
+          <tbody>
           {Array.isArray(OrderList) && OrderList.map((item, index) => {
             const { Product, User, State, amount, id } = item
             return (
@@ -94,12 +94,12 @@ function TransactionDetails() {
                 </td>
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.customer.name}
+                    {item.customer?.name || 'N/A'}
                   </p>
                 </td>
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
                   <p className="font-[500] whitespace-no-wrap text-xs">
-                    {item.vendor.name}
+                    {item.vendor?.name || 'N/A'}
                   </p>
                 </td>
                 <td className="px-5 py-5 border-b border-gray-200  text-xs">
@@ -148,14 +148,6 @@ function TransactionDetails() {
               </tr>
             )
           })}
-
-
-
-          <tbody>
-
-
-
-
           </tbody>
         </table>
 

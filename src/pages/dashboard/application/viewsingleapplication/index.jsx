@@ -58,6 +58,8 @@ function SingleApplication() {
     { id: 'guarantor-info', pairedWith: 'bank-details', defaultExpanded: false },
     { id: 'uploaded-documents', pairedWith: 'payment-mandate', defaultExpanded: false },
     { id: 'payment-mandate', pairedWith: 'uploaded-documents', defaultExpanded: false },
+    { id: 'repayment-schedule', pairedWith: 'transactions', defaultExpanded: false },
+    { id: 'transactions', pairedWith: 'repayment-schedule', defaultExpanded: false },
   ];
 
   // Use the paired sections hook
@@ -633,6 +635,82 @@ function SingleApplication() {
           </CollapsibleSection>
         )}
 
+        {/* Repayment Schedule */}
+        {schedules && schedules.length > 0 && (
+          <CollapsibleSection
+            title="Repayment Schedule"
+            icon={CreditCard}
+            badge={schedules.length}
+            badgeColor="green"
+            defaultExpanded={getSectionState('repayment-schedule')}
+            onToggle={(isExpanded) => toggleSection('repayment-schedule', isExpanded)}
+          >
+            <div className="space-y-4">
+              {/* Schedule Summary */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {schedules.filter(s => s.status === 'paid').length}
+                    </div>
+                    <div className="text-sm text-gray-600">Paid Installments</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {schedules.filter(s => s.status === 'pending').length}
+                    </div>
+                    <div className="text-sm text-gray-600">Pending Installments</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {schedules.filter(s => s.status === 'overdue').length}
+                    </div>
+                    <div className="text-sm text-gray-600">Overdue Installments</div>
+                  </div>
+            </div>
+          </div>
+
+              {/* Schedule Details */}
+              <div className="space-y-3">
+                {schedules.map((schedule, index) => (
+                  <div key={schedule.id || index} className="border border-gray-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-lg font-medium text-gray-800">
+                        Installment #{schedule.installment_number}
+                      </h4>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        schedule.status === 'paid' ? 'bg-green-100 text-green-800' :
+                        schedule.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {schedule.status?.charAt(0).toUpperCase() + schedule.status?.slice(1)}
+                      </span>
+                    </div>
+                    
+                    <InfoGrid 
+                      data={[
+                        { key: 'amountDue', label: 'Amount Due', value: schedule.amount_due ? formatCurrency(schedule.amount_due) : 'N/A' },
+                        { key: 'dueDate', label: 'Due Date', value: schedule.due_date ? formatDate(schedule.due_date, 'short') : 'N/A' },
+                        { key: 'paidAmount', label: 'Paid Amount', value: schedule.paid_amount ? formatCurrency(schedule.paid_amount) : '₦0.00' },
+                        { key: 'paidAt', label: 'Paid At', value: schedule.paid_at ? formatDate(schedule.paid_at, 'datetime') : 'N/A' },
+                        { key: 'paymentReference', label: 'Payment Reference', value: schedule.payment_reference || 'N/A' },
+                        { key: 'failedAttempts', label: 'Failed Attempts', value: schedule.failed_attempts || 0 },
+                        { key: 'lastAttemptAt', label: 'Last Attempt', value: schedule.last_attempt_at ? formatDate(schedule.last_attempt_at, 'datetime') : 'N/A' },
+                        { key: 'nextAttemptAt', label: 'Next Attempt', value: schedule.next_attempt_at ? formatDate(schedule.next_attempt_at, 'datetime') : 'N/A' },
+                        { key: 'reminderSent', label: 'Reminder Sent', value: schedule.reminder_sent ? 'Yes' : 'No' },
+                        { key: 'reminderSentAt', label: 'Reminder Sent At', value: schedule.reminder_sent_at ? formatDate(schedule.reminder_sent_at, 'datetime') : 'N/A' },
+                        { key: 'createdAt', label: 'Created At', value: schedule.created_at ? formatDate(schedule.created_at, 'datetime') : 'N/A' },
+                        { key: 'updatedAt', label: 'Updated At', value: schedule.updated_at ? formatDate(schedule.updated_at, 'datetime') : 'N/A' },
+                      ]}
+                      columns={{ mobile: 1, tablet: 2, desktop: 3 }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CollapsibleSection>
+        )}
+
         {/* Transactions */}
         {transactions && transactions.length > 0 && (
           <CollapsibleSection
@@ -640,7 +718,8 @@ function SingleApplication() {
             icon={Banknote}
             badge={transactions.length}
             badgeColor="blue"
-            defaultExpanded={false}
+            defaultExpanded={getSectionState('transactions')}
+            onToggle={(isExpanded) => toggleSection('transactions', isExpanded)}
           >
             <div className="space-y-4">
               {transactions.map((txn, index) => (
