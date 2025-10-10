@@ -1,13 +1,26 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Card, Label } from 'flowbite-react'
-import Button from '../../../components/shared/button'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from "@tanstack/react-query";
-import { useFetchSingleActivation, useFetchSingleVendorData } from '../../../hooks/queries/loan'
-import { useFetchOneCustomer } from '../../../hooks/queries/customer'
-import { handleDeleteVendor, handleUpdateLoanStatus, handleUpdateVendorStatus, handleUpdateverification } from '../../../services/loans'
+import { useFetchSingleVendorData } from '../../../hooks/queries/loan'
+import { handleDeleteVendor, handleUpdateVendorStatus, handleUpdateverification } from '../../../services/loans'
+import Button from '../../../components/shared/button'
+import CollapsibleSection from '../../../components/application/CollapsibleSection'
+import InfoGrid from '../../../components/application/InfoGrid'
+import { formatCurrency, formatDate, getStatusBadgeClasses } from '../../../utils/formatters'
+import { usePairedSections } from '../../../hooks/usePairedSections'
+import { 
+  User, 
+  Building, 
+  CreditCard, 
+  FileText, 
+  BarChart3, 
+  Pencil,
+  MapPin,
+  Shield,
+  TrendingUp
+} from 'lucide-react'
 
 function ViewActivation() {
   const { id } = useParams()
@@ -18,25 +31,38 @@ function ViewActivation() {
   const [interest, setInterest] = useState(0)
   const [isLoad, setIsLoad] = useState(false)
 
+  const { data: vendorData, isPending, isError } = useFetchSingleVendorData(id)
 
-  const { data: vendor, isPending, isError } = useFetchSingleVendorData(id)
+  const [selectedStatus, setSelectedStatus] = useState(vendorData?.account_status || "");
+  const [selectedVerificationStatus, setSelectedVerificationStatus] = useState(vendorData?.verification_status || "");
 
-  const [selectedStatus, setSelectedStatus] = useState(vendor?.status || "");
-  const [selectedVerificationStatus, setSelectedVerificationStatus] = useState(vendor?.verification_status || "");
+  // Define paired sections configuration for vendor view
+  const pairedSectionsConfig = [
+    { id: 'personal-info', pairedWith: 'business-info', defaultExpanded: true },
+    { id: 'business-info', pairedWith: 'personal-info', defaultExpanded: true },
+    { id: 'address-info', pairedWith: 'bank-details', defaultExpanded: false },
+    { id: 'bank-details', pairedWith: 'address-info', defaultExpanded: false },
+    { id: 'agent-info', pairedWith: 'settings-preferences', defaultExpanded: false },
+    { id: 'settings-preferences', pairedWith: 'agent-info', defaultExpanded: false },
+    { id: 'rating-reviews', pairedWith: 'uploaded-documents', defaultExpanded: false },
+    { id: 'uploaded-documents', pairedWith: 'rating-reviews', defaultExpanded: false },
+  ];
+
+  // Use the paired sections hook
+  const { toggleSection, getSectionState } = usePairedSections(pairedSectionsConfig);
+
   const handleChangeStatus = (e) => {
     setSelectedStatus(e.target.value);
   };
+
   const handleChangeVerificationStatus = (e) => {
     setSelectedVerificationStatus(e.target.value);
   };
+
   const handleSms = (id) => {
-
-
-
     navigate(`/create_sms_notification/${id}`);
-
   }
-  console.log(vendor)
+
   const handleUpdateStatus = async () => {
     if (selectedStatus === "") {
       toast.error("Please select the active status to proceed")
@@ -44,12 +70,9 @@ function ViewActivation() {
     }
     setIsLoading(true)
     try {
-      const response = await handleUpdateVendorStatus(id,
-        {
-          account_status: selectedStatus,
-
-        }
-      )
+      const response = await handleUpdateVendorStatus(id, {
+        account_status: selectedStatus,
+      })
       if (response) {
         toast.success("Vendor Status updated successfully")
         queryClient.invalidateQueries(["getsinglevendors", id]);
@@ -59,11 +82,12 @@ function ViewActivation() {
     } finally {
       setIsLoading(false)
     }
-
   }
+
   const handleEdit = () => {
     navigate(`/edit_vendor/${id}`)
   }
+
   const handleUpdateVerificationStatus = async () => {
     if (!interest) {
       toast.error("interest rate is required")
@@ -76,14 +100,11 @@ function ViewActivation() {
 
     setisVerified(true)
     try {
-      const response = await handleUpdateverification(id,
-        {
-          verification_status: selectedVerificationStatus,
-          verification_notes: "Verification approved by admin",
-          interest_rate: Number(interest),
-
-        }
-      )
+      const response = await handleUpdateverification(id, {
+        verification_status: selectedVerificationStatus,
+        verification_notes: "Verification approved by admin",
+        interest_rate: Number(interest),
+      })
       if (response) {
         toast.success("Verification Status updated successfully")
         queryClient.invalidateQueries(["getsinglevendors", id]);
@@ -96,18 +117,17 @@ function ViewActivation() {
     } finally {
       setisVerified(false)
     }
-
   }
+
   const handleDelete = async () => {
     setIsLoad(true)
     try {
       console.log(id)
-      const response = await handleDeleteVendor(id, {
+      await handleDeleteVendor(id, {
         force_delete: false
       })
 
       toast.success("Vendor deactivated successfully")
-
 
     } catch (error) {
       console.log(error)
@@ -119,282 +139,410 @@ function ViewActivation() {
       setIsLoad(false)
     }
   }
-  const getStatusBadgeClasses = (status) => {
-    if (!status) return 'bg-gray-100 text-gray-800';
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'suspended':
-        return 'bg-red-300 text-red-800';
 
-      case 'deleted':
-        return 'bg-red-100 text-red-800';
-      case 'default':
-        return 'bg-gray-500 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-  return (
-    <div className="px-6">
-      <div className='flex justify-end mt-2'>
-        <Button
-          label="Edit Vendor"
-          onClick={handleEdit}
-          variant="outline"
-          size="sm"
-          className="px-4 py-2 text-sm"
-        />
+  if (isPending) {
+    return (
+      <div className="flex justify-center items-center h-screen text-xl">
+        Loading vendor details...
       </div>
-      <div className="min-w-full rounded-lg overflow-hidden bg-white shadow-md mt-2">
+    );
+  }
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 border-b">
-          <h2 className="text-3xl font-bold text-gray-800">
-            Vendor Details ({vendor?.full_name})
-          </h2>
-          <span
-            className={`ml-0 md:ml-4 mt-2 md:mt-0 inline-block px-4 py-1 text-sm font-semibold rounded-full transition-colors duration-200 ${getStatusBadgeClasses(
-              vendor?.account_status
-            )}`}
-          >
-            {vendor?.account_status}
-          </span>
+  if (isError || !vendorData) {
+    return (
+      <div className="flex justify-center items-center h-screen text-xl text-red-500">
+        Failed to load vendor details.
+      </div>
+    );
+  }
+
+  // Extract vendor data
+  const vendor = vendorData;
+  const business = vendor?.Business;
+  const attachments = vendor?.Attachments || [];
+  const agent = vendor?.agent;
+
+  // Vendor Statistics Data
+  const vendorStats = [
+    { key: 'totalApplications', label: 'Total Applications', value: vendor?.statistics?.total_applications || 0 },
+    { key: 'totalCustomers', label: 'Total Customers', value: vendor?.statistics?.total_customers || 0 },
+    { key: 'totalProducts', label: 'Total Products', value: vendor?.statistics?.total_products || 0 },
+  ];
+
+  // Personal Information Data
+  const personalInfo = [
+    { key: 'fullName', label: 'Full Name', value: vendor?.full_name },
+    { key: 'phoneNumber', label: 'Phone Number', value: vendor?.phone_number },
+    { key: 'email', label: 'Email', value: vendor?.email },
+    { key: 'gender', label: 'Gender', value: vendor?.gender },
+    { key: 'dob', label: 'Date of Birth', value: vendor?.dob ? formatDate(vendor.dob, 'date') : null },
+    { key: 'bvn', label: 'BVN', value: vendor?.bvn },
+    { key: 'address', label: 'Address', value: vendor?.address },
+    { key: 'location', label: 'Location', value: vendor?.location },
+    { key: 'state', label: 'State', value: vendor?.state },
+    { key: 'accountStatus', label: 'Account Status', value: vendor?.account_status },
+    { key: 'verificationStatus', label: 'Verification Status', value: vendor?.verification_status },
+    { key: 'verifiedAt', label: 'Verified At', value: vendor?.verified_at ? formatDate(vendor.verified_at, 'datetime') : null },
+    { key: 'createdAt', label: 'Created At', value: vendor?.created_at ? formatDate(vendor.created_at, 'datetime') : null },
+    { key: 'updatedAt', label: 'Last Updated', value: vendor?.updated_at ? formatDate(vendor.updated_at, 'datetime') : null },
+  ];
+
+  // Business Information Data
+  const businessInfo = [
+    { key: 'businessName', label: 'Business Name', value: business?.name },
+    { key: 'companyName', label: 'Company Name', value: vendor?.company_name },
+    { key: 'businessDescription', label: 'Business Description', value: business?.business_description || vendor?.business_description },
+    { key: 'category', label: 'Category', value: business?.category },
+    { key: 'subCategory', label: 'Sub Category', value: business?.sub_category },
+    { key: 'cacNumber', label: 'CAC Number', value: business?.cac_number },
+    { key: 'cacRegistration', label: 'CAC Registration', value: vendor?.cac_registration_number },
+    { key: 'taxId', label: 'Tax ID', value: vendor?.tax_identification_number },
+    { key: 'timeInBusiness', label: 'Time in Business', value: business?.time_in_business },
+    { key: 'monthlyRevenue', label: 'Monthly Revenue', value: business?.monthly_revenue ? formatCurrency(business.monthly_revenue) : null },
+    { key: 'website', label: 'Website', value: business?.website || vendor?.website },
+    { key: 'socialMedia', label: 'Social Media', value: business?.social_media },
+  ];
+
+  // Address Information Data
+  const addressInfo = [
+    { key: 'streetAddress', label: 'Street Address', value: business?.street_address },
+    { key: 'lga', label: 'LGA', value: business?.lga },
+    { key: 'state', label: 'State', value: business?.state },
+    { key: 'location', label: 'Location', value: vendor?.location },
+  ];
+
+  // Bank Information Data
+  const bankInfo = [
+    { key: 'bankName', label: 'Bank Name', value: vendor?.bank_name },
+    { key: 'accountNumber', label: 'Account Number', value: vendor?.account_number },
+    { key: 'accountName', label: 'Account Name', value: vendor?.account_name },
+    { key: 'bankCode', label: 'Bank Code', value: vendor?.bank_code },
+    { key: 'accountVerified', label: 'Account Verified', value: vendor?.account_verified ? 'Yes' : 'No' },
+    { key: 'accountVerifiedAt', label: 'Account Verified At', value: vendor?.account_verified_at ? formatDate(vendor.account_verified_at, 'datetime') : null },
+  ];
+
+  // Agent Information Data
+  const agentInfo = [
+    { key: 'agentName', label: 'Agent Name', value: agent ? `${agent.first_name} ${agent.last_name}` : null },
+    { key: 'agentEmail', label: 'Agent Email', value: agent?.email },
+    { key: 'agentPhone', label: 'Agent Phone', value: agent?.phone_number },
+    { key: 'employeeId', label: 'Employee ID', value: agent?.employee_id },
+    { key: 'position', label: 'Position', value: agent?.position },
+    { key: 'department', label: 'Department', value: agent?.department },
+    { key: 'status', label: 'Status', value: agent?.status },
+    { key: 'hireDate', label: 'Hire Date', value: agent?.hire_date ? formatDate(agent.hire_date, 'date') : null },
+    { key: 'commissionRate', label: 'Commission Rate', value: agent?.commission_rate ? `${agent.commission_rate}%` : null },
+  ];
+
+  // Settings Information Data
+  const settingsInfo = [
+    { key: 'pushNotifications', label: 'Push Notifications', value: vendor?.push_notifications_enabled ? 'Enabled' : 'Disabled' },
+    { key: 'emailNotifications', label: 'Email Notifications', value: vendor?.email_notifications_enabled ? 'Enabled' : 'Disabled' },
+    { key: 'termsAccepted', label: 'Terms Accepted', value: vendor?.terms_accepted ? 'Yes' : 'No' },
+    { key: 'termsAcceptedAt', label: 'Terms Accepted At', value: vendor?.terms_accepted_at ? formatDate(vendor.terms_accepted_at, 'datetime') : null },
+    { key: 'interestRate', label: 'Interest Rate', value: vendor?.interest_rate ? `${vendor.interest_rate}%` : null },
+  ];
+
+  // Rating Information Data
+  const ratingInfo = [
+    { key: 'rating', label: 'Rating', value: vendor?.rating ? `${vendor.rating}/5` : null },
+    { key: 'reviewCount', label: 'Review Count', value: vendor?.review_count },
+    { key: 'totalRatingPoints', label: 'Total Rating Points', value: vendor?.total_rating_points },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto p-4 md:p-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+        <div className="flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Vendor Details
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {vendor?.full_name}
+          </p>
         </div>
-        <div className="p-6 mt-4 bg-white rounded-xl">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">📈 Vendor Statistics</h2>
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClasses(vendor?.account_status)}`}>
+            {vendor?.account_status?.toUpperCase()}
+          </span>
+          <Button
+            label="Edit Vendor"
+            onClick={handleEdit}
+            variant="outline"
+            size="sm"
+            className="px-4 py-2 text-sm"
+            icon={Pencil}
+          />
+        </div>
+      </div>
 
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {[
-              { label: "Total Applications", value: vendor?.statistics?.total_applications },
-              { label: "Total Customers", value: vendor?.statistics?.total_customers },
-              { label: "Total Products", value: vendor?.statistics?.total_products },
-            ].map((stat, index) => (
-              <div
-                key={index}
-                className="bg-gray-50 border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow transition"
-              >
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-semibold text-gray-800 mt-2">
-                  {stat.value ?? "—"}
-                </p>
+      {/* Vendor Statistics */}
+      <div className="mb-6">
+        <CollapsibleSection
+          title="Vendor Statistics"
+          icon={BarChart3}
+          defaultExpanded={true}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {vendorStats.map((stat) => (
+              <div key={stat.key} className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                <p className="text-sm text-gray-500 mb-1">{stat.label}</p>
+                <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
               </div>
             ))}
           </div>
+        </CollapsibleSection>
+      </div>
 
+      {/* Collapsible Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Personal Information */}
+        <CollapsibleSection
+          title="Personal Information"
+          icon={User}
+          badge={vendor?.account_status}
+          badgeColor={vendor?.account_status === 'active' ? 'green' : 'yellow'}
+          defaultExpanded={getSectionState('personal-info')}
+          onToggle={(isExpanded) => toggleSection('personal-info', isExpanded)}
+        >
+          <InfoGrid 
+            data={personalInfo}
+            columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+          />
+        </CollapsibleSection>
 
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        {/* Business Information */}
+        <CollapsibleSection
+          title="Business Information"
+          icon={Building}
+          badge={business?.category}
+          badgeColor="blue"
+          defaultExpanded={getSectionState('business-info')}
+          onToggle={(isExpanded) => toggleSection('business-info', isExpanded)}
+        >
+          <InfoGrid 
+            data={businessInfo}
+            columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+          />
+        </CollapsibleSection>
 
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Personal Information</h3>
-            <div className="space-y-4">
-              <Input label="Full Name" value={vendor?.full_name} disabled />
-              <Input label="Phone Number" value={vendor?.phone_number} disabled />
-              <Input label="Email" value={vendor?.email} disabled />
-              <Input label="Account Status" value={vendor?.account_status} disabled />
-              <Input label="Verification Status" value={vendor?.verification_status} disabled />
-            </div>
-          </div>
+        {/* Address Information */}
+        <CollapsibleSection
+          title="Address Information"
+          icon={MapPin}
+          defaultExpanded={getSectionState('address-info')}
+          onToggle={(isExpanded) => toggleSection('address-info', isExpanded)}
+        >
+          <InfoGrid 
+            data={addressInfo}
+            columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+          />
+        </CollapsibleSection>
 
+        {/* Bank Information */}
+        <CollapsibleSection
+          title="Bank Information"
+          icon={CreditCard}
+          badge={vendor?.account_verified ? 'Verified' : 'Unverified'}
+          badgeColor={vendor?.account_verified ? 'green' : 'yellow'}
+          defaultExpanded={getSectionState('bank-details')}
+          onToggle={(isExpanded) => toggleSection('bank-details', isExpanded)}
+        >
+          <InfoGrid 
+            data={bankInfo}
+            columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+          />
+        </CollapsibleSection>
 
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Business Information</h3>
-            <div className="space-y-4">
-              <Input label="Business Name" value={vendor?.Business?.name} disabled />
-              <div className="relative w-full">
-                <Input
-                  label="CAC Number"
-                  value={vendor?.Business?.cac_number}
-                  disabled
-                  className="w-full pr-40"
-                />
+        {/* Agent Information */}
+        {agent && (
+          <CollapsibleSection
+            title="Agent Information"
+            icon={User}
+            badge={agent?.status}
+            badgeColor={agent?.status === 'active' ? 'green' : 'yellow'}
+            defaultExpanded={getSectionState('agent-info')}
+            onToggle={(isExpanded) => toggleSection('agent-info', isExpanded)}
+          >
+            <InfoGrid 
+              data={agentInfo}
+              columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+            />
+          </CollapsibleSection>
+        )}
 
-                <a
-                  href="https://search.cac.gov.ng/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute right-0 bottom-1"
-                >
-                  <Button
-                    label="Verify CAC"
-                    variant="solid"
-                    onClick={() => handleSms(id)}
-                    size="md"
-                    className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-6 md:mt-0"
+        {/* Settings Information */}
+        <CollapsibleSection
+          title="Settings & Preferences"
+          icon={Shield}
+          defaultExpanded={getSectionState('settings-preferences')}
+          onToggle={(isExpanded) => toggleSection('settings-preferences', isExpanded)}
+        >
+          <InfoGrid 
+            data={settingsInfo}
+            columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+          />
+        </CollapsibleSection>
+
+        {/* Rating Information */}
+        {vendor?.rating && (
+          <CollapsibleSection
+            title="Rating & Reviews"
+            icon={TrendingUp}
+            defaultExpanded={getSectionState('rating-reviews')}
+            onToggle={(isExpanded) => toggleSection('rating-reviews', isExpanded)}
+          >
+            <InfoGrid 
+              data={ratingInfo}
+              columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+            />
+          </CollapsibleSection>
+        )}
+
+        {/* Uploaded Documents */}
+        {attachments.length > 0 && (
+          <CollapsibleSection
+            title="Uploaded Documents"
+            icon={FileText}
+            badge={`${attachments.length}`}
+            badgeColor="blue"
+            defaultExpanded={getSectionState('uploaded-documents')}
+            onToggle={(isExpanded) => toggleSection('uploaded-documents', isExpanded)}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {attachments.map((doc, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                  <img
+                    src={doc.url}
+                    alt={doc.filename || `Document ${index + 1}`}
+                    className="w-full h-48 object-cover"
                   />
-                </a>
-              </div>
-
-              <Input label="Category" value={vendor?.Business?.category} disabled />
-              <Input label="Sub Category" value={vendor?.Business?.sub_category} disabled />
-              <Input label="Monthly Revenue" value={vendor?.Business?.monthly_revenue} disabled />
-              <Input label="Time in Business" value={vendor?.Business?.time_in_business} disabled />
-            </div>
-          </div>
-
-
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Address</h3>
-            <div className="space-y-4">
-              <Input label="Street Address" value={vendor?.Business?.street_address} disabled />
-              <Input label="LGA" value={vendor?.Business?.lga} disabled />
-              <Input label="State" value={vendor?.Business?.state} disabled />
-            </div>
-          </div>
-
-
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Interest Rate</h3>
-            <div className="space-y-4">
-
-
-              <Input
-                label="Interest Rate (Please input the interest rate)"
-                value={interest}
-                type="number"
-                onChange={(e) => setInterest(e.target.value)}
-              />
-
-            </div>
-
-          </div>
-          {Array.isArray(vendor?.business_photos) && vendor.business_photos.length > 0 && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-              <h3 className="text-xl font-semibold text-gray-700 mb-4">Uploaded Documents</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {vendor.business_photos.map((doc, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                    <img
-                      src={doc.url}
-                      alt={doc.label || `Document ${index + 1}`}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-3 bg-white border-t text-sm text-gray-600 font-medium text-center">
-                      {doc.label || `Document ${index + 1}`}
-                    </div>
+                  <div className="p-3 bg-white border-t text-sm text-gray-600 font-medium text-center">
+                    {doc.filename || `Document ${index + 1}`}
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
+
+        {/* Status Management */}
+        <CollapsibleSection
+          title="Status Management"
+          icon={Shield}
+          defaultExpanded={false}
+        >
+          <div className="space-y-6">
+            {/* Account Status Update */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Account Status Update</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Select Status to be updated</label>
+                  <select
+                    value={selectedStatus}
+                    onChange={handleChangeStatus}
+                    className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select an option</option>
+                    <option value="pending">Pending</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <Button
+                  label="Update Status"
+                  onClick={handleUpdateStatus}
+                  variant="solid"
+                  size="md"
+                  className="text-sm px-6 py-3"
+                  loading={isLoading}
+                />
               </div>
             </div>
-          )}
 
-
-
-
-
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Account Status Update
-            </h3>
-            <label className="block text-sm text-gray-600 mb-1">Select Status to be updated</label>
-            <select
-              value={selectedStatus}
-              onChange={handleChangeStatus}
-              className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select an option</option>
-              <option value="pending">Pending</option>
-              <option value="active">active</option>
-
-              <option value="suspended">suspended</option>
-              <option value="inactive">inactive</option>
-
-
-
-            </select>
-            <div className="mt-5">
-              <Button
-                label="Update Status"
-                onClick={handleUpdateStatus}
-                variant="solid"
-                size="md"
-                className="text-sm px-6 py-3"
-                loading={isLoading}
-              />
+            {/* Verification Status Update */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Verification Status Update</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Interest Rate</label>
+                  <input
+                    type="number"
+                    value={interest}
+                    onChange={(e) => setInterest(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter interest rate"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Select Verification Status</label>
+                  <select
+                    value={selectedVerificationStatus}
+                    onChange={handleChangeVerificationStatus}
+                    className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select an option</option>
+                    <option value="pending">Pending</option>
+                    <option value="under_review">Under Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <Button
+                  label="Update Verification Status"
+                  onClick={handleUpdateVerificationStatus}
+                  variant="solid"
+                  size="md"
+                  className="text-sm px-6 py-3"
+                  loading={isverfied}
+                />
+              </div>
             </div>
           </div>
+        </CollapsibleSection>
 
-
-
-
-          <div className="bg-gray-50 p-6 mt-5 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Verification Status Update
-            </h3>
-            <label className="block text-sm text-gray-600 mb-1">Select Status to be updated</label>
-            <select
-              value={selectedVerificationStatus}
-              onChange={handleChangeVerificationStatus}
-              className="w-full p-3 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select an option</option>
-              <option value="pending">pending</option>
-              <option value="under_review">under_review</option>
-              <option value="approved">approved</option>
-
-              <option value="suspended">rejected</option>
-
-
-
-
-
-            </select>
-            <div className="mt-5">
-
-              <Button
-                label="Update Verification Status"
-                onClick={handleUpdateVerificationStatus}
-                variant="solid"
-                size="md"
-                className="text-sm px-6 py-3"
-                loading={isverfied}
-              />
-
-            </div>
-          </div>
-          <div className="p-6 flex gap-10">
-
+        {/* Actions */}
+        <CollapsibleSection
+          title="Actions"
+          icon={Pencil}
+          defaultExpanded={false}
+        >
+          <div className="flex flex-wrap gap-4">
             <Button
               label="Deactivate Vendor"
               onClick={handleDelete}
-              variant="transparent"
+              variant="outline"
               size="md"
-              className="text-sm px-6 py-3"
+              className="text-red-600 border-red-600 hover:bg-red-50"
               loading={isLoad}
             />
             <Button
-              label="Create Sms Application"
-              variant="solid"
+              label="Create SMS Application"
               onClick={() => handleSms(id)}
+              variant="solid"
               size="md"
-              className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
+              className="bg-green-700 text-white hover:bg-green-800"
             />
-
+            <a
+              href="https://search.cac.gov.ng/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                label="Verify CAC"
+                variant="outline"
+                size="md"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              />
+            </a>
           </div>
-
-        </div>
-
+        </CollapsibleSection>
       </div>
-
-    </div >
+    </div>
   )
 }
 
-const Input = ({ label, value, onChange, disabled, type }) => (
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">{label}</label>
-    <input
-      type={type}
-      disabled={disabled}
-      onChange={onChange}
-      value={value ?? '—'}
-      className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  </div>
-)
 export default ViewActivation
