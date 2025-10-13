@@ -156,7 +156,7 @@ function EditApplication() {
     application_data,
     status,
   } = singleLoan || {};
-  
+
   // Ensure Customer is not null before using it
   const safeCustomer = Customer || {};
   const handleEdit = async () => {
@@ -409,7 +409,7 @@ function EditApplication() {
                 />
               </div>
 
-              {/* Down Payment */}
+
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Down Payment</label>
                 <input
@@ -428,7 +428,7 @@ function EditApplication() {
                 />
               </div>
 
-              {/* Down Payment Percent */}
+
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Down Payment Percent</label>
                 <input
@@ -642,7 +642,7 @@ function EditApplication() {
           </div>
 
           {/* Recalculation Section */}
-    
+
 
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm md:col-span-2 mt-6">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
