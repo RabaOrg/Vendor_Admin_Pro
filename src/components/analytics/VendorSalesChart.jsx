@@ -127,39 +127,39 @@ const VendorSalesChart = ({ data, isLoading }) => {
         <div className="space-y-3">
           {vendor_sales.slice(0, 8).map((vendor, index) => (
             <div key={vendor.vendor_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-sm font-bold text-blue-600">#{index + 1}</span>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{vendor.name}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 truncate">{vendor.name}</p>
                   <div className="flex items-center space-x-2">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getVerificationBadge(vendor.verification_status)}`}>
                       {vendor.verification_status}
                     </span>
-                    <span className="text-xs text-gray-500">{vendor.email}</span>
+                    <span className="text-xs text-gray-500 truncate">{vendor.email}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4 text-sm">
-                <div className="text-center">
+              <div className="flex items-center space-x-2 sm:space-x-4 text-sm">
+                <div className="text-center min-w-0">
                   <p className="font-medium text-gray-900">{vendor.total_applications}</p>
-                  <p className="text-xs text-gray-500">Applications</p>
+                  <p className="text-xs text-gray-500 truncate">Apps</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center min-w-0">
                   <p className="font-medium text-gray-900">{vendor.approved_applications}</p>
-                  <p className="text-xs text-gray-500">Approved</p>
+                  <p className="text-xs text-gray-500 truncate">Approved</p>
                 </div>
-                <div className="text-center">
-                  <p className="font-medium text-gray-900">{formatCurrency(vendor.total_sales_value)}</p>
-                  <p className="text-xs text-gray-500">Sales Value</p>
+                <div className="text-center min-w-0">
+                  <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatCurrency(vendor.total_sales_value)}</p>
+                  <p className="text-xs text-gray-500 truncate">Sales</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center min-w-0">
                   <span className={`font-medium ${getPerformanceColor(vendor.approval_rate)}`}>
                     {vendor.approval_rate}%
                   </span>
-                  <p className="text-xs text-gray-500">Approval Rate</p>
+                  <p className="text-xs text-gray-500 truncate">Rate</p>
                 </div>
               </div>
             </div>

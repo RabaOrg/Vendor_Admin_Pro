@@ -110,38 +110,38 @@ const AgentLeaderboard = ({ data, isLoading }) => {
         <h4 className="text-sm font-medium text-gray-700 mb-3">Top Performing Agents</h4>
         {leaderboard.slice(0, 10).map((agent, index) => (
           <div key={agent.agent_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
               <div className="flex-shrink-0">
                 {getRankIcon(index)}
               </div>
-              <div>
-                <p className="font-medium text-gray-900">{agent.name}</p>
-                <p className="text-sm text-gray-500">{agent.email}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-gray-900 truncate">{agent.name}</p>
+                <p className="text-sm text-gray-500 truncate">{agent.email}</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4 text-sm">
-              <div className="text-center">
+            <div className="flex items-center space-x-2 sm:space-x-4 text-sm">
+              <div className="text-center min-w-0">
                 <p className="font-medium text-gray-900">{agent.total_applications}</p>
-                <p className="text-xs text-gray-500">Applications</p>
+                <p className="text-xs text-gray-500 truncate">Apps</p>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0">
                 <p className="font-medium text-gray-900">{agent.approved_applications}</p>
-                <p className="text-xs text-gray-500">Approved</p>
+                <p className="text-xs text-gray-500 truncate">Approved</p>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0">
                 <p className="font-medium text-gray-900">{agent.vendors_managed}</p>
-                <p className="text-xs text-gray-500">Vendors</p>
+                <p className="text-xs text-gray-500 truncate">Vendors</p>
               </div>
-              <div className="text-center">
-                <p className="font-medium text-gray-900">{formatCurrency(agent.total_approved_value)}</p>
-                <p className="text-xs text-gray-500">Value</p>
+              <div className="text-center min-w-0">
+                <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatCurrency(agent.total_approved_value)}</p>
+                <p className="text-xs text-gray-500 truncate">Value</p>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPerformanceColor(agent.performance_score)}`}>
                   {agent.performance_score}%
                 </span>
-                <p className="text-xs text-gray-500 mt-1">Score</p>
+                <p className="text-xs text-gray-500 truncate">Score</p>
               </div>
             </div>
           </div>

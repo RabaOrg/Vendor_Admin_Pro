@@ -56,10 +56,13 @@ function SingleApplication() {
     { id: 'product-details', pairedWith: 'vendor-info', defaultExpanded: false },
     { id: 'bank-details', pairedWith: 'guarantor-info', defaultExpanded: false },
     { id: 'guarantor-info', pairedWith: 'bank-details', defaultExpanded: false },
-    { id: 'uploaded-documents', pairedWith: 'payment-mandate', defaultExpanded: false },
-    { id: 'payment-mandate', pairedWith: 'uploaded-documents', defaultExpanded: false },
-    { id: 'repayment-schedule', pairedWith: 'transactions', defaultExpanded: false },
-    { id: 'transactions', pairedWith: 'repayment-schedule', defaultExpanded: false },
+    { id: 'uploaded-documents', pairedWith: 'quote-documents', defaultExpanded: false },
+    { id: 'quote-documents', pairedWith: 'uploaded-documents', defaultExpanded: false },
+    { id: 'quote-document-info', pairedWith: null, defaultExpanded: false },
+    { id: 'payment-mandate', pairedWith: 'repayment-schedule', defaultExpanded: false },
+    { id: 'repayment-schedule', pairedWith: 'payment-mandate', defaultExpanded: false },
+    { id: 'transactions', pairedWith: 'status-timeline', defaultExpanded: false },
+    { id: 'status-timeline', pairedWith: 'transactions', defaultExpanded: false },
   ];
 
   // Use the paired sections hook
@@ -110,6 +113,25 @@ function SingleApplication() {
       }
     } catch {
       toast.error("Failed to restore application");
+    }
+  };
+
+  const handleQuoteDocumentReview = async (documentId, status) => {
+    try {
+      const response = await axiosInstance.put(`/api/admin/quote-documents/${documentId}/review`, {
+        status,
+        review_notes: status === 'rejected' ? 'Document rejected by admin' : 'Document approved by admin'
+      });
+      
+      if (response.data.success) {
+        toast.success(`Document ${status} successfully`);
+        // Refresh the application data
+        const updatedResponse = await axiosInstance.get(`/api/admin/applications/${id}`);
+        setLoanData(updatedResponse.data);
+      }
+    } catch (error) {
+      console.error('Error reviewing quote document:', error);
+      toast.error('Failed to review document');
     }
   };
 
@@ -197,7 +219,8 @@ function SingleApplication() {
     sms_link,
     upload_summary,
     application_source,
-    is_custom_product
+    is_custom_product,
+    quote_document_info
   } = applicationData;
 
   // Calculate next repayment date from schedules
@@ -596,6 +619,84 @@ function SingleApplication() {
           )}
         </CollapsibleSection>
 
+        {/* Quote Documents */}
+        {applicationData?.quote_documents && applicationData.quote_documents.length > 0 && (
+          <CollapsibleSection
+            title="Quote Documents"
+            icon={FileText}
+            badge={applicationData.quote_documents.length}
+            badgeColor="orange"
+            defaultExpanded={getSectionState('quote-documents')}
+            onToggle={(isExpanded) => toggleSection('quote-documents', isExpanded)}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {applicationData.quote_documents.map((doc, index) => (
+                <div key={index} className="border rounded-md p-4 bg-white shadow-sm">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-900 mb-1">
+                        {doc.filename}
+                      </h4>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          doc.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          doc.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {doc.status}
+                        </span>
+                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                          {doc.document_type}
+                        </span>
+                      </div>
+                      {doc.description && (
+                        <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
+                      )}
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <p>Uploaded: {formatDate(doc.created_at)}</p>
+                        {doc.file_size && <p>Size: {formatFileSize(doc.file_size)}</p>}
+                        {doc.reviewed_at && (
+                          <p>Reviewed: {formatDate(doc.reviewed_at)}</p>
+                        )}
+                        {doc.review_notes && (
+                          <p className="text-orange-600">Notes: {doc.review_notes}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <a
+                        href={doc.signed_url || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
+                      >
+                        Download
+                      </a>
+                      {doc.status === 'pending' && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleQuoteDocumentReview(doc.id, 'approved')}
+                            className="text-xs text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleQuoteDocumentReview(doc.id, 'rejected')}
+                            className="text-xs text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
+
         {/* Payment Mandate */}
         {mandates && mandates.length > 0 && (
           <CollapsibleSection
@@ -782,6 +883,54 @@ function SingleApplication() {
               ]}
               columns={{ mobile: 1, tablet: 2, desktop: 3 }}
             />
+          </CollapsibleSection>
+        )}
+
+        {/* Quote Document Info (from SMS applications) */}
+        {quote_document_info && (
+          <CollapsibleSection
+            title="Quote Document (SMS Application)"
+            icon={FileText}
+            badge="1"
+            badgeColor="blue"
+            defaultExpanded={getSectionState('quote-document-info')}
+            onToggle={(isExpanded) => toggleSection('quote-document-info', isExpanded)}
+          >
+            <div className="border rounded-md p-4 bg-white shadow-sm">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-gray-900 mb-1">
+                    {quote_document_info.filename}
+                  </h4>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                      Quote Document
+                    </span>
+                    <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                      Uploaded
+                    </span>
+                  </div>
+                  {quote_document_info.description && (
+                    <p className="text-sm text-gray-600 mb-2">{quote_document_info.description}</p>
+                  )}
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <p>Uploaded: {formatDate(quote_document_info.uploaded_at)}</p>
+                    {quote_document_info.file_size && <p>Size: {formatFileSize(quote_document_info.file_size)}</p>}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={quote_document_info.signed_url || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
+                  >
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
           </CollapsibleSection>
         )}
       </div>
