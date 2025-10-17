@@ -13,6 +13,8 @@ import CollapsibleSection from '../../../../components/application/CollapsibleSe
 import InfoGrid from '../../../../components/application/InfoGrid';
 import FinancialSummaryCard from '../../../../components/application/FinancialSummaryCard';
 import StatusTimeline from '../../../../components/application/StatusTimeline';
+import ActionCard from '../../../../components/application/ActionCard';
+import CreateActionModal from '../../../../components/modals/CreateActionModal';
 
 // Import utility functions
 import { 
@@ -35,7 +37,8 @@ import {
   Banknote,
   Link,
   BarChart3,
-  Pencil
+  Pencil,
+  AlertCircle
 } from 'lucide-react';
 
 function SingleApplication() {
@@ -47,6 +50,7 @@ function SingleApplication() {
   const [isLoading, setIsLoading] = useState(false);
   const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [showActionModal, setShowActionModal] = useState(false);
 
   // Define paired sections configuration
   const pairedSectionsConfig = [
@@ -56,6 +60,7 @@ function SingleApplication() {
     { id: 'product-details', pairedWith: 'vendor-info', defaultExpanded: false },
     { id: 'bank-details', pairedWith: 'guarantor-info', defaultExpanded: false },
     { id: 'guarantor-info', pairedWith: 'bank-details', defaultExpanded: false },
+    { id: 'actions-section', pairedWith: null, defaultExpanded: false },
     { id: 'uploaded-documents', pairedWith: 'quote-documents', defaultExpanded: false },
     { id: 'quote-documents', pairedWith: 'uploaded-documents', defaultExpanded: false },
     { id: 'quote-document-info', pairedWith: null, defaultExpanded: false },
@@ -158,6 +163,38 @@ function SingleApplication() {
       toast.error("Failed to restore application");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCreateAction = async (actionData) => {
+    try {
+      const response = await axiosInstance.post(`/api/admin/applications/${id}/actions`, actionData);
+      // API returns status 201 with { message, data } format
+      if (response.status === 201) {
+        toast.success('Action created successfully');
+        setShowActionModal(false);
+        // Refresh the application data to show the new action
+        queryClient.invalidateQueries(["singleLoanApplication", id]);
+      }
+    } catch (error) {
+      console.error('Error creating action:', error);
+      toast.error('Failed to create action');
+    }
+  };
+
+  const handleActionStatusUpdate = async (actionId, newStatus) => {
+    try {
+      const response = await axiosInstance.patch(`/api/admin/actions/${actionId}/status`, {
+        status: newStatus
+      });
+      if (response.status === 200) {
+        toast.success(`Action ${newStatus === 'resolved' ? 'resolved' : 'cancelled'} successfully`);
+        // Refresh the application data to update the action list
+        queryClient.invalidateQueries(["singleLoanApplication", id]);
+      }
+    } catch (error) {
+      console.error('Error updating action status:', error);
+      toast.error('Failed to update action status');
     }
   };
 
@@ -304,16 +341,30 @@ function SingleApplication() {
     { key: 'bankCode', label: 'Bank Code', value: customer_details?.bank_details?.bank_code },
   ];
 
-  const guarantorInfo = [
-    { key: 'name', label: 'Guarantor Name', value: customer_details?.guarantor?.name },
-    { key: 'phone', label: 'Guarantor Phone', value: customer_details?.guarantor?.phone },
-    { key: 'email', label: 'Guarantor Email', value: customer_details?.guarantor?.email },
-    { key: 'address', label: 'Guarantor Address', value: customer_details?.guarantor?.address },
-    { key: 'whatsapp', label: 'WhatsApp', value: customer_details?.guarantor?.whatsapp },
-    { key: 'primaryMethod', label: 'Primary Communication', value: customer_details?.guarantor?.communication_preferences?.primaryMethod },
-    { key: 'smsAvailable', label: 'SMS Available', value: customer_details?.guarantor?.communication_preferences?.smsAvailable ? 'Yes' : 'No' },
-    { key: 'whatsappAvailable', label: 'WhatsApp Available', value: customer_details?.guarantor?.communication_preferences?.whatsappAvailable ? 'Yes' : 'No' },
-    { key: 'emailAvailable', label: 'Email Available', value: customer_details?.guarantor?.communication_preferences?.emailAvailable ? 'Yes' : 'No' },
+  // Multiple guarantors information
+  const guarantorsData = applicationData?.Guarantors || [];
+  const guarantorsFromApplicationData = application_data?.guarantors || [];
+  
+  // Combine guarantors from both sources (prioritize database records)
+  const allGuarantors = guarantorsData.length > 0 ? guarantorsData : guarantorsFromApplicationData.map(g => ({
+    id: g.id,
+    name: g.name,
+    phone_number: g.phone,
+    email: g.email,
+    address: g.address,
+    relationship: g.relationship,
+    verification_status: g.verification_status
+  }));
+
+  const guarantorInfo = allGuarantors.length > 0 ? allGuarantors.map((guarantor, index) => [
+    { key: `name_${index}`, label: `${guarantor.relationship === 'guarantor' ? 'Guarantor' : 'Family Member'} ${index + 1} Name`, value: guarantor.name },
+    { key: `phone_${index}`, label: 'Phone', value: guarantor.phone_number },
+    { key: `email_${index}`, label: 'Email', value: guarantor.email },
+    { key: `address_${index}`, label: 'Address', value: guarantor.address },
+    { key: `relationship_${index}`, label: 'Relationship', value: guarantor.relationship },
+    { key: `verification_${index}`, label: 'Verification Status', value: guarantor.verification_status || 'pending' }
+  ]).flat() : [
+    { key: 'no_guarantors', label: 'Guarantors', value: 'No guarantors found' }
   ];
 
   // Financial data for FinancialSummaryCard
@@ -361,6 +412,14 @@ function SingleApplication() {
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClasses(status)}`}>
             {status?.replace('_', ' ').toUpperCase()}
           </span>
+          <Button
+            label="Raise New Action"
+            onClick={() => setShowActionModal(true)}
+            variant="primary"
+            size="sm"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white"
+            icon={AlertCircle}
+          />
           <Button
             label="Edit Application"
             onClick={handleEdit}
@@ -466,7 +525,7 @@ function SingleApplication() {
 
         {/* Guarantor Information */}
         <CollapsibleSection
-          title="Guarantor Information"
+          title={`Guarantors & Family Members (${allGuarantors.length})`}
           icon={User}
           defaultExpanded={getSectionState('guarantor-info')}
           onToggle={(isExpanded) => toggleSection('guarantor-info', isExpanded)}
@@ -475,6 +534,41 @@ function SingleApplication() {
             data={guarantorInfo}
             columns={{ mobile: 1, tablet: 2, desktop: 2 }}
           />
+        </CollapsibleSection>
+
+        {/* Actions Section */}
+        <CollapsibleSection
+          title="Action Required Requests"
+          icon={AlertCircle}
+          badge={applicationData?.actions?.filter(a => a.status === 'pending').length || 0}
+          badgeColor="red"
+          defaultExpanded={getSectionState('actions-section')}
+          onToggle={(isExpanded) => toggleSection('actions-section', isExpanded)}
+        >
+          <div className="space-y-4">
+            {applicationData?.actions && applicationData.actions.length > 0 ? (
+              applicationData.actions.map(action => (
+                <ActionCard 
+                  key={action.id} 
+                  action={action}
+                  onStatusUpdate={handleActionStatusUpdate}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-lg font-medium mb-2">No Action Requests</p>
+                <p className="text-sm">No action requests have been raised for this application yet.</p>
+              </div>
+            )}
+            <Button 
+              onClick={() => setShowActionModal(true)}
+              className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2"
+              icon={AlertCircle}
+            >
+              Raise New Action Request
+            </Button>
+          </div>
         </CollapsibleSection>
 
         {/* Uploaded Documents */}
@@ -995,6 +1089,14 @@ function SingleApplication() {
       <div className="mt-6">
         <StatusTimeline applicationData={applicationData} />
       </div>
+
+      {/* Action Modal */}
+      <CreateActionModal
+        isOpen={showActionModal}
+        onClose={() => setShowActionModal(false)}
+        onSubmit={handleCreateAction}
+        applicationId={id}
+      />
     </div>
   );
 }
