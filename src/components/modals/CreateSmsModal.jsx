@@ -192,8 +192,12 @@ function CreateSmsModal({ isOpen, onClose, onSuccess }) {
                 <input
                   type="text"
                   name="product_price"
-                  value={formik.values.product_price}
-                  onChange={formik.handleChange}
+                  value={formik.values.product_price ? Number(formik.values.product_price).toLocaleString() : ''}
+                  onChange={(e) => {
+                    // Remove commas and non-numeric characters except decimal point
+                    const numericValue = e.target.value.replace(/[^\d.]/g, '');
+                    formik.setFieldValue('product_price', numericValue);
+                  }}
                   onBlur={formik.handleBlur}
                   className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
                   placeholder="Enter Product Price"
