@@ -59,7 +59,13 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
 
 
     return (
-        <div className={`${isOpen ? "block" : "hidden"} fixed top-0 left-0 w-64 h-full bg-white z-50 md:block`}>
+        <div
+            className={`${isOpen ? "block" : "hidden"} fixed top-0 left-0 w-64 h-full bg-white z-50 md:block overflow-y-auto md:overflow-y-visible pb-20 md:pb-5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}
+        >
+
+
+
+
             <div className="flex flex-col justify-between h-full p-5">
 
 
@@ -130,7 +136,7 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
                         <li
                             className={`text-sm px-4 py-3 rounded cursor-pointer transition-colors
     ${activeItem === "Settings"
-                                    ? "text-[#0f5d30] font-semibold" // No green background, just bold green text
+                                    ? "text-[#0f5d30] font-semibold"
                                     : "text-gray-700 hover:bg-gray-200"
                                 }`}
                         >

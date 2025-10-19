@@ -7,12 +7,15 @@ import { useFetchSingleLoan } from '../../../../hooks/queries/loan';
 import Button from '../../../../components/shared/button';
 import axiosInstance from '../../../../../store/axiosInstance';
 import { handleDeleteApplication, handleUpdateStatus, handleRestoreApplication } from '../../../../services/loans';
+import { restartMandate } from '../../../../services/application';
 
 // Import new components
 import CollapsibleSection from '../../../../components/application/CollapsibleSection';
 import InfoGrid from '../../../../components/application/InfoGrid';
 import FinancialSummaryCard from '../../../../components/application/FinancialSummaryCard';
 import StatusTimeline from '../../../../components/application/StatusTimeline';
+import ActionCard from '../../../../components/application/ActionCard';
+import CreateActionModal from '../../../../components/modals/CreateActionModal';
 
 // Import utility functions
 import { 
@@ -35,7 +38,8 @@ import {
   Banknote,
   Link,
   BarChart3,
-  Pencil
+  Pencil,
+  AlertCircle
 } from 'lucide-react';
 
 function SingleApplication() {
@@ -47,6 +51,7 @@ function SingleApplication() {
   const [isLoading, setIsLoading] = useState(false);
   const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [showActionModal, setShowActionModal] = useState(false);
 
   // Define paired sections configuration
   const pairedSectionsConfig = [
@@ -56,10 +61,14 @@ function SingleApplication() {
     { id: 'product-details', pairedWith: 'vendor-info', defaultExpanded: false },
     { id: 'bank-details', pairedWith: 'guarantor-info', defaultExpanded: false },
     { id: 'guarantor-info', pairedWith: 'bank-details', defaultExpanded: false },
-    { id: 'uploaded-documents', pairedWith: 'payment-mandate', defaultExpanded: false },
-    { id: 'payment-mandate', pairedWith: 'uploaded-documents', defaultExpanded: false },
-    { id: 'repayment-schedule', pairedWith: 'transactions', defaultExpanded: false },
-    { id: 'transactions', pairedWith: 'repayment-schedule', defaultExpanded: false },
+    { id: 'actions-section', pairedWith: null, defaultExpanded: false },
+    { id: 'uploaded-documents', pairedWith: 'quote-documents', defaultExpanded: false },
+    { id: 'quote-documents', pairedWith: 'uploaded-documents', defaultExpanded: false },
+    { id: 'quote-document-info', pairedWith: null, defaultExpanded: false },
+    { id: 'payment-mandate', pairedWith: 'repayment-schedule', defaultExpanded: false },
+    { id: 'repayment-schedule', pairedWith: 'payment-mandate', defaultExpanded: false },
+    { id: 'transactions', pairedWith: 'status-timeline', defaultExpanded: false },
+    { id: 'status-timeline', pairedWith: 'transactions', defaultExpanded: false },
   ];
 
   // Use the paired sections hook
@@ -113,6 +122,25 @@ function SingleApplication() {
     }
   };
 
+  const handleQuoteDocumentReview = async (documentId, status) => {
+    try {
+      const response = await axiosInstance.put(`/api/admin/quote-documents/${documentId}/review`, {
+        status,
+        review_notes: status === 'rejected' ? 'Document rejected by admin' : 'Document approved by admin'
+      });
+      
+      if (response.data.success) {
+        toast.success(`Document ${status} successfully`);
+        // Refresh the application data
+        const updatedResponse = await axiosInstance.get(`/api/admin/applications/${id}`);
+        setLoanData(updatedResponse.data);
+      }
+    } catch (error) {
+      console.error('Error reviewing quote document:', error);
+      toast.error('Failed to review document');
+    }
+  };
+
   const handleUpdateLoanStatus = async () => {
     if (selectedStatus === singleLoan?.status) {
       toast.error("Please select a different status to update");
@@ -136,6 +164,50 @@ function SingleApplication() {
       toast.error("Failed to restore application");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCreateAction = async (actionData) => {
+    try {
+      const response = await axiosInstance.post(`/api/admin/applications/${id}/actions`, actionData);
+      // API returns status 201 with { message, data } format
+      if (response.status === 201) {
+        toast.success('Action created successfully');
+        setShowActionModal(false);
+        // Refresh the application data to show the new action
+        queryClient.invalidateQueries(["singleLoanApplication", id]);
+      }
+    } catch (error) {
+      console.error('Error creating action:', error);
+      toast.error('Failed to create action');
+    }
+  };
+
+  const handleActionStatusUpdate = async (actionId, newStatus) => {
+    try {
+      const response = await axiosInstance.patch(`/api/admin/actions/${actionId}/status`, {
+        status: newStatus
+      });
+      if (response.status === 200) {
+        toast.success(`Action ${newStatus === 'resolved' ? 'resolved' : 'cancelled'} successfully`);
+        // Refresh the application data to update the action list
+        queryClient.invalidateQueries(["singleLoanApplication", id]);
+      }
+    } catch (error) {
+      console.error('Error updating action status:', error);
+      toast.error('Failed to update action status');
+    }
+  };
+
+  const handleRestartMandate = async (mandateId, applicationId) => {
+    try {
+      await restartMandate(applicationId, 'Admin initiated mandate restart');
+      toast.success('Mandate restart initiated successfully');
+      // Refresh the application data to update the mandate list
+      queryClient.invalidateQueries(["singleLoanApplication", id]);
+    } catch (error) {
+      console.error('Error restarting mandate:', error);
+      toast.error(error.response?.data?.message || 'Failed to restart mandate');
     }
   };
 
@@ -180,7 +252,9 @@ function SingleApplication() {
     application_type,
     amount,
     down_payment_amount,
+    down_payment_percent,
     monthly_repayment,
+    interest_rate,
     lease_tenure,
     lease_tenure_unit,
     created_at,
@@ -197,7 +271,8 @@ function SingleApplication() {
     sms_link,
     upload_summary,
     application_source,
-    is_custom_product
+    is_custom_product,
+    quote_document_info
   } = applicationData;
 
   // Calculate next repayment date from schedules
@@ -281,27 +356,41 @@ function SingleApplication() {
     { key: 'bankCode', label: 'Bank Code', value: customer_details?.bank_details?.bank_code },
   ];
 
-  const guarantorInfo = [
-    { key: 'name', label: 'Guarantor Name', value: customer_details?.guarantor?.name },
-    { key: 'phone', label: 'Guarantor Phone', value: customer_details?.guarantor?.phone },
-    { key: 'email', label: 'Guarantor Email', value: customer_details?.guarantor?.email },
-    { key: 'address', label: 'Guarantor Address', value: customer_details?.guarantor?.address },
-    { key: 'whatsapp', label: 'WhatsApp', value: customer_details?.guarantor?.whatsapp },
-    { key: 'primaryMethod', label: 'Primary Communication', value: customer_details?.guarantor?.communication_preferences?.primaryMethod },
-    { key: 'smsAvailable', label: 'SMS Available', value: customer_details?.guarantor?.communication_preferences?.smsAvailable ? 'Yes' : 'No' },
-    { key: 'whatsappAvailable', label: 'WhatsApp Available', value: customer_details?.guarantor?.communication_preferences?.whatsappAvailable ? 'Yes' : 'No' },
-    { key: 'emailAvailable', label: 'Email Available', value: customer_details?.guarantor?.communication_preferences?.emailAvailable ? 'Yes' : 'No' },
+  // Multiple guarantors information
+  const guarantorsData = applicationData?.Guarantors || [];
+  const guarantorsFromApplicationData = application_data?.guarantors || [];
+  
+  // Combine guarantors from both sources (prioritize database records)
+  const allGuarantors = guarantorsData.length > 0 ? guarantorsData : guarantorsFromApplicationData.map(g => ({
+    id: g.id,
+    name: g.name,
+    phone_number: g.phone,
+    email: g.email,
+    address: g.address,
+    relationship: g.relationship,
+    verification_status: g.verification_status
+  }));
+
+  const guarantorInfo = allGuarantors.length > 0 ? allGuarantors.map((guarantor, index) => [
+    { key: `name_${index}`, label: `${guarantor.relationship === 'guarantor' ? 'Guarantor' : 'Family Member'} ${index + 1} Name`, value: guarantor.name },
+    { key: `phone_${index}`, label: 'Phone', value: guarantor.phone_number },
+    { key: `email_${index}`, label: 'Email', value: guarantor.email },
+    { key: `address_${index}`, label: 'Address', value: guarantor.address },
+    { key: `relationship_${index}`, label: 'Relationship', value: guarantor.relationship },
+    { key: `verification_${index}`, label: 'Verification Status', value: guarantor.verification_status || 'pending' }
+  ]).flat() : [
+    { key: 'no_guarantors', label: 'Guarantors', value: 'No guarantors found' }
   ];
 
   // Financial data for FinancialSummaryCard
   const financialData = application_data?.calculation_breakdown ? {
     displayPrice: application_data.calculation_breakdown.display_price,
-    managementFee: application_data.calculation_breakdown.management_fee,
-    totalWithManagementFee: application_data.calculation_breakdown.total_with_management_fee,
+    managementFee: application_data.calculation_breakdown.raba_markup, // Changed from management_fee
+    totalWithManagementFee: application_data.calculation_breakdown.total_with_markup, // Changed from total_with_management_fee
     downPayment: application_data.calculation_breakdown.down_payment,
-    downPaymentPercent: application_data.calculation_breakdown.down_payment_percent,
+    downPaymentPercent: down_payment_percent, // Use from main application data
     financedAmount: application_data.calculation_breakdown.financed_amount,
-    interestRate: application_data.calculation_breakdown.monthly_interest_rate,
+    interestRate: interest_rate, // Use from main application data (already in percentage format)
     totalInterest: application_data.calculation_breakdown.total_interest,
     monthlyPayment: application_data.calculation_breakdown.monthly_payment,
     leaseTermMonths: application_data.calculation_breakdown.lease_term_months,
@@ -338,6 +427,14 @@ function SingleApplication() {
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClasses(status)}`}>
             {status?.replace('_', ' ').toUpperCase()}
           </span>
+          <Button
+            label="Raise New Action"
+            onClick={() => setShowActionModal(true)}
+            variant="primary"
+            size="sm"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white"
+            icon={AlertCircle}
+          />
           <Button
             label="Edit Application"
             onClick={handleEdit}
@@ -443,7 +540,7 @@ function SingleApplication() {
 
         {/* Guarantor Information */}
         <CollapsibleSection
-          title="Guarantor Information"
+          title={`Guarantors & Family Members (${allGuarantors.length})`}
           icon={User}
           defaultExpanded={getSectionState('guarantor-info')}
           onToggle={(isExpanded) => toggleSection('guarantor-info', isExpanded)}
@@ -452,6 +549,41 @@ function SingleApplication() {
             data={guarantorInfo}
             columns={{ mobile: 1, tablet: 2, desktop: 2 }}
           />
+        </CollapsibleSection>
+
+        {/* Actions Section */}
+        <CollapsibleSection
+          title="Action Required Requests"
+          icon={AlertCircle}
+          badge={applicationData?.actions?.filter(a => a.status === 'pending').length || 0}
+          badgeColor="red"
+          defaultExpanded={getSectionState('actions-section')}
+          onToggle={(isExpanded) => toggleSection('actions-section', isExpanded)}
+        >
+          <div className="space-y-4">
+            {applicationData?.actions && applicationData.actions.length > 0 ? (
+              applicationData.actions.map(action => (
+                <ActionCard 
+                  key={action.id} 
+                  action={action}
+                  onStatusUpdate={handleActionStatusUpdate}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-lg font-medium mb-2">No Action Requests</p>
+                <p className="text-sm">No action requests have been raised for this application yet.</p>
+              </div>
+            )}
+            <Button 
+              onClick={() => setShowActionModal(true)}
+              className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2"
+              icon={AlertCircle}
+            >
+              Raise New Action Request
+            </Button>
+          </div>
         </CollapsibleSection>
 
         {/* Uploaded Documents */}
@@ -596,6 +728,84 @@ function SingleApplication() {
           )}
         </CollapsibleSection>
 
+        {/* Quote Documents */}
+        {applicationData?.quote_documents && applicationData.quote_documents.length > 0 && (
+          <CollapsibleSection
+            title="Quote Documents"
+            icon={FileText}
+            badge={applicationData.quote_documents.length}
+            badgeColor="orange"
+            defaultExpanded={getSectionState('quote-documents')}
+            onToggle={(isExpanded) => toggleSection('quote-documents', isExpanded)}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {applicationData.quote_documents.map((doc, index) => (
+                <div key={index} className="border rounded-md p-4 bg-white shadow-sm">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-900 mb-1">
+                        {doc.filename}
+                      </h4>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          doc.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          doc.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {doc.status}
+                        </span>
+                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                          {doc.document_type}
+                        </span>
+                      </div>
+                      {doc.description && (
+                        <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
+                      )}
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <p>Uploaded: {formatDate(doc.created_at)}</p>
+                        {doc.file_size && <p>Size: {formatFileSize(doc.file_size)}</p>}
+                        {doc.reviewed_at && (
+                          <p>Reviewed: {formatDate(doc.reviewed_at)}</p>
+                        )}
+                        {doc.review_notes && (
+                          <p className="text-orange-600">Notes: {doc.review_notes}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <a
+                        href={doc.signed_url || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
+                      >
+                        Download
+                      </a>
+                      {doc.status === 'pending' && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleQuoteDocumentReview(doc.id, 'approved')}
+                            className="text-xs text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleQuoteDocumentReview(doc.id, 'rejected')}
+                            className="text-xs text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
+
         {/* Payment Mandate */}
         {mandates && mandates.length > 0 && (
           <CollapsibleSection
@@ -629,6 +839,18 @@ function SingleApplication() {
                     ]}
                     columns={{ mobile: 1, tablet: 2, desktop: 3 }}
                   />
+                  
+                  {/* Add Restart Button for pending/failed mandates */}
+                  {(mandate.status === 'pending' || mandate.status === 'failed' || mandate.status === 'inactive') && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => handleRestartMandate(mandate.id, id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Restart Mandate
+                      </button>
+                    </div>
+                  )}
             </div>
               ))}
           </div>
@@ -784,6 +1006,54 @@ function SingleApplication() {
             />
           </CollapsibleSection>
         )}
+
+        {/* Quote Document Info (from SMS applications) */}
+        {quote_document_info && (
+          <CollapsibleSection
+            title="Quote Document (SMS Application)"
+            icon={FileText}
+            badge="1"
+            badgeColor="blue"
+            defaultExpanded={getSectionState('quote-document-info')}
+            onToggle={(isExpanded) => toggleSection('quote-document-info', isExpanded)}
+          >
+            <div className="border rounded-md p-4 bg-white shadow-sm">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-gray-900 mb-1">
+                    {quote_document_info.filename}
+                  </h4>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                      Quote Document
+                    </span>
+                    <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                      Uploaded
+                    </span>
+                  </div>
+                  {quote_document_info.description && (
+                    <p className="text-sm text-gray-600 mb-2">{quote_document_info.description}</p>
+                  )}
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <p>Uploaded: {formatDate(quote_document_info.uploaded_at)}</p>
+                    {quote_document_info.file_size && <p>Size: {formatFileSize(quote_document_info.file_size)}</p>}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={quote_document_info.signed_url || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
+                  >
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
+          </CollapsibleSection>
+        )}
       </div>
 
       {/* Status Update Section */}
@@ -807,6 +1077,7 @@ function SingleApplication() {
               <option value="cancelled">Cancelled</option>
               <option value="rejected">Rejected</option>
               <option value="awaiting_downpayment">Awaiting Down Payment</option>
+              <option value="downpayment_paid">Down Payment Paid</option>
               <option value="awaiting_delivery">Awaiting Delivery</option>
               <option value="processing">Processing</option>
             </select>
@@ -846,6 +1117,14 @@ function SingleApplication() {
       <div className="mt-6">
         <StatusTimeline applicationData={applicationData} />
       </div>
+
+      {/* Action Modal */}
+      <CreateActionModal
+        isOpen={showActionModal}
+        onClose={() => setShowActionModal(false)}
+        onSubmit={handleCreateAction}
+        applicationId={id}
+      />
     </div>
   );
 }

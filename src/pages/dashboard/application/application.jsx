@@ -6,12 +6,14 @@ import { useNavigate } from 'react-router-dom'
 import { FaEdit } from 'react-icons/fa'
 import { useFetchLoanApplication } from '../../../hooks/queries/loan'
 import RecalculationModal from '../../../components/modals/RecalculationModal'
+import CreateSmsModal from '../../../components/modals/CreateSmsModal'
 
 
 function ApplicationList() {
   const [page, setPage] = useState(1);
   const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
 
   const { data: applicationData, refetch } = useFetchLoanApplication({ page, limit: 10 })
   console.log(applicationData)
@@ -34,6 +36,10 @@ function ApplicationList() {
     refetch(); // Refresh the application list
   };
 
+  const handleSmsSuccess = () => {
+    refetch(); // Refresh the application list
+  };
+
 
   const handleViewPayment = (id) => {
 
@@ -49,15 +55,23 @@ function ApplicationList() {
           <h1 className="text-3xl font-semibold">
             Application<span className="text-black-400">{'>'}</span> View Application
           </h1>
-          <Link to={"/create_application"}>
+          <div className="flex gap-3">
             <Button
-              label="View Application statistics"
+              label="Create SMS Application"
               variant="solid"
               size="md"
-              className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
+              onClick={() => setIsSmsModalOpen(true)}
+              className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 mt-4 md:mt-0"
             />
-          </Link>
-
+            <Link to={"/create_application"}>
+              <Button
+                label="View Application statistics"
+                variant="solid"
+                size="md"
+                className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
+              />
+            </Link>
+          </div>
         </div>
         <table className="min-w-full leading-normal mt-3">
           <thead className="bg-[#D5D5D5]">
@@ -141,9 +155,11 @@ function ApplicationList() {
                             ? 'bg-green-100 text-green-700'
                             : item.status === 'active'
                               ? 'bg-green-100 text-green-600'
-                              : item.status === 'awaiting_downpayment'
-                                ? 'bg-orange-100 text-[#FFA756]'
-                                : item.status === 'awaiting delivery'
+                                : item.status === 'awaiting_downpayment'
+                                  ? 'bg-orange-100 text-[#FFA756]'
+                                  : item.status === 'downpayment_paid'
+                                    ? 'bg-green-100 text-green-700'
+                                    : item.status === 'awaiting delivery'
                                   ? 'bg-orange-100 text-[#FFA756]'
                                   : item.status === 'processing'
                                     ? 'bg-purple-100 text-purple-700'
@@ -246,6 +262,11 @@ function ApplicationList() {
         onSuccess={handleRecalculationSuccess}
       />
 
+      <CreateSmsModal
+        isOpen={isSmsModalOpen}
+        onClose={() => setIsSmsModalOpen(false)}
+        onSuccess={handleSmsSuccess}
+      />
 
     </div>
   )
