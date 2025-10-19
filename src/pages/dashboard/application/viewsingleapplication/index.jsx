@@ -1050,6 +1050,7 @@ function SingleApplication() {
               <option value="cancelled">Cancelled</option>
               <option value="rejected">Rejected</option>
               <option value="awaiting_downpayment">Awaiting Down Payment</option>
+              <option value="downpayment_paid">Down Payment Paid</option>
               <option value="awaiting_delivery">Awaiting Delivery</option>
               <option value="processing">Processing</option>
             </select>
