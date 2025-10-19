@@ -7,6 +7,7 @@ import { useFetchSingleLoan } from '../../../../hooks/queries/loan';
 import Button from '../../../../components/shared/button';
 import axiosInstance from '../../../../../store/axiosInstance';
 import { handleDeleteApplication, handleUpdateStatus, handleRestoreApplication } from '../../../../services/loans';
+import { restartMandate } from '../../../../services/application';
 
 // Import new components
 import CollapsibleSection from '../../../../components/application/CollapsibleSection';
@@ -198,6 +199,18 @@ function SingleApplication() {
     }
   };
 
+  const handleRestartMandate = async (mandateId, applicationId) => {
+    try {
+      await restartMandate(applicationId, 'Admin initiated mandate restart');
+      toast.success('Mandate restart initiated successfully');
+      // Refresh the application data to update the mandate list
+      queryClient.invalidateQueries(["singleLoanApplication", id]);
+    } catch (error) {
+      console.error('Error restarting mandate:', error);
+      toast.error(error.response?.data?.message || 'Failed to restart mandate');
+    }
+  };
+
   if (isPending) {
   return (
       <div className="flex justify-center items-center h-screen text-xl">
@@ -239,7 +252,9 @@ function SingleApplication() {
     application_type,
     amount,
     down_payment_amount,
+    down_payment_percent,
     monthly_repayment,
+    interest_rate,
     lease_tenure,
     lease_tenure_unit,
     created_at,
@@ -370,12 +385,12 @@ function SingleApplication() {
   // Financial data for FinancialSummaryCard
   const financialData = application_data?.calculation_breakdown ? {
     displayPrice: application_data.calculation_breakdown.display_price,
-    managementFee: application_data.calculation_breakdown.management_fee,
-    totalWithManagementFee: application_data.calculation_breakdown.total_with_management_fee,
+    managementFee: application_data.calculation_breakdown.raba_markup, // Changed from management_fee
+    totalWithManagementFee: application_data.calculation_breakdown.total_with_markup, // Changed from total_with_management_fee
     downPayment: application_data.calculation_breakdown.down_payment,
-    downPaymentPercent: application_data.calculation_breakdown.down_payment_percent,
+    downPaymentPercent: down_payment_percent, // Use from main application data
     financedAmount: application_data.calculation_breakdown.financed_amount,
-    interestRate: application_data.calculation_breakdown.monthly_interest_rate,
+    interestRate: interest_rate, // Use from main application data (already in percentage format)
     totalInterest: application_data.calculation_breakdown.total_interest,
     monthlyPayment: application_data.calculation_breakdown.monthly_payment,
     leaseTermMonths: application_data.calculation_breakdown.lease_term_months,
@@ -824,6 +839,18 @@ function SingleApplication() {
                     ]}
                     columns={{ mobile: 1, tablet: 2, desktop: 3 }}
                   />
+                  
+                  {/* Add Restart Button for pending/failed mandates */}
+                  {(mandate.status === 'pending' || mandate.status === 'failed' || mandate.status === 'inactive') && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => handleRestartMandate(mandate.id, id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Restart Mandate
+                      </button>
+                    </div>
+                  )}
             </div>
               ))}
           </div>
