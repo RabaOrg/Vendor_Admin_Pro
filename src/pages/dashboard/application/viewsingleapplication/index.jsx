@@ -136,8 +136,8 @@ function SingleApplication() {
         setLoanData(updatedResponse.data);
       }
     } catch (error) {
-      console.error('Error reviewing quote document:', error);
-      toast.error('Failed to review document');
+      console.log('Quote documents API not available or error reviewing quote document:', error.message);
+      toast.error('Quote documents functionality is currently unavailable');
     }
   };
 
@@ -729,7 +729,7 @@ function SingleApplication() {
         </CollapsibleSection>
 
         {/* Quote Documents */}
-        {applicationData?.quote_documents && applicationData.quote_documents.length > 0 && (
+        {applicationData?.quote_documents && Array.isArray(applicationData.quote_documents) && applicationData.quote_documents.length > 0 && (
           <CollapsibleSection
             title="Quote Documents"
             icon={FileText}
@@ -744,7 +744,7 @@ function SingleApplication() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-900 mb-1">
-                        {doc.filename}
+                        {doc.filename || 'Unknown Document'}
                       </h4>
                       <div className="flex items-center gap-2 mb-2">
                         <span className={`px-2 py-1 text-xs rounded-full ${
@@ -752,17 +752,17 @@ function SingleApplication() {
                           doc.status === 'rejected' ? 'bg-red-100 text-red-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {doc.status}
+                          {doc.status || 'pending'}
                         </span>
                         <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                          {doc.document_type}
+                          {doc.document_type || 'document'}
                         </span>
                       </div>
                       {doc.description && (
                         <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
                       )}
                       <div className="text-xs text-gray-500 space-y-1">
-                        <p>Uploaded: {formatDate(doc.created_at)}</p>
+                        {doc.created_at && <p>Uploaded: {formatDate(doc.created_at)}</p>}
                         {doc.file_size && <p>Size: {formatFileSize(doc.file_size)}</p>}
                         {doc.reviewed_at && (
                           <p>Reviewed: {formatDate(doc.reviewed_at)}</p>
@@ -773,16 +773,18 @@ function SingleApplication() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <a
-                        href={doc.signed_url || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        download
-                        className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
-                      >
-                        Download
-                      </a>
-                      {doc.status === 'pending' && (
+                      {doc.signed_url && (
+                        <a
+                          href={doc.signed_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                          className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
+                        >
+                          Download
+                        </a>
+                      )}
+                      {doc.status === 'pending' && doc.id && (
                         <div className="flex gap-1">
                           <button
                             onClick={() => handleQuoteDocumentReview(doc.id, 'approved')}
@@ -1021,7 +1023,7 @@ function SingleApplication() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <h4 className="text-sm font-medium text-gray-900 mb-1">
-                    {quote_document_info.filename}
+                    {quote_document_info.filename || 'Unknown Document'}
                   </h4>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
@@ -1035,20 +1037,22 @@ function SingleApplication() {
                     <p className="text-sm text-gray-600 mb-2">{quote_document_info.description}</p>
                   )}
                   <div className="text-xs text-gray-500 space-y-1">
-                    <p>Uploaded: {formatDate(quote_document_info.uploaded_at)}</p>
+                    {quote_document_info.uploaded_at && <p>Uploaded: {formatDate(quote_document_info.uploaded_at)}</p>}
                     {quote_document_info.file_size && <p>Size: {formatFileSize(quote_document_info.file_size)}</p>}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <a
-                    href={quote_document_info.signed_url || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
-                  >
-                    Download
-                  </a>
+                  {quote_document_info.signed_url && (
+                    <a
+                      href={quote_document_info.signed_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors"
+                    >
+                      Download
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
