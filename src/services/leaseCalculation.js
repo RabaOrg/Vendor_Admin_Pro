@@ -1,4 +1,5 @@
 import axiosInstance from '../../store/axiosInstance';
+import axios from 'axios';
 
 /**
  * Calculate lease terms using backend service
@@ -10,7 +11,14 @@ import axiosInstance from '../../store/axiosInstance';
  * @returns {Promise<Object>} - Calculation results
  */
 export const calculateLease = async (params) => {
-  const { data } = await axiosInstance.post('/api/lease-calculator', params);
+  // Use a no-logout client to avoid global 401 logout; still sends token
+  const token = (await import('../../store/store')).useAuthStore.getState().token;
+  const client = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+  client.interceptors.request.use((config) => {
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+  const { data } = await client.post('/api/lease-calculator', params);
   return data;
 };
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import PropTypes from 'prop-types';
-import { calculateLease } from '../../services/leaseCalculation';
+import { calculateLease, calculateLeasePublic } from '../../services/leaseCalculation';
 
 const LeaseCalculatorModal = ({ 
   isOpen, 
@@ -70,17 +70,34 @@ const LeaseCalculatorModal = ({
       const downPaymentValue = formData.downPaymentType === 'amount' ? 
         parseFloat(parseNumberFromDelimited(formData.downPaymentValue)) : 
         parseFloat(formData.downPaymentValue);
-      const interestRate = parseFloat(formData.interestRate);
+      // Note: interestRate input kept for UI parity, but public endpoint ignores it
+      // const interestRate = parseFloat(formData.interestRate);
       const leaseTenure = parseInt(formData.leaseTenure);
 
-      // Use centralized backend API that handles all conversions
-      const response = await calculateLease({
-        product_price: productPrice,
-        down_payment_value: downPaymentValue,
-        down_payment_type: formData.downPaymentType,
-        lease_term_months: leaseTenure,
-        custom_interest_rate: interestRate
-      });
+      // Try AUTHENTICATED calculator first to support custom interest rate
+      // If it fails due to auth, gracefully fall back to PUBLIC calculator
+      let response;
+      try {
+        response = await calculateLease({
+          product_price: productPrice,
+          down_payment_value: downPaymentValue,
+          down_payment_type: formData.downPaymentType,
+          lease_term_months: leaseTenure,
+          custom_interest_rate: parseFloat(formData.interestRate) || undefined
+        });
+      } catch {
+        // Fallback: public endpoint (no custom interest rate support)
+        const downPaymentPercentage = formData.downPaymentType === 'amount'
+          ? (downPaymentValue / productPrice) * 100
+          : downPaymentValue;
+        response = await calculateLeasePublic({
+          product_price: productPrice,
+          down_payment_percentage: downPaymentPercentage,
+          lease_term_months: leaseTenure,
+          // Try to pass custom_interest_rate for servers that allow it on public path.
+          custom_interest_rate: parseFloat(formData.interestRate) || undefined
+        });
+      }
 
       // Transform backend response to match frontend expectations
       const result = {
