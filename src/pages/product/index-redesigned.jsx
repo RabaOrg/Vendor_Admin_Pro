@@ -1,17 +1,15 @@
-import { useEffect, useState } from 'react';
-import { FaSearch, FaEdit, FaEye, FaTh, FaList, FaTrash, FaFilter, FaArchive, FaEllipsisV } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { FaSearch, FaEdit, FaEye, FaTh, FaList, FaTrash, FaFilter, FaArchive } from 'react-icons/fa';
 import axiosInstance from '../../../store/axiosInstance';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/shared/button';
 import { toast } from 'react-toastify';
-import { saveAs } from 'file-saver';
-import { handleGetCategories } from '../../services/product';
 
 function Product() {
     const [currentPage, setCurrentPage] = useState(1);
     const [allProducts, setAllProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
-    const [productMeta, setProductMeta] = useState(null);
+    const [productMeta, setMetaProduct] = useState([]);
     const itemsPerPage = 10;
     const [search, setSearch] = useState("");
     const [viewMode, setViewMode] = useState('table');
@@ -19,28 +17,8 @@ function Product() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
     const [marketplaceFilter, setMarketplaceFilter] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('');
-    const [categories, setCategories] = useState([]);
-    const [actionsMenu, setActionsMenu] = useState(null);
 
     const navigate = useNavigate();
-
-    // Fetch categories
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const categoriesData = await handleGetCategories();
-                if (categoriesData && categoriesData.categories && Array.isArray(categoriesData.categories)) {
-                    setCategories(categoriesData.categories)
-                } else if (Array.isArray(categoriesData)) {
-                    setCategories(categoriesData)
-                }
-            } catch (error) {
-                console.error('Error fetching categories:', error)
-            }
-        }
-        fetchCategories();
-    }, []);
 
     // Filter products based on search, archived status, and marketplace status
     useEffect(() => {
@@ -58,11 +36,6 @@ function Product() {
             filtered = filtered.filter(item => !item.marketplace_enabled);
         }
 
-        // Apply category filter
-        if (categoryFilter) {
-            filtered = filtered.filter(item => item.category_id === categoryFilter);
-        }
-
         // Apply search filter
         if (search) {
             filtered = filtered.filter(item => 
@@ -71,7 +44,7 @@ function Product() {
         }
 
         setFilteredProducts(filtered);
-    }, [allProducts, showArchived, marketplaceFilter, categoryFilter, search]);
+    }, [allProducts, showArchived, marketplaceFilter, search]);
 
     // Fetch products from API
     useEffect(() => {
@@ -151,30 +124,11 @@ function Product() {
         );
     };
 
-    const handleSelectAll = () => {
+    const handleSelectAll =踝 () => {
         if (selectedProducts.length === filteredProducts.length) {
             setSelectedProducts([]);
         } else {
             setSelectedProducts(filteredProducts.map(item => item.id));
-        }
-    };
-
-    const handleDownloadTemplate = async () => {
-        try {
-            toast.info('Preparing download...');
-            const response = await axiosInstance.get(
-                '/api/admin/products/upload-template',
-                { responseType: 'arraybuffer' }
-            );
-            const blob = new Blob(
-                [response.data],
-                { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-            );
-            saveAs(blob, 'bulk-products-template.xlsx');
-            toast.success('Template downloaded successfully!');
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to download template');
         }
     };
 
@@ -230,23 +184,6 @@ function Product() {
                                 className="bg-green-600 hover:bg-green-700 text-white"
                             />
                         </Link>
-                        
-                        <Link to="/product/bulk-upload">
-                            <Button
-                                label="Bulk Upload"
-                                variant="outline"
-                                size="md"
-                                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                            />
-                        </Link>
-                        
-                        <Button
-                            label="Download Template"
-                            variant="outline"
-                            size="md"
-                            className="border-purple-600 text-purple-600 hover:bg-purple-50"
-                            onClick={handleDownloadTemplate}
-                        />
                     </div>
                 </div>
 
@@ -255,7 +192,7 @@ function Product() {
                     <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search products..."
+                       不全="Search products..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -270,21 +207,6 @@ function Product() {
                             <span className="text-sm font-medium text-gray-700">Filters:</span>
                         </div>
                         
-                        {/* Category Filter */}
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-gray-700">Category:</label>
-                            <select
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                            >
-                                <option value="">All Categories</option>
-                                {categories.map((cat) => (
-                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                ))}
-                            </select>
-                        </div>
-
                         {/* Marketplace Filter */}
                         <div className="flex items-center gap-2">
                             <label className="text-sm font-medium text-gray-700">Marketplace:</label>
@@ -320,23 +242,6 @@ function Product() {
                         </div>
                     </div>
                 </div>
-
-                {/* Management Links */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-                    <div className="flex flex-wrap items-center gap-4">
-                        <span className="text-sm font-medium text-gray-700">Quick Links:</span>
-                        <Link to="/repayment-plan">
-                            <button className="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                Manage Repayment Plans
-                            </button>
-                        </Link>
-                        <Link to="/category">
-                            <button className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-                                Manage Categories
-                            </button>
-                        </Link>
-                    </div>
-                </div>
             </div>
 
             {/* Product Table/Grid */}
@@ -366,8 +271,8 @@ function Product() {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {filteredProducts.length > 0 ? (
                                     filteredProducts.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/view_product_details/${item.id}`)}>
-                                            <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                        <tr key={item.id} className="hover:bg-gray-50">
+                                            <td className="px-4 py-4 whitespace-nowrap">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedProducts.includes(item.id)}
@@ -377,7 +282,7 @@ function Product() {
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap">
                                                 <img 
-                                                    src={item.display_image || item.display_attachment_url?.url || '/placeholder.png'} 
+                                                    src={item.display_attachment_url?.url || '/placeholder.png'} 
                                                     alt={item.name}
                                                     className="w-12 h-12 rounded object-cover"
                                                 />
@@ -386,7 +291,7 @@ function Product() {
                                                 <div className="text-sm font-medium text-gray-900">{item.name}</div>
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {item.Category?.name || item.category || 'N/A'}
+                                                {item.category || 'N/A'}
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                                 ₦{parseFloat(item.price || 0).toLocaleString()}
@@ -409,51 +314,30 @@ function Product() {
                                                     {item.is_archived ? 'Archived' : 'Active'}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium relative" onClick={(e) => e.stopPropagation()}>
-                                                <div className="relative">
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div className="flex items-center gap-2">
                                                     <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setActionsMenu(actionsMenu === item.id ? null : item.id);
-                                                        }}
-                                                        className="text-gray-600 hover:text-gray-900 p-2 rounded hover:bg-gray-100"
-                                                        title="Actions"
+                                                        onClick={() => navigate(`/view_product_details/${item.id}`)}
+                                                        className="text-blue-600 hover:text-blue-900"
+                                                        title="View"
                                                     >
-                                                        <FaEllipsisV />
+                                                        <FaEye />
                                                     </button>
-                                                    
-                                                    {actionsMenu === item.id && (
-                                                        <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActionsMenu(null);
-                                                                    navigate(`/view_product_details/${item.id}`);
-                                                                }}
-                                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                                            >
-                                                                <FaEye /> View
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActionsMenu(null);
-                                                                    navigate(`/editproduct/${item.id}`);
-                                                                }}
-                                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                                            >
-                                                                <FaEdit /> Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActionsMenu(null);
-                                                                    handleDeleteProduct(item.id);
-                                                                }}
-                                                                disabled={isDeleting}
-                                                                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50"
-                                                            >
-                                                                <FaTrash /> Delete
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                                    <button
+                                                        onClick={() => navigate(`/editproduct/${item.id}`)}
+                                                        className="text-green-600 hover:text-green-900"
+                                                        title="Edit"
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteProduct(item.id)}
+                                                        disabled={isDeleting}
+                                                        className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                                                        title="Delete"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -483,9 +367,9 @@ function Product() {
                                     />
                                 </div>
                                 <div className="h-48 bg-gray-100 flex items-center justify-center">
-                                    {item.display_image || item.display_attachment_url?.url ? (
+                                    {item.display_attachment_url?.url ? (
                                         <img 
-                                            src={item.display_image || item.display_attachment_url.url} 
+                                            src={item.display_attachment_url.url} 
                                             alt={item.name}
                                             className="w-full h-full object-cover"
                                         />
@@ -498,7 +382,7 @@ function Product() {
                                 </div>
                                 <div className="p-4">
                                     <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">{item.name}</h3>
-                                    <p className="text-sm text-gray-600 mb-2">{item.Category?.name || item.category || 'N/A'}</p>
+                                    <p className="text-sm text-gray-600 mb-2">{item.category || 'N/A'}</p>
                                     <p className="text-lg font-bold text-green-600 mb-3">
                                         ₦{parseFloat(item.price || 0).toLocaleString()}
                                     </p>

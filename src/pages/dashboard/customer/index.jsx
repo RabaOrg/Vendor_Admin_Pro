@@ -11,8 +11,9 @@ function Customer() {
     const [page, setPage] = useState(1);
     const navigate = useNavigate()
     const [search, setSearch] = useState("");
+    const [sourceFilter, setSourceFilter] = useState("");
 
-    const { data: customerData, isPending, isError } = useFetchCustomer(page, perPage, search);
+    const { data: customerData, isPending, isError } = useFetchCustomer(page, perPage, search, sourceFilter);
 
 
     console.log(customerData)
@@ -52,11 +53,29 @@ function Customer() {
                     </Link>
                 </div>
 
+                {/* Filter Section */}
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">Source:</label>
+                        <select 
+                            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={sourceFilter}
+                            onChange={(e) => {
+                                setSourceFilter(e.target.value);
+                                setPage(1); // Reset to first page when filtering
+                            }}
+                        >
+                            <option value="">All Sources</option>
+                            <option value="vendor">Vendor</option>
+                            <option value="marketplace">Marketplace</option>
+                        </select>
+                    </div>
+                </div>
 
                 <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <thead className="bg-white-100 text-black-700">
                         <tr>
-                            {["ID", "Name", "Address", "Email", "Created At", "Phone No", "View",].map((header, index) => (
+                            {["ID", "Name", "Address", "Email", "Created At", "Phone No", "Source", "View",].map((header, index) => (
                                 <th key={index} className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
                                     {header}
                                 </th>
@@ -82,6 +101,13 @@ function Customer() {
                                                 {new Date(created_at).toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 text-xs border-b border-gray-200">{item?.phone_number || "N/A"}</td>
+                                            <td className="px-6 py-4 text-xs border-b border-gray-200">
+                                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                    item?.source === 'marketplace' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                                                }`}>
+                                                    {item?.source === 'marketplace' ? 'Marketplace' : 'Vendor'}
+                                                </span>
+                                            </td>
                                             <td className="px-6 py-4 border-b border-gray-200 text-center">
                                                 <button
                                                     className="w-9 h-9 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none"
@@ -97,7 +123,7 @@ function Customer() {
                         ) : (
                             <tr>
                                 <td
-                                    colSpan={7}
+                                    colSpan={8}
                                     className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
                                 >
                                     No customer data available at the moment.

@@ -141,7 +141,7 @@ function EditFinancial() {
 
 
                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                        placeholder="name@raba.com"
+                                        placeholder="name@getraba.com"
 
                                     />
 
@@ -165,7 +165,7 @@ function EditFinancial() {
 
 
                                         className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                        placeholder="name@raba.com"
+                                        placeholder="name@getraba.com"
 
                                     />
 

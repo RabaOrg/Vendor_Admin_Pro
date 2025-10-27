@@ -54,9 +54,18 @@ export const handleVendorCustomer = async (Id) => {
 }
 
 
-export const handleGetCustomer = async (page, perPage, search) => {
-   
-    const { data } = await axiosInstance.get(`/api/admin/customers?page=${page}&limit=${perPage}`);
+export const handleGetCustomer = async (page, perPage, search, source) => {
+    let url = `/api/admin/customers?page=${page}&limit=${perPage}`;
+    
+    if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+    }
+    
+    if (source) {
+        url += `&source=${source}`;
+    }
+    
+    const { data } = await axiosInstance.get(url);
     
     return data.data
 }

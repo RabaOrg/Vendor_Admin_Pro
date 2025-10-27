@@ -1,1172 +1,792 @@
-import React, { useState } from 'react'
-import { AiFillDelete } from "react-icons/ai";
-import { useEffect } from 'react'
-import { Label } from 'flowbite-react'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { FaPlus, FaTrash, FaUpload, FaImage, FaTimes } from 'react-icons/fa'
 import Button from '../../components/shared/button'
-import Card from '../../components/shared/card'
-import { FaMinus, FaTrash } from 'react-icons/fa'
-import { useFetchRepayment } from '../../hooks/queries/loan';
-
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify';
-import { useFetchCategory } from '../../hooks/queries/product';
-import { useParams } from 'react-router-dom'
-import { BiUpload } from 'react-icons/bi'
-import { useQueryClient } from "@tanstack/react-query";
-import { handleCreateProduct, handleDeleteImage, handleDeleteImageDisplay, handleDeleteProduct, handleDisplayProductImage, handleProductImage, handleUpdateProduct } from '../../services/product';
+import { 
+    handleUpdateProduct, 
+    handleGetCategories, 
+    handleDeleteImage,
+    handleDeleteImageDisplay
+} from '../../services/product'
+import { useFetchRepaymentPlans } from '../../hooks/queries/loan'
 import { useFetchSingleProduct } from '../../hooks/queries/product'
 
 function EditProduct() {
-  const [loading, setIsLoading] = useState()
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedImageDisplay, setSelectedImageDisplay] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [previews, setPreviews] = useState(null);
-  const [isLoad, setIsLoad] = useState(false);
-  const [isLoads, setIsLoads] = useState(false);
-  const { id } = useParams()
-  const [newImage, setNewImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState("");
+    const { id } = useParams()
+    const navigate = useNavigate()
+    const [loading, setIsLoading] = useState(false)
+    const [categories, setCategories] = useState([])
+    const [selectedImages, setSelectedImages] = useState([])
+    const [selectedDisplayImage, setSelectedDisplayImage] = useState(null)
+    const [previewImages, setPreviewImages] = useState([])
+    const [displayPreview, setDisplayPreview] = useState(null)
+    const [existingImages, setExistingImages] = useState([])
+    const [existingDisplayImage, setExistingDisplayImage] = useState(null)
+    const [repaymentPlans, setRepaymentPlans] = useState([])
+    
+    const { data: repaymentPlan } = useFetchRepaymentPlans()
+    const { data: singleProduct, isLoading: productLoading } = useFetchSingleProduct(id)
 
-  const { data: singleProduct } = useFetchSingleProduct(id)
-  const Navigate = useNavigate()
-  const { data: category, isPending, isError } = useFetchCategory()
-  const [imageId, setImageId] = useState("")
-  const [product, setProduct] = useState({
-    id: id,
-    name: '',
-    description: '',
-    shipping_days_min: null,
-    shipping_days_max: null,
-    category_id: '',
-    price: '',
-    specifications: [],
-    interest_rule: [],
-    repayment_policies: {
-      description: "",
-      tenure_unit: "",
-      weekly_tenure: { min: null, max: null },
-      monthly_tenure: { min: null, max: null },
-      down_percentage: { min: null, max: null }
-    },
+    const [product, setProduct] = useState({
+        id: id,
+        name: "",
+        description: "",
+        shipping_days_min: "",
+        shipping_days_max: "",
+        category_id: "",
+        price: "",
+        stock: 0,
+        featured: false,
+        repayment_plan_id: "",
+        status: "active",
+        lease_eligible: true,
+        marketplace_enabled: true,
+        is_archived: false,
+        specifications: [],
+        loan_terms: {
+            down_payment_percentage: "",
+            max_tenure_months: "",
+            interest_rate: "",
+            processing_fee: 0
+        }
+    })
 
-  });
+    // Fetch real data on component mount
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const categoriesData = await handleGetCategories()
+                // Handle nested structure: categoriesData.categories
+                if (categoriesData && categoriesData.categories && Array.isArray(categoriesData.categories)) {
+                    setCategories(categoriesData.categories)
+                } else if (Array.isArray(categoriesData)) {
+                    setCategories(categoriesData)
+                } else {
+                    setCategories([])
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error)
+                toast.error('Failed to load form data')
+            }
+        }
+        fetchData()
+    }, [])
 
-  console.log(singleProduct)
-
-
-
-  const [specifications, setSpecifications] = useState(singleProduct?.specifications || {});
-  const [newSpecificationKey, setNewSpecificationKey] = useState("");
-  const queryClient = useQueryClient();
-  const { data: repaymentPlan } = useFetchRepayment()
-  const [newSpecifications, setNewSpecifications] = useState([]);
-  const [newSpecificationValue, setNewSpecificationValue] = useState("");
-
-  const MAX_ATTACHMENTS = 5;
-  useEffect(() => {
-    if (singleProduct) {
-      let normalizedInterest = [];
-      if (singleProduct.interest_rule) {
-        if (!Array.isArray(singleProduct.interest_rule)) {
-          normalizedInterest = [
-            ...((singleProduct.interest_rule.weekly || []).map(rule => ({ ...rule, interval: 'weekly' }))),
-            ...((singleProduct.interest_rule.monthly || []).map(rule => ({ ...rule, interval: 'monthly' })))
-          ];
+    // Parse repayment plans when data is loaded
+    useEffect(() => {
+        console.log('Repayment Plan Data:', repaymentPlan)
+        if (repaymentPlan && Array.isArray(repaymentPlan)) {
+            setRepaymentPlans(repaymentPlan)
+        } else if (repaymentPlan && repaymentPlan.repayment_plans && Array.isArray(repaymentPlan.repayment_plans)) {
+            setRepaymentPlans(repaymentPlan.repayment_plans)
+        } else if (repaymentPlan && repaymentPlan.data && repaymentPlan.data.repayment_plans) {
+            setRepaymentPlans(repaymentPlan.data.repayment_plans)
+        } else if (repaymentPlan && repaymentPlan.data && Array.isArray(repaymentPlan.data)) {
+            setRepaymentPlans(repaymentPlan.data)
         } else {
-          normalizedInterest = singleProduct.interest_rule;
+            setRepaymentPlans([])
         }
-      }
+    }, [repaymentPlan])
 
-      setProduct({
-        id: singleProduct.id,
-        name: singleProduct.name || '',
-        description: singleProduct.description || '',
-        shipping_days_min: singleProduct.shipping_days_min ?? null,
-        shipping_days_max: singleProduct.shipping_days_max ?? null,
-        category_id: singleProduct.category_id || '',
-        price: singleProduct.price || '',
-        specifications: singleProduct.specifications || {},
-        interest_rule: normalizedInterest,
-        isArchived: singleProduct.is_archived,
-        repayment_policies: {
+    // Update product data when singleProduct is loaded
+    useEffect(() => {
+        if (singleProduct && singleProduct.data) {
+            const productData = singleProduct.data;
+            console.log('Product Data:', productData);
+            setProduct({
+                id: productData.id,
+                name: productData.name || "",
+                description: productData.description || "",
+                shipping_days_min: productData.shipping_days_min || "",
+                shipping_days_max: productData.shipping_days_max || "",
+                category_id: productData.category_id || "",
+                price: productData.price || "",
+                specifications: productData.specifications && typeof productData.specifications === 'object' && !Array.isArray(productData.specifications) 
+                    ? Object.entries(productData.specifications).map(([key, value]) => ({ attribute: key, value }))
+                    : (productData.specifications || []),
+                stock: productData.stock || 0,
+                featured: productData.featured || false,
+                lease_eligible: productData.lease_eligible || false,
+                repayment_plan_id: productData.repayment_policies?.id || productData.repayment_plan_id || "",
+                loan_terms: productData.loan_terms || {},
+                marketplace_enabled: productData.marketplace_enabled || false,
+                is_archived: productData.is_archived || false,
+                status: productData.status || 'active'
+            })
 
-          ...singleProduct.repayment_policies,
-          tenure_unit:
-            singleProduct.repayment_policies.tenure_unit
+            // Set existing images
+            if (productData.attachments) {
+                setExistingImages(productData.attachments)
+            }
+            if (productData.display_attachment) {
+                setExistingDisplayImage({ url: productData.display_attachment })
+            }
         }
-      });
-    }
-  }, [singleProduct]);
-  const addSpecification = () => {
-    setNewSpecifications([...newSpecifications, { attribute: "", value: "" }]);
-  };
+    }, [singleProduct])
 
-  const handleExistingSpecChange = (oldAttribute, field, newValue) => {
-    setProduct((prevProduct) => {
-      const specs = { ...prevProduct.specifications };
-      if (field === "attribute") {
-
-        if (!newValue) return prevProduct;
-        const currentValue = specs[oldAttribute];
-
-        delete specs[oldAttribute];
-        specs[newValue] = currentValue;
-      } else if (field === "value") {
-        specs[oldAttribute] = newValue;
-      }
-      return { ...prevProduct, specifications: specs };
-    });
-  };
-  const handleRemoveSpec = (attributeToRemove) => {
-    setProduct((prev) => {
-      const updatedSpecs = { ...prev.specifications };
-      delete updatedSpecs[attributeToRemove];
-      return {
-        ...prev,
-        specifications: updatedSpecs
-      };
-    });
-  };
-
-
-  const handleNewSpecChange = (index, e) => {
-    const { name, value } = e.target;
-    const updatedSpecs = [...newSpecifications];
-    updatedSpecs[index][name] = value;
-    setNewSpecifications(updatedSpecs);
-  };
-
-  const removeNewSpecification = (index) => {
-    setNewSpecifications(newSpecifications.filter((_, i) => i !== index));
-  };
-  const handleRepaymentPlanSelect = (e) => {
-    const { name, value } = e.target;
-
-
-    if (name === 'repayment_policies.tenure_unit') {
-
-      const selectedPlan = repaymentPlan.find(plan => plan.id === value);
-      console.log(value)
-      if (selectedPlan) {
+    const handleInput = (e) => {
+        const { name, value, type, checked } = e.target
         setProduct(prev => ({
-          ...prev,
-          repayment_policies: {
-            ...prev.repayment_policies,
-            tenure_unit: value,
-            weekly_tenure: {
-              min: selectedPlan.weekly_tenure_min,
-              max: selectedPlan.weekly_tenure_max
-            },
-            monthly_tenure: {
-              min: selectedPlan.monthly_tenure_min,
-              max: selectedPlan.monthly_tenure_max
-            },
-            down_percentage: {
-              min: selectedPlan.down_percent_min,
-              max: selectedPlan.down_percent_max
-            },
-            description: selectedPlan.description || ""
-          }
-        }));
-      } else {
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }))
+    }
 
+    const handleNestedInput = (e) => {
+        const { name, value } = e.target
+        const keys = name.split('.')
+        
+        setProduct(prev => {
+            const newProduct = { ...prev }
+            let current = newProduct
+            
+            for (let i = 0; i < keys.length - 1; i++) {
+                current = current[keys[i]] = { ...current[keys[i]] }
+            }
+            
+            current[keys[keys.length - 1]] = value
+            return newProduct
+        })
+    }
+
+    const addSpecification = () => {
         setProduct(prev => ({
-          ...prev,
-          repayment_policies: {
-            ...prev.repayment_policies,
-            tenure_unit: ""
-          }
-        }));
-      }
-    } else {
+            ...prev,
+            specifications: [...prev.specifications, { attribute: "", value: "" }]
+        }))
+    }
 
-      setProduct(prev => ({
-        ...prev,
+    const removeSpecification = (index) => {
+        setProduct(prev => ({
+            ...prev,
+            specifications: prev.specifications.filter((_, i) => i !== index)
+        }))
+    }
 
-        repayment_policies: {
-          ...prev.repayment_policies,
-          [name.split('.')[1]]: {
-            ...prev.repayment_policies[name.split('.')[1]],
-            [name.split('.')[2]]: value
-          }
+    const handleSpecificationChange = (index, e) => {
+        const { name, value } = e.target
+        setProduct(prev => ({
+            ...prev,
+            specifications: prev.specifications.map((spec, i) => 
+                i === index ? { ...spec, [name]: value } : spec
+            )
+        }))
+    }
+
+    const handleImageUpload = (e) => {
+        const files = Array.from(e.target.files)
+        const newImages = files.map(file => ({
+            file,
+            preview: URL.createObjectURL(file)
+        }))
+        setSelectedImages(prev => [...prev, ...newImages])
+        setPreviewImages(prev => [...prev, ...newImages.map(img => img.preview)])
+    }
+
+    const handleDisplayImageUpload = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            setSelectedDisplayImage(file)
+            setDisplayPreview(URL.createObjectURL(file))
         }
-      }));
-    }
-  };
-
-
-  const handleDelete = async (attachmentId, url) => {
-
-    try {
-
-
-      const response = await handleDeleteImage(id, attachmentId, { attachment_type: 'products', image: url })
-
-
-      if (response && response.status === 200) {
-        toast.success("Image deleted successfully!");
-        queryClient.invalidateQueries(["SingleProduct", id]);
-
-
-      } else {
-        toast.error("Failed to delete the image. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error updating image:", error);
-      toast.error("An error occurred while updating the image.");
-    } finally {
-      setIsLoad(false);
-    }
-  };
-  const handleDeleteDisplay = async (url) => {
-
-    try {
-
-
-      const response = await handleDeleteImageDisplay(id, { attachment_type: 'products', image: url })
-
-
-      if (response && response.status === 200) {
-        toast.success("Image deleted successfully!");
-        queryClient.invalidateQueries(["SingleProduct", id]);
-
-
-      } else {
-        toast.error("Failed to delete the image. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error updating image:", error);
-      toast.error("An error occurred while updating the image.");
-    } finally {
-      setIsLoad(false);
-    }
-  };
-
-  const handleChangeInterest = (index, e) => {
-    const updatedRules = [...product.interest_rule];
-    updatedRules[index][e.target.name] = e.target.value;
-    setProduct({ ...product, interest_rule: updatedRules });
-  };
-
-
-  const addInterestRule = () => {
-    setProduct(prevProduct => ({
-      ...prevProduct,
-      interest_rule: [
-        ...prevProduct.interest_rule,
-        { min: null, max: null, rate: null, interval: null }
-      ]
-    }));
-  };
-
-  const removeInterestRule = (index) => {
-    setProduct(prevProduct => ({
-      ...prevProduct,
-      interest_rule: prevProduct.interest_rule.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    setSelectedImage(file);
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  const handleImageChangeDisplay = (event) => {
-    const file = event.target.files[0];
-    setSelectedImageDisplay(file);
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviews(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!preview) {
-      toast.error("Please select an image to upload.");
-      return;
     }
 
-    const base64Image = preview.split(",")[1];
-
-    try {
-      setIsLoad(true);
-      console.log(base64Image);
-      const response = await handleProductImage(id, { attachment_type: 'products', image: base64Image })
-
-
-      if (response && response.status === 200) {
-        toast.success("Image uploaded successfully!");
-        queryClient.invalidateQueries(["SingleProduct", id]);
-      } else {
-        toast.error("Failed to upload the image. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("An error occurred while uploading the image.");
-    } finally {
-      setIsLoad(false);
-      setSelectedImage(null);
-      setPreview(null);
-    }
-  };
-  const handleUploadDisplay = async () => {
-    if (!previews) {
-      toast.error("Please select an image to upload.");
-      return;
+    const removeImage = (index) => {
+        setSelectedImages(prev => prev.filter((_, i) => i !== index))
+        setPreviewImages(prev => prev.filter((_, i) => i !== index))
     }
 
-    const base64Image = previews.split(",")[1];
-
-    try {
-      setIsLoads(true);
-      console.log(base64Image);
-      const response = await handleDisplayProductImage(id, { attachment_type: 'products', image: base64Image })
-
-
-      if (response && response.status === 200) {
-        toast.success("Image uploaded successfully!");
-        queryClient.invalidateQueries(["SingleProduct", id]);
-      } else {
-        toast.error("Failed to upload the image. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("An error occurred while uploading the image.");
-    } finally {
-      setIsLoads(false);
-      setSelectedImageDisplay(null);
-      setPreviews(null);
-    }
-  };
-
-  const handleInput = (e) => {
-    const { name, value } = e.target
-    setProduct((prevProduct) => ({
-      ...prevProduct,
-      [name]: value
-    }))
-  }
-  const handleInputs = (e) => {
-    const { name, value } = e.target;
-    const keys = name.split('.');
-
-    setProduct((prevProduct) => {
-      let updatedProduct = { ...prevProduct };
-      let nested = updatedProduct;
-
-
-      for (let i = 0; i < keys.length - 1; i++) {
-        nested[keys[i]] = { ...nested[keys[i]] };
-        nested = nested[keys[i]];
-      }
-
-      nested[keys[keys.length - 1]] = value;
-
-      return updatedProduct;
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-
-    const groupedInterest = product.interest_rule.reduce((acc, rule) => {
-      if (rule.interval === 'weekly') {
-        acc.weekly.push({
-          min: rule.min ? Number(rule.min) : 0,
-          max: rule.max ? Number(rule.max) : 0,
-          rate: rule.rate ? Number(rule.rate) : 0,
-        });
-      } else if (rule.interval === 'monthly') {
-        acc.monthly.push({
-          min: rule.min ? Number(rule.min) : 0,
-          max: rule.max ? Number(rule.max) : 0,
-          rate: rule.rate ? Number(rule.rate) : 0,
-        });
-      }
-      return acc;
-    }, { weekly: [], monthly: [] });
-
-
-    const existingSpecifications = Object.entries(product.specifications || {}).map(
-      ([attribute, value]) => ({ attribute, value })
-    );
-    const updatedSpecifications = [...existingSpecifications, ...newSpecifications];
-    const payload = {
-      id: id,
-      name: product.name || singleProduct?.name,
-      description: product.description || singleProduct?.description,
-      shipping_days_min: Number(product.shipping_days_min) || singleProduct?.shipping_days_min,
-      shipping_days_max: Number(product.shipping_days_max) || singleProduct?.shipping_days_max,
-      category_id: Number(product.category_id),
-      price: product.price || singleProduct?.price,
-      specifications: updatedSpecifications.reduce((acc, spec) => {
-        if (spec.attribute && spec.value) {
-          acc[spec.attribute] = spec.value;
+    const removeExistingImage = async (imageId) => {
+        try {
+            await handleDeleteImage(id, imageId)
+            setExistingImages(prev => prev.filter(img => img.id !== imageId))
+            toast.success('Image removed successfully')
+        } catch (error) {
+            console.error('Error removing image:', error)
+            toast.error('Failed to remove image')
         }
-        return acc;
-      }, {}),
-
-      interest_rule: groupedInterest,
-      repayment_policies: {
-        description: product.repayment_policies.description,
-        tenure_unit: "week",
-        weekly_tenure: {
-          min: Number(product.repayment_policies.weekly_tenure.min),
-          max: Number(product.repayment_policies.weekly_tenure.max)
-        },
-        monthly_tenure: {
-          min: Number(product.repayment_policies.monthly_tenure.min),
-          max: Number(product.repayment_policies.monthly_tenure.max)
-        },
-        down_percentage: {
-          min: Number(product.repayment_policies.down_percentage.min),
-          max: Number(product.repayment_policies.down_percentage.max)
-        }
-      },
-      is_archived: product.isArchived !== undefined
-        ? (product.isArchived === true ? "true" : "false")
-        : (singleProduct?.is_archived ? true : "false"),
-
-    };
-
-    console.log(payload);
-
-    try {
-      const response = await handleUpdateProduct(payload);
-      if (response.data) {
-        setImageId(response.data.id);
-        toast.success("Product updated successfully");
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
     }
-  };
 
+    const removeExistingDisplayImage = async () => {
+        try {
+            await handleDeleteImageDisplay(id)
+            setExistingDisplayImage(null)
+            toast.success('Display image removed successfully')
+        } catch (error) {
+            console.error('Error removing display image:', error)
+            toast.error('Failed to remove display image')
+        }
+    }
 
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        
+        if (!product.name || !product.price || !product.category_id) {
+            toast.error('Please fill in all required fields')
+            return
+        }
 
+        setIsLoading(true)
+        try {
+            const response = await handleUpdateProduct(product)
+            if (response.status === 200 || response.status === 201) {
+                toast.success('Product updated successfully!')
+                navigate('/products')
+            } else {
+                toast.error('Failed to update product')
+            }
+        } catch (error) {
+            console.error('Error updating product:', error)
+            toast.error('An error occurred while updating the product')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
-
-
-  return (
-    <div>
-      <div className="flex items-center justify-between p-4">
-        <h1 className="text-3xl font-semibold">
-          Products <span className="text-black-400 ">{'>'}</span> Update Products
-        </h1>
-        <div className='flex gap-3'>
-          <Button
-            label="Cancel"
-            variant="transparent"
-            size="lg"
-            className="text-sm w-[150px]"
-          />
-          <Button
-            label="Add Products"
-            variant="solid"
-            size="md"
-            className="text-sm px-6 py-5"
-          />
-        </div>
-      </div>
-      <div className='p-4'>
-        <Card className='w-full h-full bg-white'>
-          <h3 className='p-3 px-10 font-semibold'>Update Product Information</h3>
-          <div className='w-full border-t-2 border-gray-200'></div>
-
-          <form onSubmit={(e) => handleSubmit(e)} >
-            <div>
-              <div className='flex flex-col lg:flex-row gap-12 px-10 pb-14 mt-5'>
-                <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                  <div>
-                    <div className="mb-2 block">
-                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="name" value="Product name" />
-                    </div>
-                    <input
-                      style={{ color: "#202224", borderRadius: "8px" }}
-                      id="name"
-                      type="text"
-                      className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                      placeholder="Enter Business name"
-                      defaultValue={singleProduct?.name || product.name}
-                      name='name'
-                      onChange={handleInput}
-                    />
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="shipping_days_min" value="Shipping Days Min" />
-                    </div>
-                    <input
-                      style={{ color: "#202224", borderRadius: "8px" }}
-                      id="shipping_days_min"
-                      className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                      type="number"
-                      defaultValue={singleProduct?.shipping_days_max
-                        || product.shipping_days_min}
-                      name='shipping_days_min'
-                      onChange={handleInput}
-                    />
-                  </div>
+    if (productLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading product data...</p>
                 </div>
-                <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                  <div>
-                    <div className="mb-2 block">
-                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="shipping_days_max" value="Shipping Days Max" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Header */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">Edit Product</h1>
+                            <p className="mt-1 text-sm text-gray-600">Update product information and settings</p>
+                        </div>
+                        <div className="mt-4 sm:mt-0 flex gap-3">
+                            <Button
+                                label="Cancel"
+                                variant="outline"
+                                size="md"
+                                className="border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50"
+                                onClick={() => navigate('/products')}
+                            />
+                            <Button
+                                label="Update Product"
+                                variant="solid"
+                                size="md"
+                                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 shadow-sm"
+                                onClick={handleSubmit}
+                                loading={loading}
+                            />
+                        </div>
                     </div>
-                    <input
-                      style={{ color: "#202224", borderRadius: "8px" }}
-                      id="shipping_days_max"
-                      type="number"
-                      className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                      defaultValue={singleProduct?.shipping_days_max || product.shipping_days_max}
-                      name='shipping_days_max'
-                      onChange={handleInput}
-                    />
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="price" value="Price" />
-                    </div>
-                    <input
-                      style={{ color: "#202224", borderRadius: "8px" }}
-                      id="price"
-                      className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                      type="number"
-                      defaultValue={singleProduct?.price || product.price}
-                      name='price'
-                      onChange={handleInput}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                  <div>
-                    <div className="mb-2 block">
-                      <Label
-                        className="text-[#212C25] text-xs font-[500]"
-                        htmlFor="category"
-                        value="Category"
-                      />
-                    </div>
-                    <select
-                      style={{ color: "#202224", borderRadius: "8px" }}
-                      id="category"
-                      name="category_id"
-                      value={product.category_id}
-                      onChange={handleInput}
-                      className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                    >
-                      <option value="">Select a category</option>
-                      {isPending ? (
-                        <option disabled>Loading...</option>
-                      ) : isError ? (
-                        <option disabled>Error loading categories</option>
-                      ) : (
-                        category?.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
                 </div>
 
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* Product Information */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">Product Information</h3>
+                            <p className="mt-1 text-sm text-gray-600">Basic product details and pricing</p>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Product Name */}
+                                <div className="lg:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Product Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={product.name}
+                                        onChange={handleInput}
+                                        placeholder="Enter product name"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                        required
+                                    />
+                                </div>
 
-              </div>
-              <div className='p-10'>
-                <div className=' flex mt-[-75px]'>
-                  <div className="w-full lg:w-[65%] sm:w-[90%]">
-                    <div className="mb-2 block">
-                      <Label className="text-[#212C25] text-xs font-[500]" htmlFor="description" value="Description" />
-                    </div>
-                    <textarea
-                      style={{ color: "#202224", borderRadius: "8px" }}
-                      id="description"
-                      className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full h-40 resize-none"
-                      placeholder="Describe your product, services, or business needs here..."
-                      name='description'
-                      defaultValue={singleProduct?.description || product.description}
-                      onChange={handleInput}
-                    ></textarea>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
+                                {/* Price */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Price (₦) *
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        value={product.price}
+                                        onChange={handleInput}
+                                        placeholder="0.00"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                        required
+                                    />
+                                </div>
 
+                                {/* Category */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Category *
+                                    </label>
+                                    <select
+                                        name="category_id"
+                                        value={product.category_id}
+                                        onChange={handleInput}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                        required
+                                    >
+                                        <option value="">Select a category</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat.id} value={cat.id}>
+                                                {cat.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
+                                {/* Shipping Days Min */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Min Shipping Days
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="shipping_days_min"
+                                        value={product.shipping_days_min}
+                                        onChange={handleInput}
+                                        placeholder="1"
+                                        min="1"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    />
+                                </div>
 
+                                {/* Shipping Days Max */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Max Shipping Days
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="shipping_days_max"
+                                        value={product.shipping_days_max}
+                                        onChange={handleInput}
+                                        placeholder="7"
+                                        min="1"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    />
+                                </div>
 
-                  <div className="flex items-center gap-2 mt-3">
-                    <label className="text-sm font-medium text-gray-700">Archived:</label>
-                    <input
-                      type="checkbox"
-                      checked={product.isArchived}
-                      onChange={(e) => setProduct({ ...product, isArchived: e.target.checked })}
-                      className="w-5 h-5"
-                    />
-                  </div>
-                </div>
-              </div>
+                                {/* Status Options */}
+                                <div className="lg:col-span-2">
+                                    <div className="flex items-center space-x-6">
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="marketplace_enabled"
+                                                checked={product.marketplace_enabled}
+                                                onChange={handleInput}
+                                                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                            />
+                                            <label className="ml-2 block text-sm text-gray-900">
+                                                Enable for Marketplace
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="is_archived"
+                                                checked={product.is_archived}
+                                                onChange={handleInput}
+                                                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                                            />
+                                            <label className="ml-2 block text-sm text-gray-900">
+                                                Archived
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
 
-
-
-
-              <div className="p-4">
-                <Card className="w-full h-full bg-white p-4 rounded-md shadow-md">
-                  <div className='flex justify-between'>
-                    <h3 className="p-3 px-7 flex items-center justify-between">
-                      <span className='font-semibold'>Update Specifications</span>
-                    </h3>
-                    <div className="flex justify-center py-4">
-                      <button
-                        onClick={addSpecification}
-                        type="button"
-                        className="bg-[#0f5d30] text-white px-4 py-2 rounded"
-                      >
-                        + Add Specification
-                      </button>
-                    </div>
-                  </div>
-
-
-                  <div className="w-full border-t-2 border-gray-200"></div>
-
-                  <div className="flex flex-col lg:flex-row gap-12 px-7 pb-14 mt-5">
-                    {singleProduct?.specifications && typeof singleProduct?.specifications === "object" ? (
-                      <div className="mt-8 w-full">
-                        <h4 className="text-lg font-semibold text-[#212C25] mb-4">
-                          Product Specifications
-                        </h4>
-                        <div className="flex flex-col gap-6">
-                          {Object.entries(product.specifications).map(([attribute, value]) => (
-                            <div key={attribute} className="flex flex-col md:flex-row items-start md:items-end gap-4 w-full">
-                              <div className="w-full md:w-1/2">
-                                <label className="text-[#212C25] text-xs font-[500] mb-1 block">
-                                  Attribute
-                                </label>
-                                <input
-                                  type="text"
-                                  value={attribute}
-                                  onChange={(e) =>
-                                    handleExistingSpecChange(attribute, "attribute", e.target.value)
-                                  }
-                                  className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                  placeholder="Enter attribute (e.g., Weight, Colour)"
-                                />
-                              </div>
-
-                              <div className="w-full md:w-1/2">
-                                <label className="text-[#212C25] text-xs font-[500] mb-1 block">
-                                  Value
-                                </label>
-                                <input
-                                  type="text"
-                                  value={value}
-                                  onChange={(e) =>
-                                    handleExistingSpecChange(attribute, "value", e.target.value)
-                                  }
-                                  className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                                  placeholder="Enter value (e.g., 0.15 kg, white)"
-                                />
-                              </div>
-
-                              <button
-                                onClick={() => handleRemoveSpec(attribute)}
-                                className="bg-red-400 hover:bg-red-600 text-white px-4 py-2 rounded"
-                              >
-                                Remove
-                              </button>
+                                {/* Description */}
+                                <div className="lg:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Description *
+                                    </label>
+                                    <textarea
+                                        name="description"
+                                        value={product.description}
+                                        onChange={handleInput}
+                                        placeholder="Describe your product, services, or business needs here..."
+                                        rows={4}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                                        required
+                                    />
+                                </div>
                             </div>
-                          ))}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="p-10 flex justify-center items-center text-center text-gray-500">
-                        No specifications added yet
-                      </div>
-                    )}
-                  </div>
-
-
-
-
-
-                  {newSpecifications.length > 0 && (
-                    <div className="px-7 mt-[-20px]">
-
-                      {newSpecifications.map((spec, index) => (
-                        <div
-                          key={`new-${index}`}
-                          className="flex flex-col lg:flex-row gap-4 w-full items-center border-0"
-                        >
-                          <div className="flex-1">
-                            <label className="text-[#212C25] text-xs font-[500]">Attribute</label>
-                            <input
-                              name="attribute"
-                              type="text"
-                              onChange={(e) => handleNewSpecChange(index, e)}
-                              className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                              placeholder="Enter attribute (e.g., Weight, Colour)"
-                              value={spec.attribute || ""}
-                            />
-                          </div>
-
-                          <div className="flex-1">
-                            <label className="text-[#212C25] text-xs font-[500]">Value</label>
-                            <input
-                              name="value"
-                              type="text"
-                              onChange={(e) => handleNewSpecChange(index, e)}
-                              className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                              placeholder="Enter value (e.g., 0.15 kg, white)"
-                              value={spec.value || ""}
-                            />
-                          </div>
-
-                          <div className="py-4 mt-5">
-                            <button
-                              onClick={() => removeNewSpecification(index)}
-                              type="button"
-                              className="bg-red-400 hover:bg-red-600 text-white px-4 py-2 rounded"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-
-
-                </Card>
-              </div>
-
-
-              <div className='p-4'>
-                <Card className='w-full h-full bg-white'>
-                  <div className='flex justify-between'>
-                    <h3 className='p-3 px-7 flex justify-between items-center'>
-                      <span className='font-semibold'>Update Product Interest Rate Rule</span>
-                    </h3>
-                    <button
-                      type="button"
-                      className="bg-[#0f5d30] text-white px-4 py-2 rounded"
-                      onClick={addInterestRule}
-                    >
-                      + Add Interest Rule
-                    </button></div>
-                  <div className='w-full border-t-2 border-gray-200'></div>
-
-                  {product.interest_rule.length === 0 ? (
-                    <div className="p-10 text-center text-gray-500">
-                      No product interval added yet
-                    </div>
-                  ) : (
-                    product.interest_rule.map((rule, index) => (
-                      <div key={index} className='flex flex-col lg:flex-row gap-12 px-7 pb-7 mt-4'>
-                        <div className="flex flex-col gap-4 w-full lg:w-1/3">
-                          <div className="mb-2 block">
-                            <Label
-                              className="text-[#212C25] text-xs font-[500]"
-                              htmlFor={`interest-rule-interval-${index}`}
-                              value="Interval"
-                            />
-                          </div>
-                          <select
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            id={`interest-rule-interval-${index}`}
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                            name="interval"
-                            value={rule.interval || ''}
-                            onChange={(e) => handleChangeInterest(index, e)}
-                          >
-                            <option value="" disabled>Select interval</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                          </select>
-                        </div>
-                        <div className="flex flex-col gap-4 w-full lg:w-1/3">
-                          <div className="mb-2 block">
-                            <Label
-                              className="text-[#212C25] text-xs font-[500]"
-                              htmlFor={`interest-rule-min-${index}`}
-                              value="Min"
-                            />
-                          </div>
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            id={`interest-rule-min-${index}`}
-                            type="number"
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                            name="min"
-                            value={rule.min || ''}
-                            onChange={(e) => handleChangeInterest(index, e)}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-4 w-full lg:w-1/3">
-                          <div className="mb-2 block">
-                            <Label
-                              className="text-[#212C25] text-xs font-[500]"
-                              htmlFor={`interest-rule-rate-${index}`}
-                              value="Rate"
-                            />
-                          </div>
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            id={`interest-rule-rate-${index}`}
-                            type="number"
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                            name="rate"
-                            value={rule.rate || ''}
-                            onChange={(e) => handleChangeInterest(index, e)}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-4 w-full lg:w-1/3">
-                          <div className="mb-2 block">
-                            <Label
-                              className="text-[#212C25] text-xs font-[500]"
-                              htmlFor={`interest-rule-max-${index}`}
-                              value="Max"
-                            />
-                          </div>
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            id={`interest-rule-max-${index}`}
-                            type="number"
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                            name="max"
-                            value={rule.max || ''}
-                            onChange={(e) => handleChangeInterest(index, e)}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeInterestRule(index)}
-                          className="text-red-500 hover:text-red-700 mt-3 flex items-center gap-2"
-                        >
-                          <FaMinus /> Remove
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </Card>
-              </div>
-
-
-
-
-
-
-              <div className='p-4'>
-                <Card className='w-full h-full bg-white'>
-                  <h3 className='p-3 px-7 font-semibold'>Update Repayment Plan</h3>
-                  <div className='w-full border-t-2 border-gray-200'></div>
-
-                  <div className='flex flex-col lg:flex-row gap-7 pb-7 mt-5 px-7'>
-                    <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                      <div>
-                        <div className="mb-2 block">
-                          <Label className="text-[#212C25] text-xs font-[500]" htmlFor="tenure_unit" value="Tenure Unit" />
-                        </div>
-                        <select
-                          style={{ color: "#202224", borderRadius: "8px" }}
-                          id="tenure_unit"
-                          className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                          name="repayment_policies.tenure_unit"
-                          value={product.repayment_policies.tenure_unit ?? ""}
-                          onChange={handleRepaymentPlanSelect}
-                        >
-
-                          {isPending ? (
-                            <option disabled>Loading...</option>
-                          ) : isError ? (
-                            <option disabled>Error loading categories</option>
-                          ) : (
-                            repaymentPlan?.map((cat) => (
-                              <option key={cat.id} value={cat.id}>
-                                {cat.tenure_unit}
-                              </option>
-                            ))
-                          )}
-                        </select>
-
-                      </div>
-
-                      <div>
-                        <div className="mb-2 block">
-                          <Label className="text-[#212C25] text-xs font-[500]" htmlFor="weekly_tenure" value="Weekly Tenure" />
-                        </div>
-                        <div className='flex gap-2'>
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                            type="number"
-                            value={product.repayment_policies.weekly_tenure.min ?? ""}
-                            name='repayment_policies.weekly_tenure.min'
-                            onChange={handleRepaymentPlanSelect}
-                            placeholder='min'
-                          />
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                            type="number"
-                            value={product.repayment_policies.weekly_tenure.max ?? ""}
-                            name='repayment_policies.weekly_tenure.max'
-                            onChange={handleRepaymentPlanSelect}
-                            placeholder='max'
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="mb-2 block">
-                          <Label className="text-[#212C25] text-xs font-[500]" htmlFor="description" value="Description" />
-                        </div>
-                        <textarea
-                          style={{ color: "#202224", borderRadius: "8px" }}
-                          value={product.repayment_policies.description ?? ""}
-                          name='repayment_policies.description'
-                          onChange={handleRepaymentPlanSelect}
-                          className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full h-40 resize-none"
-                          placeholder='Enter description'
-                        />
-                      </div>
                     </div>
 
-                    <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                      <div>
-                        <div className="mb-2 block">
-                          <Label className="text-[#212C25] text-xs font-[500]" htmlFor="down_percentage" value="Down Percentage" />
+                    {/* Specifications */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900">Product Specifications</h3>
+                                    <p className="mt-1 text-sm text-gray-600">Add detailed product specifications</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={addSpecification}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                >
+                                    <FaPlus className="w-4 h-4 mr-2" />
+                                    Add Specification
+                                </button>
+                            </div>
                         </div>
-                        <div className='flex gap-2'>
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            type="number"
-                            value={product.repayment_policies.down_percentage?.min ?? ""}
-                            name='repayment_policies.down_percentage.min'
-                            onChange={handleRepaymentPlanSelect}
-                            placeholder="min"
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                          />
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            type="number"
-                            value={product.repayment_policies.down_percentage?.max ?? ""}
-                            name='repayment_policies.down_percentage.max'
-                            onChange={handleRepaymentPlanSelect}
-                            placeholder="max"
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                          />
+                        <div className="p-6">
+                            {(!product.specifications || product.specifications.length === 0) ? (
+                                <div className="text-center py-12">
+                                    <FaImage className="mx-auto h-12 w-12 text-gray-400" />
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">No specifications</h3>
+                                    <p className="mt-1 text-sm text-gray-500">Get started by adding a product specification.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {product.specifications.map((spec, index) => (
+                                        <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                                            <div className="flex-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Attribute (e.g., Weight, Color)"
+                                                    name="attribute"
+                                                    value={spec.attribute}
+                                                    onChange={(e) => handleSpecificationChange(index, e)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Value (e.g., 2kg, Red)"
+                                                    name="value"
+                                                    value={spec.value}
+                                                    onChange={(e) => handleSpecificationChange(index, e)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeSpecification(index)}
+                                                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md"
+                                            >
+                                                <FaTrash className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                      </div>
-
-                      <div>
-                        <div className="mb-2 block">
-                          <Label className="text-[#212C25] text-xs font-[500]" htmlFor="monthly_tenure" value="Monthly Tenure" />
-                        </div>
-                        <div className='flex gap-2'>
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            type="number"
-                            value={product.repayment_policies.monthly_tenure?.min ?? ""}
-                            name='repayment_policies.monthly_tenure.min'
-                            onChange={handleRepaymentPlanSelect}
-                            placeholder='min'
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                          />
-                          <input
-                            style={{ color: "#202224", borderRadius: "8px" }}
-                            type="number"
-                            value={product.repayment_policies.monthly_tenure?.max ?? ""}
-                            name='repayment_policies.monthly_tenure.max'
-                            onChange={handleRepaymentPlanSelect}
-                            placeholder='max'
-                            className="bg-white text-sm p-3 text-gray-700 border border-[#A0ACA4] rounded-md focus:ring-2 focus:ring-[#0f5d30] focus:outline-none w-full"
-                          />
-                        </div>
-                      </div>
                     </div>
-                  </div>
-                </Card>
-              </div>
 
+                    {/* Loan Terms */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">Loan Terms</h3>
+                            <p className="mt-1 text-sm text-gray-600">Configure loan terms for this product</p>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Down Payment Percentage */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Down Payment Percentage (%)
+                                    </label>
+                                    <select
+                                        name="loan_terms.down_payment_percentage"
+                                        value={product.loan_terms.down_payment_percentage}
+                                        onChange={handleNestedInput}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    >
+                                        <option value="">Select percentage</option>
+                                        {[20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80].map(percent => (
+                                            <option key={percent} value={percent}>{percent}%</option>
+                                        ))}
+                                    </select>
+                                </div>
 
+                                {/* Max Tenure Months */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Max Tenure (Months)
+                                    </label>
+                                    <select
+                                        name="loan_terms.max_tenure_months"
+                                        value={product.loan_terms.max_tenure_months}
+                                        onChange={handleNestedInput}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    >
+                                        <option value="">Select months</option>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(month => (
+                                            <option key={month} value={month}>{month} {month === 1 ? 'month' : 'months'}</option>
+                                        ))}
+                                    </select>
+                                </div>
 
+                                {/* Interest Rate */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Interest Rate (%)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="loan_terms.interest_rate"
+                                        value={product.loan_terms.interest_rate}
+                                        onChange={handleNestedInput}
+                                        placeholder="10"
+                                        min="0"
+                                        step="0.1"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    />
+                                </div>
 
+                                {/* Processing Fee */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Processing Fee (₦)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="loan_terms.processing_fee"
+                                        value={product.loan_terms.processing_fee}
+                                        onChange={handleNestedInput}
+                                        placeholder="0"
+                                        min="0"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    {/* Repayment Plans */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">Repayment Plans</h3>
+                            <p className="mt-1 text-sm text-gray-600">Select a repayment plan for this product</p>
+                        </div>
+                        <div className="p-6">
+                            {repaymentPlans && Array.isArray(repaymentPlans) && repaymentPlans.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {repaymentPlans.map((plan) => (
+                                        <div 
+                                            key={plan.id} 
+                                            className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                                                product.repayment_plan_id === plan.id 
+                                                    ? 'border-green-500 bg-green-50' 
+                                                    : 'border-gray-200 hover:border-green-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className="flex-1">
+                                                    <h4 className="font-medium text-gray-900 mb-1">{plan.description}</h4>
+                                                </div>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={product.repayment_plan_id === plan.id}
+                                                    onChange={() => {
+                                                        setProduct(prev => ({
+                                                            ...prev,
+                                                            repayment_plan_id: prev.repayment_plan_id === plan.id ? '' : plan.id
+                                                        }));
+                                                    }}
+                                                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                                />
+                                            </div>
+                                            <div className="text-xs text-gray-500 space-y-1">
+                                                {plan.tenure_unit && (
+                                                    <div className="font-medium text-gray-700">Tenure: {plan.tenure_unit}</div>
+                                                )}
+                                                {(plan.weekly_tenure_min || plan.weekly_tenure_max) && (
+                                                    <div>Weekly: {plan.weekly_tenure_min}-{plan.weekly_tenure_max} weeks</div>
+                                                )}
+                                                {(plan.monthly_tenure_min || plan.monthly_tenure_max) && (
+                                                    <div>Monthly: {plan.monthly_tenure_min}-{plan.monthly_tenure_max} months</div>
+                                                )}
+                                                {(plan.down_percent_min || plan.down_percent_max) && (
+                                                    <div>Down Payment: {plan.down_percent_min}-{plan.down_percent_max}%</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <FaImage className="mx-auto h-12 w-12 text-gray-400" />
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">No repayment plans available</h3>
+                                    <p className="mt-1 text-sm text-gray-500">Contact admin to create repayment plans.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-              <div className='mb-7 px-10'>
-                <Button type="submit" size='lg' className="text-sm w-[150px]" label="Update Product" loading={loading} />
+                    {/* Image Management */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">Product Images</h3>
+                            <p className="mt-1 text-sm text-gray-600">Manage product images and display photo</p>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Display Image */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Display Image
+                                    </label>
+                                    
+                                    {/* Existing Display Image */}
+                                    {existingDisplayImage && (
+                                        <div className="mb-4">
+                                            <p className="text-sm text-gray-600 mb-2">Current Display Image:</p>
+                                            <div className="relative inline-block">
+                                                <img
+                                                    src={existingDisplayImage.url || existingDisplayImage}
+                                                    alt="Current display"
+                                                    className="h-32 w-32 object-cover rounded-md border"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={removeExistingDisplayImage}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                >
+                                                    <FaTimes className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
 
+                                    {/* New Display Image Upload */}
+                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                        <div className="space-y-1 text-center">
+                                            {displayPreview ? (
+                                                <div className="relative">
+                                                    <img
+                                                        src={displayPreview}
+                                                        alt="Display preview"
+                                                        className="mx-auto h-32 w-32 object-cover rounded-md"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedDisplayImage(null)
+                                                            setDisplayPreview(null)
+                                                        }}
+                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                    >
+                                                        <FaTimes className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <FaUpload className="mx-auto h-12 w-12 text-gray-400" />
+                                            )}
+                                            <div className="flex text-sm text-gray-600">
+                                                <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                                    <span>Upload new display image</span>
+                                                    <input
+                                                        type="file"
+                                                        className="sr-only"
+                                                        accept="image/*"
+                                                        onChange={handleDisplayImageUpload}
+                                                    />
+                                                </label>
+                                            </div>
+                                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-              </div>
+                                {/* Additional Images */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Additional Images
+                                    </label>
+                                    
+                                    {/* Existing Images */}
+                                    {existingImages && existingImages.length > 0 && (
+                                        <div className="mb-4">
+                                            <p className="text-sm text-gray-600 mb-2">Current Images:</p>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {existingImages.map((image) => (
+                                                    <div key={image.id} className="relative">
+                                                        <img
+                                                            src={image.url}
+                                                            alt={`Product ${image.id}`}
+                                                            className="w-full h-20 object-cover rounded-md border"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeExistingImage(image.id)}
+                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                        >
+                                                            <FaTimes className="w-2 h-2" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* New Images Upload */}
+                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                        <div className="space-y-1 text-center">
+                                            <FaUpload className="mx-auto h-12 w-12 text-gray-400" />
+                                            <div className="flex text-sm text-gray-600">
+                                                <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                                    <span>Upload images</span>
+                                                    <input
+                                                        type="file"
+                                                        className="sr-only"
+                                                        accept="image/*"
+                                                        multiple
+                                                        onChange={handleImageUpload}
+                                                    />
+                                                </label>
+                                            </div>
+                                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* New Image Previews */}
+                                    {previewImages && previewImages.length > 0 && (
+                                        <div className="mt-4 grid grid-cols-3 gap-2">
+                                            {previewImages.map((preview, index) => (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={preview}
+                                                        alt={`Preview ${index + 1}`}
+                                                        className="w-full h-20 object-cover rounded-md"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeImage(index)}
+                                                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                    >
+                                                        <FaTimes className="w-2 h-2" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
-          </form>
-
-
-
-        </Card >
-      </div >
-      <div className="p-4">
-        <Card className="w-full h-full bg-white">
-          <h3 className="p-3 px-10 font-semibold">Update Attachment Image</h3>
-          <div className="w-full border-t-2 border-gray-200"></div>
-
-
-          <div className="flex flex-wrap gap-4 p-6">
-            {singleProduct?.display_attachment && (
-              <div
-
-                className="relative w-40 h-40 border border-gray-200 rounded-lg overflow-hidden shadow-md"
-              >
-                <img
-                  src={singleProduct?.display_attachment}
-                  alt="Attachment"
-                  className="w-full h-full object-cover"
-                />
-
-                <button
-                  className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1 hover:bg-blue-700 transition cursor-pointer"
-                  onClick={() => handleDeleteDisplay()}
-                >
-                  <FaTrash size={18} />
-                </button>
-
-              </div>
-            )}
-
-            <div className="flex gap-10">
-              <div className="relative w-40 h-40 flex items-center justify-center border border-dashed border-gray-400 rounded-lg hover:bg-gray-100 transition">
-                <label className="flex flex-col items-center cursor-pointer">
-                  <BiUpload size={24} className="text-gray-500" />
-                  <span className="text-sm text-gray-600">Upload</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChangeDisplay}
-                  />
-                </label>
-              </div>
-              {previews && (
-                <div className="flex flex-col items-center">
-                  <img
-                    src={previews}
-                    alt="Preview"
-                    className="w-40 h-40 object-cover rounded-lg border border-gray-200 shadow-md"
-                  />
-                  <div className="mt-3">
-                    <Button
-                      onClick={handleUploadDisplay}
-                      size="sm"
-                      label="Upload"
-                      className="mt-2"
-                      disabled={isLoads}
-                    >
-                      {isLoads ? "Uploading..." : "Upload"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-
-        </Card>
-      </div>
-
-      <div className="p-4">
-        <Card className="w-full h-full bg-white">
-          <h3 className="p-3 px-10 font-semibold">Update Attachment Image</h3>
-          <div className="w-full border-t-2 border-gray-200"></div>
-
-
-          <div className="flex flex-wrap gap-4 p-6">
-            {singleProduct?.attachments?.map((attachment) => (
-              <div
-                key={attachment.id}
-                className="relative w-40 h-40 border border-gray-200 rounded-lg overflow-hidden shadow-md"
-              >
-                <img
-                  src={attachment.url}
-                  alt="Attachment"
-                  className="w-full h-full object-cover"
-                />
-
-                <button
-                  className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1 hover:bg-blue-700 transition cursor-pointer"
-                  onClick={(e) => handleDelete(attachment.id, attachment.url, e)}
-                >
-                  <FaTrash size={18} />
-                </button>
-
-              </div>
-            ))}
-
-
-            <div className="flex gap-10">
-              <div className="relative w-40 h-40 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                <label className="flex flex-col items-center cursor-pointer">
-                  <BiUpload size={28} className="text-gray-600" />
-                  <span className="mt-2 text-sm font-medium text-gray-700">Upload Image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>
-              {preview && (
-                <div className="flex flex-col items-center">
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-40 h-40 object-cover rounded-lg border border-gray-200 shadow-lg"
-                  />
-                  <div className="mt-3">
-                    <Button
-                      onClick={handleUpload}
-                      size="sm"
-                      label="Upload"
-                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                      disabled={isLoad}
-                    >
-                      {isLoad ? "Uploading..." : "Upload"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-
-
-        </Card>
-      </div>
-
-
-
-
-    </div >
-  )
+        </div>
+    )
 }
 
 export default EditProduct
