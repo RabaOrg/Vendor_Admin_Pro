@@ -53,6 +53,13 @@ export const handleVendorCustomer = async (Id) => {
     return data.data
 }
 
+export const handleMarketplaceUser = async (Id) => {
+   
+    const { data } = await axiosInstance.get(`/api/admin/customers/user/${Id}`);
+    
+    return data.data
+}
+
 
 export const handleGetCustomer = async (page, perPage, search, source) => {
     let url = `/api/admin/customers?page=${page}&limit=${perPage}`;

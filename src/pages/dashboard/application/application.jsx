@@ -150,10 +150,25 @@ function ApplicationList() {
                     <p className="font-medium whitespace-no-wrap text-xs">{item.id}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.vendor?.name || '—'}</p>
+                    <p className="font-medium whitespace-no-wrap text-xs">
+                      {item.vendor?.name || 'Admin'}
+                    </p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.customer?.name || '—'}</p>
+                    {item.is_marketplace_pending ? (
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium whitespace-no-wrap text-xs">
+                          {item.user?.name || '—'}
+                        </p>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                          Marketplace Applicant
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="font-medium whitespace-no-wrap text-xs">
+                        {item.customer?.name || '—'}
+                      </p>
+                    )}
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">₦{Number(item.amount).toLocaleString()}</p>

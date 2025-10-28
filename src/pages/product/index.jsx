@@ -325,12 +325,12 @@ function Product() {
                 <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
                     <div className="flex flex-wrap items-center gap-4">
                         <span className="text-sm font-medium text-gray-700">Quick Links:</span>
-                        <Link to="/repayment-plan">
+                        <Link to="/marketplace/repayment-plans">
                             <button className="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                                 Manage Repayment Plans
                             </button>
                         </Link>
-                        <Link to="/category">
+                        <Link to="/marketplace/categories">
                             <button className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
                                 Manage Categories
                             </button>

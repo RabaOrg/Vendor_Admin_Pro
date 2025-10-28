@@ -9,7 +9,11 @@ export const handleMetaProduct = async (page , perPage, search ) => {
   return data;
 }
 export const handleBulkProduct = async (url, formInfo) => {
-  return axiosInstance.post(url, formInfo);
+  return axiosInstance.post(url, formInfo, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 };
 
 export const handleProductBulk = async () => {
@@ -20,11 +24,13 @@ export const handleProductBulk = async () => {
 };
 export const handleProductBulkImages = async (formInfo) => {
   return axiosInstance.post(`/api/admin/bulk-upload-images`, formInfo);
- 
 }
 export const handleProductEditBulk = async (url, formInfo) => {
-  return axiosInstance.put(url, formInfo);
- 
+  return axiosInstance.put(url, formInfo, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 }
 export const handleCreateProduct = async (formInfo) => {
   return axiosInstance.post(

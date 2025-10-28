@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { FaPlus, FaTrash, FaUpload, FaImage, FaTimes } from 'react-icons/fa'
 import Button from '../../components/shared/button'
 import { handleCreateProduct, handleGetCategories } from '../../services/product'
-import { useFetchRepaymentPlans } from '../../hooks/queries/loan'
+import { useFetchRepaymentPlans, useFetchVendorData } from '../../hooks/queries/loan'
 
 function Addproduct() {
     const [loading, setIsLoading] = useState(false)
@@ -14,8 +14,11 @@ function Addproduct() {
     const [selectedDisplayImage, setSelectedDisplayImage] = useState(null)
     const [previewImages, setPreviewImages] = useState([])
     const [displayPreview, setDisplayPreview] = useState(null)
+    const [showVendorModal, setShowVendorModal] = useState(false) // Only show when requested
+    const [selectedVendorId, setSelectedVendorId] = useState('')
     const navigate = useNavigate()
     const { data: repaymentPlan } = useFetchRepaymentPlans()
+    const { data: vendorData } = useFetchVendorData({ page: 1, limit: 100 })
 
     const [product, setProduct] = useState({
         name: "",
@@ -29,6 +32,7 @@ function Addproduct() {
         repayment_plan_id: "",
         status: "active",
         lease_eligible: true,
+        vendor_id: "", // Added for optional vendor assignment
         specifications: {},
         loan_terms: {
             down_payment_percentage: "",
@@ -59,6 +63,19 @@ function Addproduct() {
         }
         fetchData()
     }, [])
+
+    // Show vendor selection modal once on mount (only on first visit in this session)
+    useEffect(() => {
+        // Check if modal has been shown before in this session
+        const hasSeenModal = sessionStorage.getItem('vendorModalShown')
+        
+        if (!hasSeenModal) {
+            // Small delay to ensure page is rendered
+            setTimeout(() => {
+                setShowVendorModal(true)
+            }, 100)
+        }
+    }, []) // Only run once on mount
     
     // Set repayment plans when data is loaded
     useEffect(() => {
@@ -196,6 +213,10 @@ function Addproduct() {
             formData.append('status', product.status || 'active')
             formData.append('lease_eligible', product.lease_eligible || false)
             formData.append('marketplace_enabled', product.marketplace_enabled || false)
+            // Append vendor_id if selected (optional - can be null for admin products)
+            if (product.vendor_id) {
+                formData.append('vendor_id', product.vendor_id)
+            }
             formData.append('specifications', JSON.stringify(product.specifications))
             formData.append('loan_terms', JSON.stringify(product.loan_terms))
             
@@ -226,13 +247,21 @@ function Addproduct() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${showVendorModal ? 'pointer-events-none opacity-50' : ''}`}>
                 {/* Header */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Add New Product</h1>
                             <p className="mt-1 text-sm text-gray-600">Create a new product for your inventory</p>
+                            {product.vendor_id && (
+                                <button
+                                    onClick={() => setShowVendorModal(true)}
+                                    className="mt-2 text-sm text-green-600 hover:text-green-700 underline"
+                                >
+                                    Change Vendor
+                                </button>
+                            )}
                         </div>
                         <div className="mt-4 sm:mt-0 flex gap-3">
                             <Button
@@ -759,6 +788,71 @@ function Addproduct() {
                     </div>
                 </form>
             </div>
+
+            {/* Vendor Selection Modal */}
+            {showVendorModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                        <h2 className="text-2xl font-semibold mb-4">
+                            {product.vendor_id ? 'Change Vendor' : 'Set Default Vendor'}
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Choose a vendor for this product (optional). You can update this later. 
+                            Leave empty to create an admin-managed product.
+                        </p>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Select Vendor
+                            </label>
+                            <select
+                                value={selectedVendorId || product.vendor_id || ''}
+                                onChange={(e) => setSelectedVendorId(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            >
+                                <option value="">None (Admin Managed)</option>
+                                {vendorData?.data?.data?.map && vendorData.data.data.map((vendor) => (
+                                    <option key={vendor.id} value={vendor.id}>
+                                        {vendor.business_name || `${vendor.first_name} ${vendor.last_name}`}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                            {/* Skip button for first visit */}
+                            {!product.vendor_id && (
+                                <button
+                                    onClick={() => {
+                                        setShowVendorModal(false)
+                                        sessionStorage.setItem('vendorModalShown', 'true')
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                >
+                                    Skip
+                                </button>
+                            )}
+                            {/* Cancel button when changing vendor */}
+                            {product.vendor_id && (
+                                <button
+                                    onClick={() => setShowVendorModal(false)}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    setShowVendorModal(false)
+                                    setProduct(prev => ({ ...prev, vendor_id: selectedVendorId }))
+                                    sessionStorage.setItem('vendorModalShown', 'true')
+                                }}
+                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                >
+                                {product.vendor_id ? 'Update' : 'Continue'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

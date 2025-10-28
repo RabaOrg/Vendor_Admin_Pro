@@ -20,8 +20,12 @@ function Customer() {
 
     const totalCustomers = Array.isArray(customerData) ? customerData.length : 0;
     const totalPages = Math.ceil(totalCustomers / perPage);
-    const handleViewCustomer = (id) => {
-        navigate(`/view_details/${id}`)
+    const handleViewCustomer = (id, source) => {
+        if (source === 'marketplace') {
+            navigate(`/marketplace-user/${id}`);
+        } else {
+            navigate(`/view_details/${id}`);
+        }
     }
 
     const handleNextPage = () => {
@@ -75,7 +79,10 @@ function Customer() {
                 <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <thead className="bg-white-100 text-black-700">
                         <tr>
-                            {["ID", "Name", "Address", "Email", "Created At", "Phone No", "Source", "View",].map((header, index) => (
+                            {["ID", "Name", "Address", "Email", "Created At", "Phone No", "Source", 
+                              ...(sourceFilter === 'marketplace' ? ["KYC Status", "Application Status"] : []), 
+                              "View"
+                            ].map((header, index) => (
                                 <th key={index} className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
                                     {header}
                                 </th>
@@ -108,11 +115,41 @@ function Customer() {
                                                     {item?.source === 'marketplace' ? 'Marketplace' : 'Vendor'}
                                                 </span>
                                             </td>
+                                            {sourceFilter === 'marketplace' && (
+                                                <>
+                                                    <td className="px-6 py-4 text-xs border-b border-gray-200">
+                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                            item.kyc_status === 'approved' ? 'bg-green-100 text-green-700' :
+                                                            item.kyc_status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                            item.kyc_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-gray-100 text-gray-700'
+                                                        }`}>
+                                                            {item.kyc_status === 'approved' ? 'Approved' :
+                                                             item.kyc_status === 'rejected' ? 'Rejected' :
+                                                             item.kyc_status === 'pending' ? 'Pending' :
+                                                             item.kyc_status || 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-xs border-b border-gray-200">
+                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                            item.user_status === 'has_active_lease' ? 'bg-green-100 text-green-700' :
+                                                            item.user_status === 'pending_application' ? 'bg-yellow-100 text-yellow-700' :
+                                                            item.user_status === 'no_applications' ? 'bg-gray-100 text-gray-700' :
+                                                            'bg-orange-100 text-orange-700'
+                                                        }`}>
+                                                            {item.user_status === 'has_active_lease' ? 'Active Lease' :
+                                                             item.user_status === 'pending_application' ? 'Pending' :
+                                                             item.user_status === 'no_applications' ? 'No Applications' :
+                                                             item.user_status || 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                </>
+                                            )}
                                             <td className="px-6 py-4 border-b border-gray-200 text-center">
                                                 <button
                                                     className="w-9 h-9 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none"
                                                     aria-label="View"
-                                                    onClick={() => handleViewCustomer(id)}
+                                                    onClick={() => handleViewCustomer(id, item?.source)}
                                                 >
                                                     <FaEye className="text-gray-600 text-base" />
                                                 </button>

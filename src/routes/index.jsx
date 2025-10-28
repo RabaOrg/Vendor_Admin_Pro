@@ -60,6 +60,7 @@ import MarketplaceCategories from "../pages/dashboard/marketplace/categories";
 import MarketplaceKYC from "../pages/dashboard/marketplace/kyc";
 import MarketplaceEligibility from "../pages/dashboard/marketplace/eligibility";
 import MarketplaceRepaymentPlans from "../pages/dashboard/marketplace/repayment-plans";
+import MarketplaceUserDetails from "../pages/dashboard/marketplace-user/view-user";
 
 
 
@@ -308,7 +309,7 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/product_bulkupload",
+                path: "/product/bulk-upload",
                 element: <BulkProductUpload />
 
             },
@@ -322,6 +323,7 @@ export const router = createBrowserRouter([
             { path: "/marketplace/repayment-plans", element: <MarketplaceRepaymentPlans /> },
             { path: "/marketplace/kyc", element: <MarketplaceKYC /> },
             { path: "/marketplace/eligibility", element: <MarketplaceEligibility /> },
+            { path: "/marketplace-user/:id", element: <MarketplaceUserDetails /> },
 
         ]
     }

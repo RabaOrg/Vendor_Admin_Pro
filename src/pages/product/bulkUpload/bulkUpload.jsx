@@ -7,7 +7,6 @@ import { toast } from 'react-toastify';
 import { saveAs } from 'file-saver';
 
 import { handleBulkProduct, handleProductBulkImages, handleProductEditBulk } from '../../../services/product';
-import { useFetchBulkDownload } from '../../../hooks/queries/product';
 import Button from '../../../components/shared/button';
 
 const sampleProducts = [
@@ -19,7 +18,7 @@ const sampleProducts = [
 
 
 export default function BulkProductUpload() {
-  const { data: getBulkProduct, isPending, isError } = useFetchBulkDownload();
+  // Removed useFetchBulkDownload - it was auto-fetching on mount unnecessarily
   const [products] = useState(sampleProducts);
   const [load, setLoad] = useState(false)
   const [showBulkEditModal, setShowBulkEditModal] = useState(false)
@@ -129,7 +128,7 @@ export default function BulkProductUpload() {
 
 
       const response = await axiosInstance.get(
-        '/admin/products/upload-template',
+        '/api/admin/products/upload-template',
         { responseType: 'arraybuffer' }
       );
 
@@ -169,7 +168,7 @@ export default function BulkProductUpload() {
       console.log(`${key}:`, value);
     }
     try {
-      const response = await handleBulkProduct('/admin/bulk-upload', formData
+      const response = await handleBulkProduct('/api/admin/products/bulk-upload', formData
       );
       console.log(response.data.data)
       setProductBulk(response.data.data.products)
@@ -196,7 +195,7 @@ export default function BulkProductUpload() {
       console.log(`${key}:`, value);
     }
     try {
-      const response = await handleProductEditBulk('/admin/bulk-edit', formData
+      const response = await handleProductEditBulk('/api/admin/products/bulk-edit', formData
       );
       console.log(response.data.data.results.successful)
       setProductEditBulk(response.data.data.results.successful)
@@ -288,9 +287,8 @@ export default function BulkProductUpload() {
             <button
               className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded"
               onClick={handleBulkDownload}
-              disabled={isPending || !getBulkProduct}
             >
-              {isPending ? 'Preparing…' : 'Download Template'}
+              Download Template
             </button>
             <button className="bg-[#0f5D30] hover:bg-green-900 text-white text-sm px-4 py-2 rounded" onClick={handleSubmitAllImages} disabled={loading || Object.keys(imageFileMap).length === 0}>
               {loading ? "Uploading..." : "Submit All Images"}
@@ -323,13 +321,30 @@ export default function BulkProductUpload() {
 
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Product Name</th>
-              <th className="px-4 py-3">Image</th>
-
-
+              <th className="px-4 py-3">Upload Image</th>
               <th className="px-4 py-3">Image Uploaded</th>
             </tr>
           </thead>
           <tbody>
+            {productBulk.length === 0 && productEditBulk.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-12 text-center">
+                  <div className="flex flex-col items-center">
+                    <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-gray-500 text-lg font-medium mb-2">No products uploaded yet</p>
+                    <p className="text-gray-400 text-sm mb-4">Upload an Excel file to get started</p>
+                    <button
+                      onClick={() => setShowBulkModal(true)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                    >
+                      Upload Products
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
             {productBulk.map(p => (
               <tr key={p.id} className="bg-white shadow-sm rounded-lg hover:shadow-md transition-shadow">
 
@@ -436,35 +451,127 @@ export default function BulkProductUpload() {
 
       <Modal isOpen={showBulkModal} onClose={() => setShowBulkModal(false)} title="Upload Bulk Products">
         <div className="flex flex-col space-y-4">
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleExcelChange}
-            className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          <Button
-            onClick={uploadExcel}
-            label={excelFile ? `Upload "${excelFile.name}"` : "Select a file"}
-            disabled={!excelFile}
-          />
+          <p className="text-sm text-gray-600">
+            Upload an Excel file (.xlsx or .xls) containing product information. 
+            Make sure your file matches the template format.
+          </p>
+          
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
+            <label className="flex flex-col items-center cursor-pointer">
+              <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <span className="text-sm font-medium text-gray-700 mb-1">Click to select Excel file</span>
+              <span className="text-xs text-gray-500">or drag and drop</span>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleExcelChange}
+                className="hidden"
+                id="excel-upload"
+              />
+            </label>
+            {excelFile && (
+              <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm font-medium text-green-800">{excelFile.name}</span>
+                  </div>
+                  <span className="text-xs text-green-600">{(excelFile.size / 1024).toFixed(2)} KB</span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex space-x-3">
+            <Button
+              onClick={uploadExcel}
+              label={excelFile ? "Upload Products" : "Select a file first"}
+              variant={excelFile ? "solid" : "outline"}
+              className={excelFile ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+              disabled={!excelFile}
+              loading={load}
+            />
+            <button
+              onClick={() => setShowBulkModal(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </Modal>
       <Modal isOpen={showBulkEditModal} onClose={() => setShowBulkEditModal(false)} title="Upload Edited Bulk Products">
-
         <div className="flex flex-col space-y-4">
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleExcelChanges}
-            className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          <p className="text-red-500 text-xs">Kindly note that once an edited product is uploaded, it will automatically replace the previous version.</p>
+          <p className="text-sm text-gray-600">
+            Upload an edited Excel file containing updated product information. 
+            Products will be updated based on their IDs.
+          </p>
+          
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>Note:</strong> Once an edited product is uploaded, it will automatically replace the previous version.
+                </p>
+              </div>
+            </div>
+          </div>
 
-          <Button
-            onClick={uploadEditedExcel}
-            label={excelEditFile ? `Upload "${excelEditFile.name}"` : "Select a file"}
-            disabled={!excelEditFile}
-          />
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
+            <label className="flex flex-col items-center cursor-pointer">
+              <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <span className="text-sm font-medium text-gray-700 mb-1">Click to select Excel file</span>
+              <span className="text-xs text-gray-500">or drag and drop</span>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleExcelChanges}
+                className="hidden"
+                id="excel-edit-upload"
+              />
+            </label>
+            {excelEditFile && (
+              <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm font-medium text-green-800">{excelEditFile.name}</span>
+                  </div>
+                  <span className="text-xs text-green-600">{(excelEditFile.size / 1024).toFixed(2)} KB</span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex space-x-3">
+            <Button
+              onClick={uploadEditedExcel}
+              label={excelEditFile ? "Upload Edited Products" : "Select a file first"}
+              variant={excelEditFile ? "solid" : "outline"}
+              className={excelEditFile ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
+              disabled={!excelEditFile}
+              loading={load}
+            />
+            <button
+              onClick={() => setShowBulkEditModal(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </Modal>
 
