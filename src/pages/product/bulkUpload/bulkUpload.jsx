@@ -321,6 +321,7 @@ export default function BulkProductUpload() {
 
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Product Name</th>
+              <th className="px-4 py-3">Dealer</th>
               <th className="px-4 py-3">Upload Image</th>
               <th className="px-4 py-3">Image Uploaded</th>
             </tr>
@@ -328,7 +329,7 @@ export default function BulkProductUpload() {
           <tbody>
             {productBulk.length === 0 && productEditBulk.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-12 text-center">
+                <td colSpan={5} className="px-4 py-12 text-center">
                   <div className="flex flex-col items-center">
                     <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -347,12 +348,11 @@ export default function BulkProductUpload() {
             )}
             {productBulk.map(p => (
               <tr key={p.id} className="bg-white shadow-sm rounded-lg hover:shadow-md transition-shadow">
-
                 <td className="px-4 py-3 align-middle font-medium text-gray-800">{p.id}</td>
                 <td className="px-4 py-3 align-middle text-sm text-black">{p.name}</td>
-                {/* <td className="px-4 py-3 align-middle">
-                  <span className={`px-3 py-1 text-xs rounded-full ${p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>{p.status}</span>
-                </td> */}
+                <td className="px-4 py-3 align-middle text-sm text-gray-600">
+                  {p.Vendor?.business_name || p.Vendor?.first_name || 'Admin'}
+                </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="flex items-center justify-center w-24 h-20 relative">
                     {imageFileMap[p.id] ? (
@@ -395,12 +395,11 @@ export default function BulkProductUpload() {
             ))}
             {productEditBulk.map(p => (
               <tr key={p.id} className="bg-white shadow-sm rounded-lg hover:shadow-md transition-shadow">
-
                 <td className="px-4 py-3 align-middle font-medium text-gray-800">{p.id}</td>
                 <td className="px-4 py-3 align-middle text-sm text-black">{p.name}</td>
-                {/* <td className="px-4 py-3 align-middle">
-                  <span className={`px-3 py-1 text-xs rounded-full ${p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>{p.status}</span>
-                </td> */}
+                <td className="px-4 py-3 align-middle text-sm text-gray-600">
+                  {p.Vendor?.business_name || p.Vendor?.first_name || 'Admin'}
+                </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="flex items-center justify-center w-24 h-20 relative">
                     {imageFileMap[p.id] ? (
