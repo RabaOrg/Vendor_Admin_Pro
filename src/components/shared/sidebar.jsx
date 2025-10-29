@@ -14,6 +14,7 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         { name: "Dashboard", icon: <Icons.Dashboard />, path: "/" },
         { name: "Customer", icon: <Icons.Customer />, path: "/customer" },
         { name: "Vendor Management", icon: <Icons.Activation />, path: "/vendor_management" },
+        { name: "Products", icon: <Icons.Product />, path: "/products" },
         { name: "Applications", icon: <Icons.Application />, path: "/application" },
         { name: "Guarantor Management", icon: <Icons.RepaymentPlan />, path: "/guarantor_list" },
         // { name: "Payment Details", icon: <Icons.Order />, path: "/payment_details" },
@@ -32,12 +33,14 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
 
 
     const handleItemClick = (item, path) => {
         setActiveItem(item);
         setIsSettingsOpen(false);
         setIsPaymentOpen(false);
+        setIsMarketplaceOpen(false);
 
         toggleSidebar();
         navigate(path);
@@ -47,14 +50,21 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
         setIsSettingsOpen(prev => !prev);
         setActiveItem("Settings");
         setIsPaymentOpen(false);
-
+        setIsMarketplaceOpen(false);
     };
+    
     const handlePaymentToggle = () => {
         setIsSettingsOpen(false);
         setIsPaymentOpen(!isPaymentOpen);
         setActiveItem("Payment");
-
-
+        setIsMarketplaceOpen(false);
+    };
+    
+    const handleMarketplaceToggle = () => {
+        setIsSettingsOpen(false);
+        setIsPaymentOpen(false);
+        setIsMarketplaceOpen(!isMarketplaceOpen);
+        setActiveItem("Marketplace");
     };
 
 
@@ -169,6 +179,61 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
                                         onClick={() => handleItemClick("SMS Notification", "/email_notification")}
                                     >
                                         SMS Notification
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
+
+                        <li
+                            className={`text-sm px-4 py-3 rounded cursor-pointer transition-colors
+    ${activeItem === "Marketplace"
+                                    ? "text-[#0f5d30] font-semibold"
+                                    : "text-gray-700 hover:bg-gray-200"
+                                }`}
+                        >
+                            <div onClick={handleMarketplaceToggle} className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg"><Icons.Category /></span>
+                                    <span>Marketplace</span>
+                                </div>
+                                {isMarketplaceOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </div>
+
+                            {isMarketplaceOpen && (
+                                <ul className="ml-6 mt-2 space-y-2 text-sm text-gray-700">
+                                    <li
+                                        className="hover:text-green-500 cursor-pointer py-1 px-2 rounded hover:bg-gray-100 transition-colors"
+                                        onClick={() => handleItemClick("Dealer Reviews", "/marketplace/reviews")}
+                                    >
+                                        Dealer Reviews
+                                    </li>
+                                    <hr className="my-1 border-gray-300 w-5/6" />
+                                    <li
+                                        className="hover:text-green-500 cursor-pointer py-1 px-2 rounded hover:bg-gray-100 transition-colors"
+                                        onClick={() => handleItemClick("Categories", "/marketplace/categories")}
+                                    >
+                                        Product Categories
+                                    </li>
+                                    <hr className="my-1 border-gray-300 w-5/6" />
+                                    <li
+                                        className="hover:text-green-500 cursor-pointer py-1 px-2 rounded hover:bg-gray-100 transition-colors"
+                                        onClick={() => handleItemClick("Repayment Plans", "/marketplace/repayment-plans")}
+                                    >
+                                        Repayment Plans
+                                    </li>
+                                    <hr className="my-1 border-gray-300 w-5/6" />
+                                    <li
+                                        className="hover:text-green-500 cursor-pointer py-1 px-2 rounded hover:bg-gray-100 transition-colors"
+                                        onClick={() => handleItemClick("KYC Management", "/marketplace/kyc")}
+                                    >
+                                        KYC Management
+                                    </li>
+                                    <hr className="my-1 border-gray-300 w-5/6" />
+                                    <li
+                                        className="hover:text-green-500 cursor-pointer py-1 px-2 rounded hover:bg-gray-100 transition-colors"
+                                        onClick={() => handleItemClick("Eligibility Settings", "/marketplace/eligibility")}
+                                    >
+                                        Eligibility Settings
                                     </li>
                                 </ul>
                             )}

@@ -110,7 +110,7 @@ function Notification() {
           rows="4"
           value={bulkEmails}
           onChange={(e) => setBulkEmails(e.target.value)}
-          placeholder="Enter emails separated by commas (e.g. admin@raba.com, support@raba.com)"
+          placeholder="Enter emails separated by commas (e.g. admin@getraba.com, support@getraba.com)"
           className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500"
         />
         <button

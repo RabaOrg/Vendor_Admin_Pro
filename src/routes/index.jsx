@@ -55,6 +55,12 @@ import EditCustomerApplication from "../pages/dashboard/customer/editcustomerapp
 import EditGuarantorApplication from "../pages/dashboard/guarantor/editguarantor/editguarantorapplication";
 import EditVendor from "../pages/dashboard/activations/editvendor/editvendor";
 import LeaseCalculatorPage from "../pages/dashboard/leasecalculator/leasecalculator";
+import MarketplaceReviews from "../pages/dashboard/marketplace/reviews";
+import MarketplaceCategories from "../pages/dashboard/marketplace/categories";
+import MarketplaceKYC from "../pages/dashboard/marketplace/kyc";
+import MarketplaceEligibility from "../pages/dashboard/marketplace/eligibility";
+import MarketplaceRepaymentPlans from "../pages/dashboard/marketplace/repayment-plans";
+import MarketplaceUserDetails from "../pages/dashboard/marketplace-user/view-user";
 
 
 
@@ -303,12 +309,21 @@ export const router = createBrowserRouter([
 
             },
             {
-                path: "/product_bulkupload",
+                path: "/product/bulk-upload",
                 element: <BulkProductUpload />
 
             },
             { path: "/order_summary/:id", element: <ViewOrderSummary /> },
             { path: "/category", element: <CategoryDashboard /> },
+            
+            // Marketplace routes
+            { path: "/products", element: <Product /> },
+            { path: "/marketplace/reviews", element: <MarketplaceReviews /> },
+            { path: "/marketplace/categories", element: <MarketplaceCategories /> },
+            { path: "/marketplace/repayment-plans", element: <MarketplaceRepaymentPlans /> },
+            { path: "/marketplace/kyc", element: <MarketplaceKYC /> },
+            { path: "/marketplace/eligibility", element: <MarketplaceEligibility /> },
+            { path: "/marketplace-user/:id", element: <MarketplaceUserDetails /> },
 
         ]
     }

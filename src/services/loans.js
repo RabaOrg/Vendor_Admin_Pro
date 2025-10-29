@@ -9,6 +9,11 @@ export const handleGetRepayment = async () => {
      
     return data.data
 }
+
+export const handleGetRepaymentPlans = async () => {
+    const { data } = await axiosInstance.get(`/api/admin/repayment-plans`);
+    return data.data || data;
+}
 export const handleDeleteApplication= async (id, forminfo) => {
   const { data } = await axiosInstance.delete(`/api/admin/applications/${id}`, forminfo);
      
@@ -42,8 +47,14 @@ export const handleDeleteCustomer= async (id, forminfo) => {
      
     return data.data
 }
-export const handleGetloanApplication = async ({ page = 1, limit = 10 }) => {
-  const { data } = await axiosInstance.get(`/api/admin/applications?page=${page}&limit=${limit}`);
+export const handleGetloanApplication = async ({ page = 1, limit = 10, application_type }) => {
+  let url = `/api/admin/applications?page=${page}&limit=${limit}`;
+  
+  if (application_type) {
+    url += `&application_type=${application_type}`;
+  }
+  
+  const { data } = await axiosInstance.get(url);
   return data;
 };
 

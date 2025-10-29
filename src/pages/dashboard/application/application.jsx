@@ -11,11 +11,12 @@ import CreateSmsModal from '../../../components/modals/CreateSmsModal'
 
 function ApplicationList() {
   const [page, setPage] = useState(1);
+  const [applicationTypeFilter, setApplicationTypeFilter] = useState("");
   const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
 
-  const { data: applicationData, refetch } = useFetchLoanApplication({ page, limit: 10 })
+  const { data: applicationData, refetch } = useFetchLoanApplication({ page, limit: 10, application_type: applicationTypeFilter })
   console.log(applicationData)
   const [selectedId, setSelectedId] = useState(null);
   const navigate = useNavigate();
@@ -73,6 +74,28 @@ function ApplicationList() {
             </Link>
           </div>
         </div>
+        
+        {/* Filter Section */}
+        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg mt-3">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Application Type:</label>
+            <select 
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={applicationTypeFilter}
+              onChange={(e) => {
+                setApplicationTypeFilter(e.target.value);
+                setPage(1); // Reset to first page when filtering
+              }}
+            >
+              <option value="">All Types</option>
+              <option value="vendor_created">Vendor Created</option>
+              <option value="customer_created">Customer Created</option>
+              <option value="sms_link">SMS Link</option>
+              <option value="marketplace">Marketplace</option>
+            </select>
+          </div>
+        </div>
+        
         <table className="min-w-full leading-normal mt-3">
           <thead className="bg-[#D5D5D5]">
             <tr>
@@ -90,6 +113,9 @@ function ApplicationList() {
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Application Type
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                Source
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Down Payment
@@ -124,16 +150,44 @@ function ApplicationList() {
                     <p className="font-medium whitespace-no-wrap text-xs">{item.id}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.vendor?.name || '—'}</p>
+                    <p className="font-medium whitespace-no-wrap text-xs">
+                      {item.vendor?.name || 'Admin'}
+                    </p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.customer?.name || '—'}</p>
+                    {item.is_marketplace_pending ? (
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium whitespace-no-wrap text-xs">
+                          {item.user?.name || '—'}
+                        </p>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                          Marketplace Applicant
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="font-medium whitespace-no-wrap text-xs">
+                        {item.customer?.name || '—'}
+                      </p>
+                    )}
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">₦{Number(item.amount).toLocaleString()}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">{item.application_type}</p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      item.application_type === 'marketplace' ? 'bg-blue-100 text-blue-700' :
+                      item.application_type === 'sms_link' ? 'bg-purple-100 text-purple-700' :
+                      item.application_type === 'customer_created' ? 'bg-green-100 text-green-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {item.application_type === 'marketplace' ? 'Marketplace' :
+                       item.application_type === 'sms_link' ? 'SMS Link' :
+                       item.application_type === 'customer_created' ? 'Customer' :
+                       'Vendor'}
+                    </span>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">{item.down_payment_amount ?? '—'}</p>
