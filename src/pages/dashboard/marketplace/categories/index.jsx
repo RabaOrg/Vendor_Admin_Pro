@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FaSearch, FaPlus, FaEdit, FaTrash, FaImage } from 'react-icons/fa';
 import { Package, Tag } from 'lucide-react';
 import axiosInstance from '../../../../../store/axiosInstance';
@@ -179,6 +179,7 @@ function MarketplaceCategories() {
                                 <div className="flex items-start justify-between mb-3">
                                     <h3 className="text-lg font-semibold text-gray-900 flex-1">
                                         {category.name}
+                                        <span className="block text-xs text-gray-400 font-mono mt-1">ID: {category.id}</span>
                                     </h3>
                                 </div>
                                 
@@ -243,21 +244,49 @@ function MarketplaceCategories() {
                                         placeholder="e.g., Kitchen Equipment"
                                     />
                                 </div>
-                                
+
+                                {editingCategory && (
+                                    <div className="mb-2">
+                                        <label className="block text-xs text-gray-500">Category ID</label>
+                                        <div className="text-sm text-gray-800">
+                                            {editingCategory.id}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Display Image ID
+                                        Display Image
                                     </label>
                                     <input
-                                        type="number"
-                                        value={formData.display_attachment_id || ''}
-                                        onChange={(e) => setFormData({ ...formData, display_attachment_id: e.target.value ? parseInt(e.target.value) : null })}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        placeholder="Attachment ID (optional)"
+                                        type="file"
+                                        accept="image/*"
+                                        className="w-full"
+                                        onChange={async (e) => {
+                                            const file = e.target.files && e.target.files[0];
+                                            if (file) {
+                                                const formDataImage = new FormData();
+                                                formDataImage.append('file', file);
+                                                try {
+                                                    const response = await axiosInstance.post('/api/admin/attachments/upload', formDataImage, {
+                                                        headers: { 'Content-Type': 'multipart/form-data' }
+                                                    });
+                                                    const id = response.data?.data?.attachment?.id;
+                                                    const url = response.data?.data?.attachment?.url;
+                                                    setFormData({ ...formData, display_attachment_id: id, previewImageUrl: url });
+                                                } catch (err) {
+                                                    alert('Error uploading image');
+                                                }
+                                            }
+                                        }}
                                     />
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Enter an attachment ID for the category display image
-                                    </p>
+                                    {formData.previewImageUrl && (
+                                        <img
+                                            src={formData.previewImageUrl}
+                                            alt="Preview"
+                                            className="mt-2 rounded w-full max-h-32 object-contain border"
+                                        />
+                                    )}
                                 </div>
                                 
                                 <div className="flex justify-end gap-3 pt-4 border-t">
