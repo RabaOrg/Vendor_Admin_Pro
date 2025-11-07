@@ -648,27 +648,29 @@ function SingleApplication() {
                 <label className="block text-sm font-medium text-gray-600 mb-2">
                   Bank Statement
                 </label>
-                <div className="border rounded-md p-4 bg-white shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-700 text-sm font-medium">
-                      {documents.bank_statement.original_filename || 'Bank Statement'}
-                    </p>
-                    <p className="text-gray-500 text-xs">
-                      Uploaded on {formatDate(documents.bank_statement.upload_timestamp)}
-                    </p>
-                    <p className="text-gray-500 text-xs">
-                      Size: {formatFileSize(documents.bank_statement.size)}
-                    </p>
+                <div className="border rounded-md p-4 bg-white shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-700 text-sm font-medium break-words overflow-wrap-anywhere">
+                        {documents.bank_statement.original_filename || 'Bank Statement'}
+                      </p>
+                      <p className="text-gray-500 text-xs mt-1">
+                        Uploaded on {formatDate(documents.bank_statement.upload_timestamp)}
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        Size: {formatFileSize(documents.bank_statement.size)}
+                      </p>
+                    </div>
+                    <a
+                      href={documents.bank_statement.signed_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors whitespace-nowrap flex-shrink-0"
+                    >
+                      Download
+                    </a>
                   </div>
-                  <a
-                    href={documents.bank_statement.signed_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
-                  >
-                    Download
-                  </a>
                 </div>
               </div>
             )}
@@ -679,24 +681,26 @@ function SingleApplication() {
                 <label className="block text-sm font-medium text-gray-600 mb-2">
                   CAC Document
                 </label>
-                <div className="border rounded-md p-4 bg-white shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-700 text-sm font-medium">
-                      {documents.cac_document.original_filename || 'CAC Document'}
-                    </p>
-                    <p className="text-gray-500 text-xs">
-                      Uploaded on {formatDate(documents.cac_document.upload_timestamp)}
-                    </p>
-                  </div>
-                  <a
-                    href={documents.cac_document.signed_url}
+                <div className="border rounded-md p-4 bg-white shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-700 text-sm font-medium break-words overflow-wrap-anywhere">
+                        {documents.cac_document.original_filename || 'CAC Document'}
+                      </p>
+                      <p className="text-gray-500 text-xs mt-1">
+                        Uploaded on {formatDate(documents.cac_document.upload_timestamp)}
+                      </p>
+                    </div>
+                    <a
+                      href={documents.cac_document.signed_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       download
-                    className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
+                      className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                     >
                       Download
                     </a>
+                  </div>
                 </div>
               </div>
                   )}

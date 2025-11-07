@@ -358,7 +358,6 @@ function Product() {
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marketplace</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -387,18 +386,12 @@ function Product() {
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {item.Category?.name || item.category || 'N/A'}
+                                                {item.Category?.id && (
+                                                    <span className="ml-2 text-xs font-mono text-gray-400 bg-gray-100 rounded px-2 border border-gray-200">ID: {item.Category.id}</span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                                 ₦{parseFloat(item.price || 0).toLocaleString()}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-1 text-xs font-medium rounded ${
-                                                    item.marketplace_enabled 
-                                                        ? 'bg-green-100 text-green-800' 
-                                                        : 'bg-gray-100 text-gray-800'
-                                                }`}>
-                                                    {item.marketplace_enabled ? 'Enabled' : 'Disabled'}
-                                                </span>
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap">
                                                 <span className={`px-2 py-1 text-xs font-medium rounded ${
@@ -423,7 +416,40 @@ function Product() {
                                                     </button>
                                                     
                                                     {actionsMenu === item.id && (
-                                                        <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                                        <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-10 text-sm">
+                                                            {(!item.is_archived) ? (
+                                                                <button
+                                                                    onClick={async (e) => {
+                                                                        e.stopPropagation();
+                                                                        try {
+                                                                            await axiosInstance.put(`/api/admin/products/${item.id}`, { is_archived: true });
+                                                                            setAllProducts((prev) => prev.map(p => p.id === item.id ? { ...p, is_archived: true } : p));
+                                                                            setActionsMenu(null);
+                                                                        } catch (err) {
+                                                                            alert('Update failed');
+                                                                        }
+                                                                    }}
+                                                                    className="w-full px-4 py-2 hover:bg-gray-100 text-left text-red-600"
+                                                                >
+                                                                    Set as Inactive
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={async (e) => {
+                                                                        e.stopPropagation();
+                                                                        try {
+                                                                            await axiosInstance.put(`/api/admin/products/${item.id}`, { is_archived: false });
+                                                                            setAllProducts((prev) => prev.map(p => p.id === item.id ? { ...p, is_archived: false } : p));
+                                                                            setActionsMenu(null);
+                                                                        } catch (err) {
+                                                                            alert('Update failed');
+                                                                        }
+                                                                    }}
+                                                                    className="w-full px-4 py-2 hover:bg-gray-100 text-left text-green-600"
+                                                                >
+                                                                    Set as Active
+                                                                </button>
+                                                            )}
                                                             <button
                                                                 onClick={() => {
                                                                     setActionsMenu(null);
@@ -503,11 +529,6 @@ function Product() {
                                         ₦{parseFloat(item.price || 0).toLocaleString()}
                                     </p>
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                            item.marketplace_enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                                        }`}>
-                                            {item.marketplace_enabled ? 'Marketplace' : 'Internal'}
-                                        </span>
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                                             item.is_archived ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                                         }`}>

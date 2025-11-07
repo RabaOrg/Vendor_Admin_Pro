@@ -200,8 +200,9 @@ function MarketplaceRepaymentPlans() {
                             {/* Plan Header */}
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                                         {plan.description || 'Unnamed Plan'}
+                                        <span className="ml-1 text-xs font-mono text-gray-400 bg-gray-100 rounded px-2 py-0.5 border border-gray-200">ID: {plan.id}</span>
                                     </h3>
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                         plan.tenure_unit === 'week' || plan.tenure_unit === 'weekly'
@@ -276,6 +277,9 @@ function MarketplaceRepaymentPlans() {
                                     ×
                                 </button>
                             </div>
+                            {editingPlan && (
+                              <div className="mb-2 text-xs text-gray-600 font-mono px-3 py-1 bg-gray-100 rounded border border-gray-200">ID: {editingPlan.id}</div>
+                            )}
                             
                             {editingPlan && (
                                 <div className="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 flex items-start gap-3">
