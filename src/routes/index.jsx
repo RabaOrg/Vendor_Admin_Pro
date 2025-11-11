@@ -47,6 +47,7 @@ import CreateAgent from "../pages/dashboard/Agent/createagent";
 import TransactionDetails from "../pages/dashboard/transactiondetails/transactionList";
 import SingleTransaction from "../pages/dashboard/transactiondetails/singletransaction";
 import TransactionStatistics from "../pages/dashboard/transactiondetails/transactionstats";
+import SmsLinkDetails from "../pages/dashboard/application/smsLinkDetails";
 
 
 import EditApplication from "../pages/dashboard/application/editapplication/editapplication";
@@ -324,6 +325,7 @@ export const router = createBrowserRouter([
             { path: "/marketplace/kyc", element: <MarketplaceKYC /> },
             { path: "/marketplace/eligibility", element: <MarketplaceEligibility /> },
             { path: "/marketplace-user/:id", element: <MarketplaceUserDetails /> },
+            { path: "/sms-link-details/:id", element: <SmsLinkDetails /> },
 
         ]
     }

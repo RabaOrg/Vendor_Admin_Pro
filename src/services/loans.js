@@ -47,11 +47,15 @@ export const handleDeleteCustomer= async (id, forminfo) => {
      
     return data.data
 }
-export const handleGetloanApplication = async ({ page = 1, limit = 10, application_type }) => {
+export const handleGetloanApplication = async ({ page = 1, limit = 10, application_type, include_sms_links }) => {
   let url = `/api/admin/applications?page=${page}&limit=${limit}`;
   
   if (application_type) {
     url += `&application_type=${application_type}`;
+  }
+  
+  if (include_sms_links) {
+    url += `&include_sms_links=true`;
   }
   
   const { data } = await axiosInstance.get(url);
