@@ -52,6 +52,7 @@ function SingleApplication() {
   const { data: singleLoan, isPending, isError } = useFetchSingleLoan(id);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [showActionModal, setShowActionModal] = useState(false);
+  const [isGeneratingSchedule, setIsGeneratingSchedule] = useState(false);
 
   // Define paired sections configuration
   const pairedSectionsConfig = [
@@ -65,8 +66,9 @@ function SingleApplication() {
     { id: 'uploaded-documents', pairedWith: 'quote-documents', defaultExpanded: false },
     { id: 'quote-documents', pairedWith: 'uploaded-documents', defaultExpanded: false },
     { id: 'quote-document-info', pairedWith: null, defaultExpanded: false },
+    { id: 'repayment-plan', pairedWith: 'repayment-schedule', defaultExpanded: false },
     { id: 'payment-mandate', pairedWith: 'repayment-schedule', defaultExpanded: false },
-    { id: 'repayment-schedule', pairedWith: 'payment-mandate', defaultExpanded: false },
+    { id: 'repayment-schedule', pairedWith: 'repayment-plan', defaultExpanded: false },
     { id: 'transactions', pairedWith: 'status-timeline', defaultExpanded: false },
     { id: 'status-timeline', pairedWith: 'transactions', defaultExpanded: false },
   ];
@@ -211,6 +213,25 @@ function SingleApplication() {
     }
   };
 
+  const handleGenerateSchedule = async () => {
+    setIsGeneratingSchedule(true);
+    try {
+      const response = await axiosInstance.post(`/api/admin/applications/${id}/generate-schedule`);
+      if (response.data.success || response.status === 200) {
+        toast.success('Repayment schedule generated successfully');
+        // Refresh the application data
+        const updatedResponse = await axiosInstance.get(`/api/admin/applications/${id}`);
+        setLoanData(updatedResponse.data);
+        queryClient.invalidateQueries(["singleLoanApplication", id]);
+      }
+    } catch (error) {
+      console.error('Error generating schedule:', error);
+      toast.error(error.response?.data?.message || 'Failed to generate repayment schedule');
+    } finally {
+      setIsGeneratingSchedule(false);
+    }
+  };
+
   if (isPending) {
   return (
       <div className="flex justify-center items-center h-screen text-xl">
@@ -284,8 +305,8 @@ function SingleApplication() {
       schedule.status === 'pending' || schedule.status === 'overdue'
     );
     
-    if (nextSchedule && nextSchedule.due_date) {
-      return formatDate(nextSchedule.due_date, 'short');
+    if (nextSchedule && (nextSchedule.dueDate || nextSchedule.due_date)) {
+      return formatDate(nextSchedule.dueDate || nextSchedule.due_date, 'short');
     }
     
     return 'N/A';
@@ -863,16 +884,43 @@ function SingleApplication() {
           </CollapsibleSection>
         )}
 
+        {/* Repayment Plan */}
+        <CollapsibleSection
+          title="Repayment Plan"
+          icon={BarChart3}
+          badge={lease_tenure || 'N/A'}
+          badgeColor="blue"
+          defaultExpanded={getSectionState('repayment-plan')}
+          onToggle={(isExpanded) => toggleSection('repayment-plan', isExpanded)}
+        >
+          <div className="space-y-4">
+            <InfoGrid 
+              data={[
+                { key: 'amount', label: 'Total Amount', value: amount ? formatCurrency(amount) : 'N/A' },
+                { key: 'downPayment', label: 'Down Payment', value: down_payment_amount ? formatCurrency(down_payment_amount) : 'N/A' },
+                { key: 'downPaymentPercent', label: 'Down Payment %', value: down_payment_percent ? `${down_payment_percent}%` : 'N/A' },
+                { key: 'financedAmount', label: 'Financed Amount', value: amount && down_payment_amount ? formatCurrency(parseFloat(amount) - parseFloat(down_payment_amount)) : 'N/A' },
+                { key: 'monthlyRepayment', label: 'Monthly Repayment', value: monthly_repayment ? formatCurrency(monthly_repayment) : 'N/A' },
+                { key: 'interestRate', label: 'Interest Rate', value: interest_rate ? `${interest_rate}%` : 'N/A' },
+                { key: 'leaseTenure', label: 'Lease Tenure', value: lease_tenure && lease_tenure_unit ? `${lease_tenure} ${lease_tenure_unit}${lease_tenure > 1 ? 's' : ''}` : 'N/A' },
+                { key: 'totalRepayment', label: 'Total Repayment', value: monthly_repayment && lease_tenure ? formatCurrency(parseFloat(monthly_repayment) * parseInt(lease_tenure)) : 'N/A' },
+                { key: 'totalInterest', label: 'Total Interest', value: amount && down_payment_amount && monthly_repayment && lease_tenure ? formatCurrency((parseFloat(monthly_repayment) * parseInt(lease_tenure)) - (parseFloat(amount) - parseFloat(down_payment_amount))) : 'N/A' },
+              ]}
+              columns={{ mobile: 1, tablet: 2, desktop: 3 }}
+            />
+          </div>
+        </CollapsibleSection>
+
         {/* Repayment Schedule */}
-        {schedules && schedules.length > 0 && (
-          <CollapsibleSection
-            title="Repayment Schedule"
-            icon={CreditCard}
-            badge={schedules.length}
-            badgeColor="green"
-            defaultExpanded={getSectionState('repayment-schedule')}
-            onToggle={(isExpanded) => toggleSection('repayment-schedule', isExpanded)}
-          >
+        <CollapsibleSection
+          title="Repayment Schedule"
+          icon={CreditCard}
+          badge={schedules && schedules.length > 0 ? schedules.length : '0'}
+          badgeColor={schedules && schedules.length > 0 ? 'green' : 'gray'}
+          defaultExpanded={getSectionState('repayment-schedule')}
+          onToggle={(isExpanded) => toggleSection('repayment-schedule', isExpanded)}
+        >
+          {schedules && schedules.length > 0 ? (
             <div className="space-y-4">
               {/* Schedule Summary */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -899,12 +947,12 @@ function SingleApplication() {
           </div>
 
               {/* Schedule Details */}
-              <div className="space-y-3">
+              <div className="max-h-[600px] overflow-y-auto space-y-3 pr-2">
                 {schedules.map((schedule, index) => (
                   <div key={schedule.id || index} className="border border-gray-200 rounded-lg p-4 bg-white">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-lg font-medium text-gray-800">
-                        Installment #{schedule.installment_number}
+                        Installment #{schedule.installmentNumber || schedule.installment_number}
                       </h4>
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                         schedule.status === 'paid' ? 'bg-green-100 text-green-800' :
@@ -917,18 +965,18 @@ function SingleApplication() {
                     
                     <InfoGrid 
                       data={[
-                        { key: 'amountDue', label: 'Amount Due', value: schedule.amount_due ? formatCurrency(schedule.amount_due) : 'N/A' },
-                        { key: 'dueDate', label: 'Due Date', value: schedule.due_date ? formatDate(schedule.due_date, 'short') : 'N/A' },
-                        { key: 'paidAmount', label: 'Paid Amount', value: schedule.paid_amount ? formatCurrency(schedule.paid_amount) : '₦0.00' },
-                        { key: 'paidAt', label: 'Paid At', value: schedule.paid_at ? formatDate(schedule.paid_at, 'datetime') : 'N/A' },
-                        { key: 'paymentReference', label: 'Payment Reference', value: schedule.payment_reference || 'N/A' },
-                        { key: 'failedAttempts', label: 'Failed Attempts', value: schedule.failed_attempts || 0 },
-                        { key: 'lastAttemptAt', label: 'Last Attempt', value: schedule.last_attempt_at ? formatDate(schedule.last_attempt_at, 'datetime') : 'N/A' },
-                        { key: 'nextAttemptAt', label: 'Next Attempt', value: schedule.next_attempt_at ? formatDate(schedule.next_attempt_at, 'datetime') : 'N/A' },
-                        { key: 'reminderSent', label: 'Reminder Sent', value: schedule.reminder_sent ? 'Yes' : 'No' },
-                        { key: 'reminderSentAt', label: 'Reminder Sent At', value: schedule.reminder_sent_at ? formatDate(schedule.reminder_sent_at, 'datetime') : 'N/A' },
-                        { key: 'createdAt', label: 'Created At', value: schedule.created_at ? formatDate(schedule.created_at, 'datetime') : 'N/A' },
-                        { key: 'updatedAt', label: 'Updated At', value: schedule.updated_at ? formatDate(schedule.updated_at, 'datetime') : 'N/A' },
+                        { key: 'amountDue', label: 'Amount Due', value: (schedule.amountDue || schedule.amount_due) ? formatCurrency(schedule.amountDue || schedule.amount_due) : 'N/A' },
+                        { key: 'dueDate', label: 'Due Date', value: (schedule.dueDate || schedule.due_date) ? formatDate(schedule.dueDate || schedule.due_date, 'short') : 'N/A' },
+                        { key: 'paidAmount', label: 'Paid Amount', value: (schedule.paidAmount || schedule.paid_amount) ? formatCurrency(schedule.paidAmount || schedule.paid_amount) : '₦0.00' },
+                        { key: 'paidAt', label: 'Paid At', value: (schedule.paidAt || schedule.paid_at) ? formatDate(schedule.paidAt || schedule.paid_at, 'datetime') : 'N/A' },
+                        { key: 'paymentReference', label: 'Payment Reference', value: schedule.paymentReference || schedule.payment_reference || 'N/A' },
+                        { key: 'failedAttempts', label: 'Failed Attempts', value: schedule.failedAttempts || schedule.failed_attempts || 0 },
+                        { key: 'lastAttemptAt', label: 'Last Attempt', value: (schedule.lastAttemptAt || schedule.last_attempt_at) ? formatDate(schedule.lastAttemptAt || schedule.last_attempt_at, 'datetime') : 'N/A' },
+                        { key: 'nextAttemptAt', label: 'Next Attempt', value: (schedule.nextAttemptAt || schedule.next_attempt_at) ? formatDate(schedule.nextAttemptAt || schedule.next_attempt_at, 'datetime') : 'N/A' },
+                        { key: 'reminderSent', label: 'Reminder Sent', value: (schedule.reminderSent !== undefined ? schedule.reminderSent : schedule.reminder_sent) ? 'Yes' : 'No' },
+                        { key: 'reminderSentAt', label: 'Reminder Sent At', value: (schedule.reminderSentAt || schedule.reminder_sent_at) ? formatDate(schedule.reminderSentAt || schedule.reminder_sent_at, 'datetime') : 'N/A' },
+                        { key: 'createdAt', label: 'Created At', value: (schedule.createdAt || schedule.created_at) ? formatDate(schedule.createdAt || schedule.created_at, 'datetime') : 'N/A' },
+                        { key: 'updatedAt', label: 'Updated At', value: (schedule.updatedAt || schedule.updated_at) ? formatDate(schedule.updatedAt || schedule.updated_at, 'datetime') : 'N/A' },
                       ]}
                       columns={{ mobile: 1, tablet: 2, desktop: 3 }}
                     />
@@ -936,8 +984,27 @@ function SingleApplication() {
                 ))}
               </div>
             </div>
-          </CollapsibleSection>
-        )}
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-yellow-800 mb-2">No Repayment Schedule Found</h3>
+                <p className="text-sm text-yellow-700 mb-4">
+                  The repayment schedule has not been generated for this application yet. This usually happens automatically when the mandate is authorized.
+                </p>
+                {mandates && mandates.length > 0 && mandates.some(m => m.status === 'authorized') && (
+                  <button
+                    onClick={handleGenerateSchedule}
+                    disabled={isGeneratingSchedule}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingSchedule ? 'Generating...' : 'Generate Repayment Schedule'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </CollapsibleSection>
 
         {/* Transactions */}
         {transactions && transactions.length > 0 && (

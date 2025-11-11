@@ -12,21 +12,25 @@ import CreateSmsModal from '../../../components/modals/CreateSmsModal'
 function ApplicationList() {
   const [page, setPage] = useState(1);
   const [applicationTypeFilter, setApplicationTypeFilter] = useState("");
+  const [includeSmsLinks, setIncludeSmsLinks] = useState(false);
   const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
 
-  const { data: applicationData, refetch } = useFetchLoanApplication({ page, limit: 10, application_type: applicationTypeFilter })
+  const { data: applicationData, refetch } = useFetchLoanApplication({ page, limit: 10, application_type: applicationTypeFilter, include_sms_links: includeSmsLinks })
   console.log(applicationData)
   const [selectedId, setSelectedId] = useState(null);
   const navigate = useNavigate();
 
-  const handleRowClick = (id) => {
-
-    setSelectedId(id);
-
-    navigate(`/application-statistics/${id}`);
-
+  const handleRowClick = (item) => {
+    setSelectedId(item.id);
+    
+    // Check if this is an SMS link application
+    if (item.is_sms_link && item.link_id) {
+      navigate(`/sms-link-details/${item.link_id}`);
+    } else {
+      navigate(`/application-statistics/${item.id}`);
+    }
   };
   const handleRecalculateClick = (application) => {
     setSelectedApplication(application);
@@ -94,6 +98,21 @@ function ApplicationList() {
               <option value="marketplace">Marketplace</option>
             </select>
           </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="includeSmsLinks"
+              checked={includeSmsLinks}
+              onChange={(e) => {
+                setIncludeSmsLinks(e.target.checked);
+                setPage(1); // Reset to first page when filtering
+              }}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label htmlFor="includeSmsLinks" className="text-sm font-medium text-gray-700">
+              Include SMS Links
+            </label>
+          </div>
         </div>
         
         <table className="min-w-full leading-normal mt-3">
@@ -110,9 +129,6 @@ function ApplicationList() {
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Amount
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                Application Type
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Source
@@ -142,7 +158,7 @@ function ApplicationList() {
               applicationData.data.map((item) => (
                 <tr
                   key={item.id}
-                  onClick={() => handleRowClick(item.id)}
+                  onClick={() => handleRowClick(item)}
                   className={`cursor-pointer transition-all duration-200 ${selectedId === item.id ? 'bg-blue-200' : 'bg-white'
                     } hover:bg-gray-200`}
                 >
@@ -172,9 +188,6 @@ function ApplicationList() {
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">₦{Number(item.amount).toLocaleString()}</p>
-                  </td>
-                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">{item.application_type}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -246,7 +259,7 @@ function ApplicationList() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRowClick(item.id);
+                        handleRowClick(item);
                       }}
                       className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
                       title="View Application"

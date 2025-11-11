@@ -19,7 +19,8 @@ import {
   Pencil,
   MapPin,
   Shield,
-  TrendingUp
+  TrendingUp,
+  Image
 } from 'lucide-react'
 
 function ViewActivation() {
@@ -30,6 +31,8 @@ function ViewActivation() {
   const [isverfied, setisVerified] = useState(false)
   const [interest, setInterest] = useState(0)
   const [isLoad, setIsLoad] = useState(false)
+  const [selectedPhoto, setSelectedPhoto] = useState(null)
+  const [isViewerOpen, setIsViewerOpen] = useState(false)
 
   const { data: vendorData, isPending, isError } = useFetchSingleVendorData(id)
 
@@ -44,8 +47,10 @@ function ViewActivation() {
     { id: 'bank-details', pairedWith: 'address-info', defaultExpanded: false },
     { id: 'agent-info', pairedWith: 'settings-preferences', defaultExpanded: false },
     { id: 'settings-preferences', pairedWith: 'agent-info', defaultExpanded: false },
-    { id: 'rating-reviews', pairedWith: 'uploaded-documents', defaultExpanded: false },
-    { id: 'uploaded-documents', pairedWith: 'rating-reviews', defaultExpanded: false },
+    { id: 'business-photos', pairedWith: 'uploaded-documents', defaultExpanded: false },
+    { id: 'uploaded-documents', pairedWith: 'business-photos', defaultExpanded: false },
+    { id: 'rating-reviews', pairedWith: 'status-management', defaultExpanded: false },
+    { id: 'status-management', pairedWith: 'rating-reviews', defaultExpanded: false },
   ];
 
   // Use the paired sections hook
@@ -161,6 +166,7 @@ function ViewActivation() {
   const business = vendor?.Business;
   const attachments = vendor?.Attachments || [];
   const agent = vendor?.agent;
+  const businessPhotos = vendor?.business_photos || [];
 
   // Vendor Statistics Data
   const vendorStats = [
@@ -400,6 +406,82 @@ function ViewActivation() {
           </CollapsibleSection>
         )}
 
+        {/* Business Photos */}
+        {businessPhotos.length > 0 && (
+          <CollapsibleSection
+            title="Business Photos"
+            icon={Image}
+            badge={`${businessPhotos.length}`}
+            badgeColor="green"
+            defaultExpanded={getSectionState('business-photos')}
+            onToggle={(isExpanded) => toggleSection('business-photos', isExpanded)}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {businessPhotos.map((photo, index) => (
+                <div key={photo.id || index} className="border rounded-md p-3 bg-white shadow-sm">
+                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                    Business Photo {index + 1}
+                  </label>
+                  <img
+                    src={photo.url || photo.original_url}
+                    alt={`Business Photo ${index + 1}`}
+                    className="w-full h-60 object-contain rounded-md mb-3 cursor-pointer hover:opacity-90 transition"
+                    onClick={() => {
+                      setSelectedPhoto(photo.url || photo.original_url);
+                      setIsViewerOpen(true);
+                    }}
+                  />
+                  <div className="flex flex-col gap-2">
+                    {photo.created_at && (
+                      <p className="text-gray-500 text-xs">
+                        Uploaded: {formatDate(photo.created_at, 'datetime')}
+                      </p>
+                    )}
+                    <a
+                      href={photo.url || photo.original_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 text-sm underline hover:text-blue-800"
+                      download
+                    >
+                      Download Photo
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Image Viewer Modal for Business Photos */}
+            {isViewerOpen && selectedPhoto && businessPhotos.some(photo => (photo.url || photo.original_url) === selectedPhoto) && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+                onClick={() => {
+                  setIsViewerOpen(false);
+                  setSelectedPhoto(null);
+                }}
+              >
+                <div className="relative max-w-[90vw] max-h-[90vh]">
+                  <img
+                    src={selectedPhoto}
+                    alt="Business Photo Large View"
+                    className="max-w-full max-h-[90vh] rounded-md shadow-lg object-contain"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    className="absolute top-3 right-3 bg-white rounded-full p-2 shadow hover:bg-gray-200 transition"
+                    onClick={() => {
+                      setIsViewerOpen(false);
+                      setSelectedPhoto(null);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+          </CollapsibleSection>
+        )}
+
         {/* Uploaded Documents */}
         {attachments.length > 0 && (
           <CollapsibleSection
@@ -416,14 +498,58 @@ function ViewActivation() {
                   <img
                     src={doc.url}
                     alt={doc.filename || `Document ${index + 1}`}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition"
+                    onClick={() => {
+                      setSelectedPhoto(doc.url);
+                      setIsViewerOpen(true);
+                    }}
                   />
-                  <div className="p-3 bg-white border-t text-sm text-gray-600 font-medium text-center">
-                    {doc.filename || `Document ${index + 1}`}
+                  <div className="p-3 bg-white border-t">
+                    <p className="text-sm text-gray-600 font-medium text-center mb-2">
+                      {doc.filename || `Document ${index + 1}`}
+                    </p>
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 text-sm underline hover:text-blue-800 block text-center"
+                      download
+                    >
+                      Download
+                    </a>
                   </div>
                 </div>
               ))}
             </div>
+            
+            {/* Image Viewer Modal for attachments */}
+            {isViewerOpen && selectedPhoto && attachments.some(doc => doc.url === selectedPhoto) && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+                onClick={() => {
+                  setIsViewerOpen(false);
+                  setSelectedPhoto(null);
+                }}
+              >
+                <div className="relative max-w-[90vw] max-h-[90vh]">
+                  <img
+                    src={selectedPhoto}
+                    alt="Document Large View"
+                    className="max-w-full max-h-[90vh] rounded-md shadow-lg object-contain"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    className="absolute top-3 right-3 bg-white rounded-full p-2 shadow hover:bg-gray-200 transition"
+                    onClick={() => {
+                      setIsViewerOpen(false);
+                      setSelectedPhoto(null);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
           </CollapsibleSection>
         )}
 
