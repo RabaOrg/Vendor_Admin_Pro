@@ -1154,6 +1154,7 @@ function SingleApplication() {
               <option value="awaiting_downpayment">Awaiting Down Payment</option>
               <option value="downpayment_paid">Down Payment Paid</option>
               <option value="awaiting_delivery">Awaiting Delivery</option>
+              <option value="active">Active</option>
               <option value="processing">Processing</option>
             </select>
           </div>
