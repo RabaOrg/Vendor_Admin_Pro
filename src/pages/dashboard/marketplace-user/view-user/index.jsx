@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '../../../../../store/axiosInstance';
 
 import Button from '../../../../components/shared/button';
 import CollapsibleSection from '../../../../components/application/CollapsibleSection';
 import InfoGrid from '../../../../components/application/InfoGrid';
 import { useFetchMarketplaceUser } from '../../../../hooks/queries/marketplaceUser';
-import { formatCurrency, formatDate, formatPhoneNumber, getStatusBadgeClasses } from '../../../../utils/formatters';
+import { formatCurrency, formatDate, formatPhoneNumber } from '../../../../utils/formatters';
 import { usePairedSections } from '../../../../hooks/usePairedSections';
 
 import { 
@@ -20,22 +19,33 @@ import {
   XCircle,
   Eye,
   Download,
-  ChevronDown,
-  ChevronRight
+  Settings,
+  DollarSign,
+  RefreshCw
 } from 'lucide-react';
 
 function MarketplaceUserDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   
   const { data: userData, isPending, isError, refetch } = useFetchMarketplaceUser(id);
   
   // Extract data
   const user = userData?.user;
   const applications = userData?.applications || [];
-  const guarantors = userData?.guarantors || [];
   const stats = userData?.stats;
+
+  // Modal states
+  const [showEligibilityModal, setShowEligibilityModal] = useState(false);
+  const [showKYCStatusModal, setShowKYCStatusModal] = useState(false);
+  const [showAccountStatusModal, setShowAccountStatusModal] = useState(false);
+  const [eligibilityAmount, setEligibilityAmount] = useState('');
+  const [kycStatus, setKycStatus] = useState('');
+  const [kycStatusNotes, setKycStatusNotes] = useState('');
+  const [kycEligibilityAmount, setKycEligibilityAmount] = useState('');
+  const [accountStatus, setAccountStatus] = useState('');
+  const [accountStatusNotes, setAccountStatusNotes] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Define paired sections configuration
   const pairedSectionsConfig = [
@@ -44,7 +54,8 @@ function MarketplaceUserDetails() {
     { id: 'business-info', pairedWith: 'financial-info', defaultExpanded: false },
     { id: 'financial-info', pairedWith: 'business-info', defaultExpanded: false },
     { id: 'guarantor-info', pairedWith: 'documents', defaultExpanded: false },
-    { id: 'documents', pairedWith: 'guarantor-info', defaultExpanded: false },
+    { id: 'documents', pairedWith: 'actions', defaultExpanded: false },
+    { id: 'actions', pairedWith: 'documents', defaultExpanded: false },
     { id: 'applications', pairedWith: 'statistics', defaultExpanded: true },
     { id: 'statistics', pairedWith: 'applications', defaultExpanded: true },
   ];
@@ -87,36 +98,45 @@ function MarketplaceUserDetails() {
     }
   };
 
-  const handleApproveKYC = async () => {
-    if (!window.confirm('Are you sure you want to approve this user\'s KYC?')) {
+  const handleUpdateKYCStatus = async () => {
+    if (!kycStatus) {
+      toast.error('Please select a KYC status');
+      return;
+    }
+
+    // If status is rejected, notes are required
+    if (kycStatus === 'rejected' && !kycStatusNotes.trim()) {
+      toast.error('Please enter a reason for rejection');
       return;
     }
 
     try {
-      await axiosInstance.patch(`/api/admin/kyc/users/${id}/approve`, {
-        notes: 'KYC approved from marketplace user details'
-      });
-      toast.success("KYC approved successfully");
-      refetch(); // Refresh user data
-    } catch (error) {
-      console.error('Error approving KYC:', error);
-      toast.error(error?.response?.data?.message || "Failed to approve KYC");
-    }
-  };
+      setIsSaving(true);
+      const updateData = {
+        kyc_status: kycStatus,
+        notes: kycStatusNotes || ''
+      };
 
-  const handleRejectKYC = async () => {
-    const reason = prompt('Enter rejection reason:');
-    if (!reason) return;
-    
-    try {
-      await axiosInstance.patch(`/api/admin/kyc/users/${id}/reject`, {
-        notes: reason
-      });
-      toast.success("KYC rejected successfully");
+      // Include eligibility amount if status is approved and amount is provided
+      if (kycStatus === 'approved' && kycEligibilityAmount) {
+        const amount = parseFloat(kycEligibilityAmount.replace(/,/g, ''));
+        if (!isNaN(amount) && amount >= 0) {
+          updateData.eligibility_amount = amount;
+        }
+      }
+
+      await axiosInstance.patch(`/api/admin/kyc/users/${id}/status`, updateData);
+      toast.success("KYC status updated successfully");
+      setShowKYCStatusModal(false);
+      setKycStatus('');
+      setKycStatusNotes('');
+      setKycEligibilityAmount('');
       refetch(); // Refresh user data
     } catch (error) {
-      console.error('Error rejecting KYC:', error);
-      toast.error(error?.response?.data?.message || "Failed to reject KYC");
+      console.error('Error updating KYC status:', error);
+      toast.error(error?.response?.data?.message || "Failed to update KYC status");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -124,14 +144,88 @@ function MarketplaceUserDetails() {
     navigate(`/application-statistics/${applicationId}`);
   };
 
-  const getKycStatusBadge = (status) => {
+  const handleUpdateEligibility = async () => {
+    if (!eligibilityAmount || eligibilityAmount.trim() === '') {
+      toast.error('Please enter an eligibility amount');
+      return;
+    }
+    
+    const amount = parseFloat(eligibilityAmount.replace(/,/g, ''));
+    if (isNaN(amount) || amount < 0) {
+      toast.error('Please enter a valid positive number');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await axiosInstance.put(`/api/admin/user-eligibility/${id}/eligibility`, {
+        eligibility_amount: amount,
+        reason: 'Updated from marketplace user details'
+      });
+      toast.success("Eligibility amount updated successfully");
+      setShowEligibilityModal(false);
+      setEligibilityAmount('');
+      refetch(); // Refresh user data
+    } catch (error) {
+      console.error('Error updating eligibility:', error);
+      toast.error(error?.response?.data?.message || "Failed to update eligibility");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRefreshEligibility = async () => {
+    if (!window.confirm('This will refresh the eligibility amount from Periculum. Continue?')) {
+      return;
+    }
+
+    try {
+      await axiosInstance.post(`/api/admin/users/${id}/eligibility/refresh`);
+      toast.success("Eligibility refreshed successfully");
+      refetch(); // Refresh user data
+    } catch (error) {
+      console.error('Error refreshing eligibility:', error);
+      toast.error(error?.response?.data?.message || "Failed to refresh eligibility");
+    }
+  };
+
+  const handleUpdateAccountStatus = async () => {
+    if (!accountStatus) {
+      toast.error('Please select an account status');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await axiosInstance.patch(`/api/admin/customers/user/${id}/status`, {
+        account_status: accountStatus,
+        notes: accountStatusNotes || ''
+      });
+      toast.success("Account status updated successfully");
+      setShowAccountStatusModal(false);
+      setAccountStatus('');
+      setAccountStatusNotes('');
+      refetch(); // Refresh user data
+    } catch (error) {
+      console.error('Error updating account status:', error);
+      toast.error(error?.response?.data?.message || "Failed to update account status");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getKycStatusBadge = (status, kycCompleted) => {
+    // If KYC is completed but status is incomplete/null, show as 'pending' (awaiting review)
+    const effectiveStatus = (kycCompleted && (!status || status === 'incomplete')) ? 'pending' : status;
+    
     const statusConfig = {
       'approved': { class: 'bg-green-100 text-green-700', text: 'Approved' },
       'rejected': { class: 'bg-red-100 text-red-700', text: 'Rejected' },
-      'pending': { class: 'bg-yellow-100 text-yellow-700', text: 'Pending' },
+      'pending': { class: 'bg-yellow-100 text-yellow-700', text: 'Pending Review' },
+      'under_review': { class: 'bg-blue-100 text-blue-700', text: 'Under Review' },
       'incomplete': { class: 'bg-gray-100 text-gray-700', text: 'Incomplete' }
     };
-    const config = statusConfig[status] || statusConfig['incomplete'];
+    const config = statusConfig[effectiveStatus] || statusConfig['incomplete'];
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.class}`}>
         {config.text}
@@ -195,7 +289,7 @@ function MarketplaceUserDetails() {
   ];
 
   const kycEligibilityInfo = [
-    { key: 'kyc_status', label: 'KYC Status', value: getKycStatusBadge(user.kyc_status) },
+    { key: 'kyc_status', label: 'KYC Status', value: getKycStatusBadge(user.kyc_status, user.kyc_completed) },
     { key: 'kyc_completed', label: 'KYC Completed', value: user.kyc_completed ? 'Yes' : 'No' },
     { key: 'eligibility_amount', label: 'Eligibility Amount', value: user.eligibility_amount ? formatCurrency(user.eligibility_amount) : 'N/A' },
     { key: 'eligibility_status', label: 'Eligibility Status', value: user.eligibility_status || 'N/A' },
@@ -252,29 +346,11 @@ function MarketplaceUserDetails() {
             Marketplace User Details
           </h1>
           <div className="flex gap-2 flex-wrap">
-            {getKycStatusBadge(user.kyc_status)}
+            {getKycStatusBadge(user.kyc_status, user.kyc_completed)}
             {getUserStatusBadge(user.user_status)}
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {user.kyc_status === 'pending' && (
-            <>
-              <button
-                onClick={handleApproveKYC}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Approve KYC
-              </button>
-              <button
-                onClick={handleRejectKYC}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
-              >
-                <XCircle className="h-4 w-4" />
-                Reject KYC
-              </button>
-            </>
-          )}
           <Button
             label="Back to Customers"
             onClick={() => navigate('/customer')}
@@ -402,7 +478,7 @@ function MarketplaceUserDetails() {
                     }}
                   />
                   <p className="text-sm text-gray-500 mt-2 hidden">
-                    Image preview not available. Click "View" to open in new tab.
+                    Image preview not available. Click &quot;View&quot; to open in new tab.
                   </p>
                 </div>
               </div>
@@ -488,6 +564,93 @@ function MarketplaceUserDetails() {
           </div>
         </CollapsibleSection>
 
+        {/* Actions Section - Beside KYC Documents */}
+        <CollapsibleSection
+          title="Actions"
+          icon={Settings}
+          isExpanded={getSectionState('actions')}
+          onToggle={() => toggleSection('actions')}
+        >
+          <div className="space-y-3">
+            {/* KYC Actions - Always visible */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">KYC Status</h4>
+              <div className="mb-2">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  user.kyc_status === 'approved' ? 'bg-green-100 text-green-700' :
+                  user.kyc_status === 'rejected' ? 'bg-red-100 text-red-700' :
+                  user.kyc_status === 'under_review' ? 'bg-blue-100 text-blue-700' :
+                  'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {user.kyc_status ? user.kyc_status.replace('_', ' ').charAt(0).toUpperCase() + user.kyc_status.replace('_', ' ').slice(1) : 'Pending'}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setKycStatus(user.kyc_status || 'pending');
+                  setKycStatusNotes(user.kyc_review_notes || '');
+                  setKycEligibilityAmount(user.eligibility_amount ? user.eligibility_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '');
+                  setShowKYCStatusModal(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Update KYC Status
+              </button>
+            </div>
+            
+            {/* Account Status Actions */}
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Account Status</h4>
+              <div className="mb-2">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  user.account_status === 'active' ? 'bg-green-100 text-green-700' :
+                  user.account_status === 'suspended' ? 'bg-red-100 text-red-700' :
+                  user.account_status === 'inactive' ? 'bg-gray-100 text-gray-700' :
+                  'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {user.account_status ? user.account_status.charAt(0).toUpperCase() + user.account_status.slice(1) : 'Active'}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setAccountStatus(user.account_status || 'active');
+                  setShowAccountStatusModal(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Update Account Status
+              </button>
+            </div>
+            
+            {/* Eligibility Actions */}
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Eligibility Actions</h4>
+              <button
+                onClick={() => {
+                  setEligibilityAmount(user.eligibility_amount ? user.eligibility_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '');
+                  setShowEligibilityModal(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+              >
+                <DollarSign className="h-4 w-4" />
+                Update Eligibility
+              </button>
+              
+              {user.periculum_statement_key && (
+                <button
+                  onClick={handleRefreshEligibility}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh from Periculum
+                </button>
+              )}
+            </div>
+          </div>
+        </CollapsibleSection>
+
         {/* Applications */}
         <CollapsibleSection
           title={`Applications (${applications.length})`}
@@ -566,6 +729,270 @@ function MarketplaceUserDetails() {
           <InfoGrid data={statisticsInfo} />
         </CollapsibleSection>
       </div>
+
+      {/* Update Eligibility Modal */}
+      {showEligibilityModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowEligibilityModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform transition-all" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Edit User Eligibility</h3>
+                <button
+                  onClick={() => setShowEligibilityModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
+                <p className="text-sm font-medium text-gray-900">User: {user.first_name} {user.last_name}</p>
+                <p className="text-sm text-gray-600">{user.email}</p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Eligibility Amount (NGN)
+                </label>
+                <input
+                  type="text"
+                  value={eligibilityAmount}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/,/g, '');
+                    if (!isNaN(value) || value === '') {
+                      setEligibilityAmount(value.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter amount"
+                />
+                {user.eligibility_amount && (
+                  <p className="text-xs text-gray-500 mt-1">Current: ₦{user.eligibility_amount.toLocaleString()}</p>
+                )}
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowEligibilityModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateEligibility}
+                  disabled={isSaving}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSaving ? 'Saving...' : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update KYC Status Modal */}
+      {showKYCStatusModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowKYCStatusModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Update KYC Status</h3>
+                <button
+                  onClick={() => setShowKYCStatusModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-400 rounded">
+                <p className="text-sm font-medium text-gray-900">User: {user.first_name} {user.last_name}</p>
+                <p className="text-sm text-gray-600">{user.email}</p>
+                <p className="text-xs text-gray-500 mt-1">Current Status: <span className="font-medium">{user.kyc_status || 'pending'}</span></p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  KYC Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={kycStatus}
+                  onChange={(e) => setKycStatus(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Select status</option>
+                  <option value="pending">Pending</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {kycStatus === 'approved' && 'User KYC will be marked as approved'}
+                  {kycStatus === 'rejected' && 'User KYC will be marked as rejected'}
+                  {kycStatus === 'under_review' && 'User KYC will be moved to under review'}
+                  {kycStatus === 'pending' && 'User KYC will be reset to pending'}
+                </p>
+              </div>
+
+              {kycStatus === 'approved' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Eligibility Amount (NGN) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={kycEligibilityAmount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/,/g, '');
+                      if (!isNaN(value) || value === '') {
+                        setKycEligibilityAmount(value.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter eligibility amount"
+                  />
+                  {user.eligibility_amount && (
+                    <p className="text-xs text-gray-500 mt-1">Current: ₦{user.eligibility_amount.toLocaleString()}</p>
+                  )}
+                </div>
+              )}
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes {kycStatus === 'rejected' && <span className="text-red-500">*</span>}
+                  {kycStatus !== 'rejected' && <span className="text-gray-400">(Optional)</span>}
+                </label>
+                <textarea
+                  value={kycStatusNotes}
+                  onChange={(e) => setKycStatusNotes(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder={kycStatus === 'rejected' ? 'Enter reason for rejection' : 'Enter notes (optional)'}
+                  rows={4}
+                  required={kycStatus === 'rejected'}
+                />
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowKYCStatusModal(false);
+                    setKycStatus('');
+                    setKycStatusNotes('');
+                    setKycEligibilityAmount('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateKYCStatus}
+                  disabled={isSaving || !kycStatus || (kycStatus === 'rejected' && !kycStatusNotes.trim())}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSaving ? 'Updating...' : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Update Status
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Account Status Modal */}
+      {showAccountStatusModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowAccountStatusModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Update Account Status</h3>
+                <button
+                  onClick={() => setShowAccountStatusModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6 p-4 bg-indigo-50 border-l-4 border-indigo-400 rounded">
+                <p className="text-sm font-medium text-gray-900">User: {user.first_name} {user.last_name}</p>
+                <p className="text-sm text-gray-600">{user.email}</p>
+                <p className="text-xs text-gray-500 mt-1">Current Status: <span className="font-medium">{user.account_status || 'active'}</span></p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Account Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={accountStatus}
+                  onChange={(e) => setAccountStatus(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="">Select status</option>
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {accountStatus === 'suspended' && 'User will not be able to log in'}
+                  {accountStatus === 'inactive' && 'User will not be able to log in'}
+                  {accountStatus === 'pending' && 'User account is pending activation'}
+                  {accountStatus === 'active' && 'User can access all features'}
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={accountStatusNotes}
+                  onChange={(e) => setAccountStatusNotes(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Enter reason for status change"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowAccountStatusModal(false);
+                    setAccountStatus('');
+                    setAccountStatusNotes('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateAccountStatus}
+                  disabled={isSaving || !accountStatus}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSaving ? 'Updating...' : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Update Status
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
