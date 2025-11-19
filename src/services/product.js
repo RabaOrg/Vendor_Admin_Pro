@@ -45,10 +45,65 @@ export const handleCreateProduct = async (formInfo) => {
 };
 
 export const handleUpdateProduct = async (formInfo) => {
-  return axiosInstance.put(
-   `/api/admin/products/${formInfo.id}`,
-    formInfo
-  );
+  // Check if formInfo has files (images) - if so, use FormData
+  const hasFiles = formInfo.selectedDisplayImage || (formInfo.selectedImages && formInfo.selectedImages.length > 0);
+  
+  if (hasFiles) {
+    const formData = new FormData();
+    
+    // Append all product fields
+    Object.keys(formInfo).forEach(key => {
+      if (key !== 'selectedDisplayImage' && key !== 'selectedImages' && key !== 'previewImages' && key !== 'displayPreview') {
+        const value = formInfo[key];
+        if (value !== undefined && value !== null) {
+          if (typeof value === 'object' && !Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else if (Array.isArray(value)) {
+            // Handle arrays - convert to JSON string if needed
+            if (value.length > 0 && typeof value[0] === 'object') {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              value.forEach((item, index) => {
+                formData.append(`${key}[${index}]`, item);
+              });
+            }
+          } else {
+            formData.append(key, value);
+          }
+        }
+      }
+    });
+    
+    // Append display image if selected
+    if (formInfo.selectedDisplayImage) {
+      formData.append('display_image', formInfo.selectedDisplayImage);
+    }
+    
+    // Append additional images if selected
+    if (formInfo.selectedImages && formInfo.selectedImages.length > 0) {
+      formInfo.selectedImages.forEach((imageObj, index) => {
+        if (imageObj.file) {
+          formData.append('images', imageObj.file);
+        }
+      });
+    }
+    
+    return axiosInstance.put(
+      `/api/admin/products/${formInfo.id}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+  } else {
+    // No files, send as JSON
+    return axiosInstance.put(
+      `/api/admin/products/${formInfo.id}`,
+      formInfo
+    );
+  }
 };
 export const handleDeleteProduct = async (id, productId) => {
   return axiosInstance.delete(

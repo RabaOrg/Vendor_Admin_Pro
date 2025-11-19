@@ -229,7 +229,14 @@ function EditProduct() {
 
         setIsLoading(true)
         try {
-            const response = await handleUpdateProduct(product)
+            // Include selected images in the product data
+            const productData = {
+                ...product,
+                selectedDisplayImage: selectedDisplayImage,
+                selectedImages: selectedImages
+            }
+            
+            const response = await handleUpdateProduct(productData)
             if (response.status === 200 || response.status === 201) {
                 toast.success('Product updated successfully!')
                 navigate('/products')
