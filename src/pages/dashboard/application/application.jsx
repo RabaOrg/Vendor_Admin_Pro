@@ -46,13 +46,6 @@ function ApplicationList() {
   };
 
 
-  const handleViewPayment = (id) => {
-
-    setSelectedId(id);
-
-    navigate(`/application_payment/${id}`);
-
-  };
   return (
     <div className='px-6'>
       <div className="inline-block min-w-full rounded-lg overflow-hidden">
@@ -128,6 +121,9 @@ function ApplicationList() {
                 Customer&apos;s Name
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
+                Product Name
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 Amount
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
@@ -147,9 +143,6 @@ function ApplicationList() {
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
                 View Application
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-white text-left text-xs font-bold text-black uppercase tracking-wider">
-                View Payment
               </th>
             </tr>
           </thead>
@@ -185,6 +178,11 @@ function ApplicationList() {
                         {item.customer?.name || '—'}
                       </p>
                     )}
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
+                    <p className="font-medium whitespace-no-wrap text-xs">
+                      {item.product?.name || item.product_name || '—'}
+                    </p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">₦{Number(item.amount).toLocaleString()}</p>
@@ -226,17 +224,21 @@ function ApplicationList() {
                                   ? 'bg-orange-100 text-[#FFA756]'
                                   : item.status === 'downpayment_paid'
                                     ? 'bg-green-100 text-green-700'
-                                    : item.status === 'awaiting delivery'
-                                  ? 'bg-orange-100 text-[#FFA756]'
-                                  : item.status === 'processing'
-                                    ? 'bg-purple-100 text-purple-700'
-                                    : item.status === 'cancelled'
-                                      ? 'bg-red-100 text-red-600'
-                                      : item.status === 'completed'
-                                        ? 'bg-green-100 text-green-800'
-                                        : item.status === 'Rejected'
-                                          ? 'bg-red-300 text-[#EF3826]'
-                                          : 'bg-gray-200 text-gray-700'
+                                    : item.status === 'awaiting_delivery'
+                                      ? 'bg-purple-100 text-purple-700'
+                                      : item.status === 'awaiting delivery'
+                                        ? 'bg-purple-100 text-purple-700'
+                                        : item.status === 'processing'
+                                          ? 'bg-purple-100 text-purple-700'
+                                          : item.status === 'cancelled'
+                                            ? 'bg-red-100 text-red-600'
+                                            : item.status === 'withdrawn'
+                                              ? 'bg-gray-100 text-gray-600'
+                                              : item.status === 'completed'
+                                                ? 'bg-green-100 text-green-800'
+                                                : item.status === 'Rejected'
+                                                  ? 'bg-red-300 text-[#EF3826]'
+                                                  : 'bg-gray-200 text-gray-700'
                         } font-semibold`}
                     >
                       {item.status}
@@ -267,25 +269,13 @@ function ApplicationList() {
                       <FaEye className="text-gray-500" />
                     </button>
                   </td>
-                  <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewPayment(item.id);
-                      }}
-                      className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
-                      title="View Payment"
-                    >
-                      <FaEye className="text-gray-500" />
-                    </button>
-                  </td>
 
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan={11}
+                  colSpan={10}
                   className="text-center text-gray-500 text-sm py-6 border-b border-gray-200"
                 >
                   No applications found at this time.

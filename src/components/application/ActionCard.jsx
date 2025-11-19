@@ -111,17 +111,60 @@ const ActionCard = ({ action, onStatusUpdate }) => {
         <div className="mb-3">
           <h4 className="font-medium text-gray-900 mb-2">Customer Responses:</h4>
           <div className="space-y-2">
-            {action.responses.map((response, index) => (
-              <div key={index} className="bg-green-50 p-2 rounded text-sm">
-                <div className="font-medium text-green-800">{response.item_key}</div>
-                <div className="text-green-600">
-                  {response.response_type === 'document_upload' ? 'Document uploaded' : 'Data updated'}
+            {action.responses.map((response, index) => {
+              const isDocumentUpload = response.response_type === 'document_upload';
+              const responseData = response.response_data || {};
+              const downloadUrl = responseData.downloadUrl || responseData.signedUrl;
+              const filename = responseData.filename || response.item_key;
+              
+              return (
+                <div key={index} className="bg-green-50 p-3 rounded border border-green-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="font-medium text-green-800 mb-1">
+                        {response.item_key}
+                      </div>
+                      <div className="text-green-600 text-sm mb-1">
+                        {isDocumentUpload ? '📄 Document uploaded' : '✏️ Data updated'}
+                      </div>
+                      {isDocumentUpload && responseData.filename && (
+                        <div className="text-xs text-gray-600 mb-1">
+                          File: {responseData.filename}
+                          {responseData.size && (
+                            <span className="ml-2">({(responseData.size / 1024).toFixed(2)} KB)</span>
+                          )}
+                        </div>
+                      )}
+                      <div className="text-xs text-green-500">
+                        {formatDate(response.submitted_at || response.created_at, 'short')}
+                      </div>
+                    </div>
+                    {isDocumentUpload && downloadUrl && (
+                      <div className="ml-3">
+                        <a
+                          href={downloadUrl}
+                          download={filename}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors"
+                          title="Download document"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Download
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  {isDocumentUpload && !downloadUrl && (
+                    <div className="text-xs text-red-600 mt-1">
+                      ⚠️ Download URL not available
+                    </div>
+                  )}
                 </div>
-                <div className="text-xs text-green-500">
-                  {formatDate(response.submitted_at, 'short')}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

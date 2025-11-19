@@ -281,6 +281,7 @@ function SingleApplication() {
     created_at,
     updated_at,
     Customer,
+    User: UserData, // For marketplace applications (backend may include this as fallback) - renamed to avoid conflict with icon import
     Vendor,
     Product,
     application_data,
@@ -313,29 +314,47 @@ function SingleApplication() {
   };
 
   // Prepare data for different sections
+  // Backend maps User data to Customer format for marketplace applications, so Customer should contain the data
+  // Use UserData object and customer_details as fallback for additional info
+  const customerSource = Customer || (UserData ? {
+    full_name: `${UserData.first_name || ''} ${UserData.last_name || ''}`.trim(),
+    email: UserData.email,
+    phone_number: UserData.phone_number,
+    bvn: UserData.bvn,
+    address: UserData.address,
+    state: UserData.state,
+    lga: UserData.lga,
+    dob: UserData.dob,
+    age: UserData.dob ? Math.floor((new Date() - new Date(UserData.dob)) / (365.25 * 24 * 60 * 60 * 1000)) : null,
+    customer_status: 'active',
+    created_at: UserData.created_at
+  } : null);
+  
   const customerInfo = [
-    { key: 'fullName', label: 'Full Name', value: Customer?.full_name },
-    { key: 'email', label: 'Email', value: Customer?.email },
-    { key: 'phone', label: 'Phone Number', value: Customer?.phone_number },
-    { key: 'bvn', label: 'BVN', value: Customer?.bvn },
-    { key: 'age', label: 'Age', value: Customer?.age },
-    { key: 'dob', label: 'Date of Birth', value: Customer?.dob ? formatDate(Customer.dob) : null },
-    { key: 'address', label: 'Address', value: Customer?.address },
-    { key: 'state', label: 'State', value: Customer?.state },
-    { key: 'lga', label: 'LGA', value: Customer?.lga },
-    { key: 'customerStatus', label: 'Customer Status', value: Customer?.customer_status },
-    { key: 'createdAt', label: 'Customer Since', value: Customer?.created_at ? formatDate(Customer.created_at) : null },
+    { key: 'fullName', label: 'Full Name', value: customerSource?.full_name || customer_details?.name || 'N/A' },
+    { key: 'email', label: 'Email', value: customerSource?.email || customer_details?.email || 'N/A' },
+    { key: 'phone', label: 'Phone Number', value: customerSource?.phone_number || customer_details?.phone || 'N/A' },
+    { key: 'bvn', label: 'BVN', value: customerSource?.bvn || customer_details?.bvn || 'N/A' },
+    { key: 'age', label: 'Age', value: customerSource?.age || 'N/A' },
+    { key: 'dob', label: 'Date of Birth', value: customerSource?.dob ? formatDate(customerSource.dob) : (customer_details?.dob ? formatDate(customer_details.dob) : 'N/A') },
+    { key: 'address', label: 'Address', value: customerSource?.address || customer_details?.address || 'N/A' },
+    { key: 'state', label: 'State', value: customerSource?.state || customer_details?.state || 'N/A' },
+    { key: 'lga', label: 'LGA', value: customerSource?.lga || customer_details?.lga || 'N/A' },
+    { key: 'customerStatus', label: 'Customer Status', value: customerSource?.customer_status || 'active' },
+    { key: 'createdAt', label: 'Customer Since', value: customerSource?.created_at ? formatDate(customerSource.created_at) : (customer_details?.created_at ? formatDate(customer_details.created_at) : 'N/A') },
   ];
 
+  // Business info can come from Customer object (mapped from UserBusiness) or customer_details.business_info
+  const businessInfoSource = customer_details?.business_info || {};
   const businessInfo = [
-    { key: 'businessName', label: 'Business Name', value: Customer?.business_name },
-    { key: 'businessStreet', label: 'Business Street', value: Customer?.business_street },
-    { key: 'businessCity', label: 'Business City', value: Customer?.business_city },
-    { key: 'businessLandmark', label: 'Business Landmark', value: Customer?.business_landmark },
-    { key: 'businessLga', label: 'Business LGA', value: Customer?.business_lga },
-    { key: 'businessState', label: 'Business State', value: Customer?.business_state },
-    { key: 'businessTenure', label: 'Business Tenure', value: Customer?.business_tenure },
-    { key: 'cacDocument', label: 'CAC Document', value: Customer?.cac_registration_document ? 'Uploaded' : 'Not Uploaded' },
+    { key: 'businessName', label: 'Business Name', value: customerSource?.business_name || businessInfoSource?.business_name || 'N/A' },
+    { key: 'businessStreet', label: 'Business Street', value: customerSource?.business_street || businessInfoSource?.business_street || 'N/A' },
+    { key: 'businessCity', label: 'Business City', value: customerSource?.business_city || businessInfoSource?.business_city || 'N/A' },
+    { key: 'businessLandmark', label: 'Business Landmark', value: customerSource?.business_landmark || businessInfoSource?.business_landmark || 'N/A' },
+    { key: 'businessLga', label: 'Business LGA', value: customerSource?.business_lga || businessInfoSource?.business_lga || 'N/A' },
+    { key: 'businessState', label: 'Business State', value: customerSource?.business_state || businessInfoSource?.business_state || 'N/A' },
+    { key: 'businessTenure', label: 'Business Tenure', value: customerSource?.business_tenure || businessInfoSource?.business_tenure || 'N/A' },
+    { key: 'cacDocument', label: 'CAC Document', value: (customerSource?.cac_registration_document || businessInfoSource?.has_cac_document) ? 'Uploaded' : 'Not Uploaded' },
   ];
 
   const vendorInfo = [
@@ -441,7 +460,7 @@ function SingleApplication() {
             Application Details
           </h1>
           <p className="text-sm text-gray-600 mt-1">
-            Reference: {reference} • {Customer?.full_name}
+            Reference: {reference} • {customerSource?.full_name || 'N/A'}
           </p>
               </div>
         <div className="flex items-center gap-3">
@@ -990,7 +1009,11 @@ function SingleApplication() {
                 <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-yellow-800 mb-2">No Repayment Schedule Found</h3>
                 <p className="text-sm text-yellow-700 mb-4">
-                  The repayment schedule has not been generated for this application yet. This usually happens automatically when the mandate is authorized.
+                  {status === 'downpayment_paid' || status === 'down_payment_completed' || status === 'awaiting_delivery'
+                    ? 'Repayment schedule will be available once the repayment setup is complete. This usually happens automatically when the mandate is authorized.'
+                    : status === 'active' || status === 'completed'
+                    ? 'No repayment schedule found for this application. Please contact support if this is unexpected.'
+                    : 'Repayment schedule will be generated after down payment is completed.'}
                 </p>
                 {mandates && mandates.length > 0 && mandates.some(m => m.status === 'authorized') && (
                   <button
@@ -1154,6 +1177,7 @@ function SingleApplication() {
               <option value="awaiting_downpayment">Awaiting Down Payment</option>
               <option value="downpayment_paid">Down Payment Paid</option>
               <option value="awaiting_delivery">Awaiting Delivery</option>
+              <option value="active">Active</option>
               <option value="processing">Processing</option>
             </select>
           </div>

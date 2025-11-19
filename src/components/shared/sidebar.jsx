@@ -180,6 +180,13 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
                                     >
                                         SMS Notification
                                     </li>
+                                    <hr className="my-1 border-gray-300 w-5/6" />
+                                    <li
+                                        className="hover:text-green-500 cursor-pointer"
+                                        onClick={() => handleItemClick("Marketplace Settings", "/marketplace-settings")}
+                                    >
+                                        Marketplace Settings
+                                    </li>
                                 </ul>
                             )}
                         </li>

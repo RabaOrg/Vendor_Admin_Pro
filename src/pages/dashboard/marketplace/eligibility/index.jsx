@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FaSave, FaEdit, FaEye, FaChartBar, FaCheck, FaSearch, FaUpload, FaTimes, FaSync } from 'react-icons/fa';
+import { FaSave, FaEdit, FaEye, FaChartBar, FaCheck, FaSearch, FaUpload, FaTimes, FaSync, FaExclamationTriangle, FaRedo } from 'react-icons/fa';
 import axiosInstance from '../../../../../store/axiosInstance';
 
 function MarketplaceEligibility() {
@@ -7,6 +7,7 @@ function MarketplaceEligibility() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
     
@@ -33,6 +34,8 @@ function MarketplaceEligibility() {
     const [saving, setSaving] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [refreshingUserId, setRefreshingUserId] = useState(null);
+    const [stuckUsers, setStuckUsers] = useState([]);
+    const [showStuckUsers, setShowStuckUsers] = useState(false);
 
     const itemsPerPage = 20;
 
@@ -52,6 +55,7 @@ function MarketplaceEligibility() {
                 setUsers(response.data.data.users || []);
                 const pagination = response.data.data.pagination || {};
                 setTotalPages(pagination.totalPages || 1);
+                setTotalItems(pagination.totalItems || 0);
             }
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -94,10 +98,23 @@ function MarketplaceEligibility() {
         }
     };
 
+    const fetchStuckUsers = async () => {
+        try {
+            const response = await axiosInstance.get('/api/admin/user-eligibility/stuck-processing?hours=4');
+            if (response.data.data) {
+                setStuckUsers(response.data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching stuck users:', error);
+            setStuckUsers([]);
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
         fetchEligibilityStats();
         fetchEligibilitySettings();
+        fetchStuckUsers();
     }, [fetchUsers]);
 
     const handleUpdateUserEligibility = async () => {
@@ -341,6 +358,101 @@ function MarketplaceEligibility() {
                     </div>
                 </div>
 
+                {/* Stuck Processing Users Alert */}
+                {stuckUsers.length > 0 && (
+                    <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <FaExclamationTriangle className="text-yellow-600 text-xl" />
+                                <div>
+                                    <h3 className="font-semibold text-yellow-900">
+                                        {stuckUsers.length} User{stuckUsers.length !== 1 ? 's' : ''} Stuck in Processing
+                                    </h3>
+                                    <p className="text-sm text-yellow-700">
+                                        These users have been processing for more than 4 hours. They may need to re-upload their bank statement.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowStuckUsers(!showStuckUsers)}
+                                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
+                            >
+                                {showStuckUsers ? 'Hide' : 'View Details'}
+                            </button>
+                        </div>
+                        
+                        {showStuckUsers && (
+                            <div className="mt-4 bg-white rounded-lg border border-yellow-200 overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-yellow-50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">User</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Contact</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Hours Stuck</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Processing Since</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {stuckUsers.map((user) => (
+                                                <tr key={user.id} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-3 text-sm">
+                                                        <div className="font-medium text-gray-900">{user.name}</div>
+                                                        <div className="text-gray-500">ID: {user.id}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                                        <div>{user.email}</div>
+                                                        <div>{user.phone_number}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm">
+                                                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                                                            {user.hours_stuck} hours
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                                        {user.processing_since ? new Date(user.processing_since).toLocaleString() : 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm">
+                                                        <button
+                                                            onClick={async () => {
+                                                                setRefreshingUserId(user.id);
+                                                                try {
+                                                                    await axiosInstance.post(`/api/admin/user-eligibility/${user.id}/eligibility/refresh`);
+                                                                    await fetchStuckUsers();
+                                                                    await fetchUsers();
+                                                                } catch (error) {
+                                                                    console.error('Error refreshing:', error);
+                                                                } finally {
+                                                                    setRefreshingUserId(null);
+                                                                }
+                                                            }}
+                                                            disabled={refreshingUserId === user.id}
+                                                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-xs flex items-center gap-1"
+                                                        >
+                                                            {refreshingUserId === user.id ? (
+                                                                <>
+                                                                    <FaSync className="animate-spin" />
+                                                                    Refreshing...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <FaSync />
+                                                                    Refresh
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Search */}
                 <div className="mb-6">
                     <div className="relative">
@@ -480,6 +592,27 @@ function MarketplaceEligibility() {
                                                         <FaSync className={refreshing && refreshingUserId === user.id ? 'animate-spin' : ''} />
                                                         Refresh
                                                     </button>
+                                                    {(user.eligibility_status === 'pending' || !user.eligibility_status) && (
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (window.confirm('This will reset the user\'s bank statement and allow them to re-upload. Continue?')) {
+                                                                    try {
+                                                                        await axiosInstance.post(`/api/admin/user-eligibility/${user.id}/reset-bank-statement`);
+                                                                        await fetchUsers();
+                                                                        alert('Bank statement reset successfully. User can now re-upload their bank statement.');
+                                                                    } catch (error) {
+                                                                        console.error('Error resetting bank statement:', error);
+                                                                        alert('Failed to reset bank statement. Please try again.');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="text-orange-600 hover:text-orange-900 flex items-center gap-1 transition-colors"
+                                                            title="Reset bank statement to allow re-upload"
+                                                        >
+                                                            <FaRedo />
+                                                            Re-upload
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -511,8 +644,9 @@ function MarketplaceEligibility() {
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-sm text-gray-700">
-                                        Page <span className="font-medium">{currentPage}</span> of{' '}
+                                        Showing page <span className="font-medium">{currentPage}</span> of{' '}
                                         <span className="font-medium">{totalPages}</span>
+                                        {' '}({users.length} of {totalItems} users)
                                     </p>
                                 </div>
                                 <div>
@@ -520,14 +654,41 @@ function MarketplaceEligibility() {
                                         <button
                                             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                             disabled={currentPage === 1}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Previous
                                         </button>
+                                        {/* Page Numbers */}
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+                                            
+                                            return (
+                                                <button
+                                                    key={pageNum}
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                                        currentPage === pageNum
+                                                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
                                         <button
                                             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                             disabled={currentPage === totalPages}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Next
                                         </button>
