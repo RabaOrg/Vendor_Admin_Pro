@@ -62,6 +62,7 @@ import MarketplaceKYC from "../pages/dashboard/marketplace/kyc";
 import MarketplaceEligibility from "../pages/dashboard/marketplace/eligibility";
 import MarketplaceRepaymentPlans from "../pages/dashboard/marketplace/repayment-plans";
 import MarketplaceUserDetails from "../pages/dashboard/marketplace-user/view-user";
+import MarketplaceSettings from "../pages/dashboard/marketplace-settings";
 
 
 
@@ -246,6 +247,11 @@ export const router = createBrowserRouter([
             {
                 path: "/notification",
                 element: <Notification />
+
+            },
+            {
+                path: "/marketplace-settings",
+                element: <MarketplaceSettings />
 
             },
             {
