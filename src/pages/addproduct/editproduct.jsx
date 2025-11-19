@@ -388,7 +388,19 @@ function EditProduct() {
 
                                 {/* Status Options */}
                                 <div className="lg:col-span-2">
-                                    <div className="flex items-center space-x-6">
+                                    <div className="flex items-center space-x-6 flex-wrap gap-4">
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="featured"
+                                                checked={product.featured}
+                                                onChange={handleInput}
+                                                className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+                                            />
+                                            <label className="ml-2 block text-sm text-gray-900">
+                                                Featured
+                                            </label>
+                                        </div>
                                         <div className="flex items-center">
                                             <input
                                                 type="checkbox"

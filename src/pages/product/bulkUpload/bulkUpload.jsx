@@ -29,21 +29,11 @@ export default function BulkProductUpload() {
 
   const [productEditBulk, setProductEditBulk] = useState([])
   const [imageFileMap, setImageFileMap] = useState({});
-  const [selectedIds, setSelectedIds] = useState([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
-  const [showImageModal, setShowImageModal] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
   const [excelEditFile, setExcelEditFile] = useState(null);
-  const [imageFiles, setImageFiles] = useState([]);
-  const [previews, setPreviews] = useState([]);
-  const [uploadingForId, setUploadingForId] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const allSelected = selectedIds.length === products.length;
-  // console.log(getBulkProduct)
-  const toggleSelect = (id) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  };
   const handleSubmitAllImages = async () => {
     const entries = Object.entries(imageFileMap);
     if (entries.length === 0) {
@@ -103,10 +93,6 @@ export default function BulkProductUpload() {
     }
   };
 
-  const toggleSelectAll = () => {
-    setSelectedIds(allSelected ? [] : products.map(p => p.id));
-  };
-
   const formatPrice = (value) => value.toLocaleString();
 
   const handleExcelChange = (e) => {
@@ -116,11 +102,6 @@ export default function BulkProductUpload() {
     setExcelEditFile(e.target.files[0]);
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    setImageFiles(files);
-    setPreviews(files.map(file => URL.createObjectURL(file)));
-  };
   const handleBulkDownload = async () => {
 
     try {
@@ -220,59 +201,6 @@ export default function BulkProductUpload() {
     setImageFileMap(prev => ({ ...prev, [productId]: file }));
   };
 
-  const uploadImages = async () => {
-    if (imageFiles.length === 0) {
-      toast.error("No images selected.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      for (const file of imageFiles) {
-        const reader = new FileReader();
-
-        await new Promise((resolve, reject) => {
-          reader.onload = async () => {
-            const base64 = reader.result.split(",")[1];
-            try {
-              const response = await handleProductBulkImages({
-                product_id: uploadingForId,
-                attachment_type: 'products',
-                is_display_image: true,
-                image: base64,
-              });
-              console.log(response.data.successful)
-              resolve();
-            } catch (err) {
-              reject(err);
-            }
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      }
-
-      toast.success('Images uploaded successfully!');
-      setShowImageModal(false);
-      setImageFiles([]);
-      setPreviews([]);
-    } catch (error) {
-      console.error(error);
-      toast.error('Error uploading images.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUploadImageClick = () => {
-    if (selectedIds.length === 1) {
-      setUploadingForId(selectedIds[0]);
-      setShowImageModal(true);
-    } else {
-      toast.warn('Please select exactly one product to upload an image.');
-    }
-  };
 
   return (
     <div className="p-6">
@@ -290,27 +218,29 @@ export default function BulkProductUpload() {
             >
               Download Template
             </button>
-            <button className="bg-[#0f5D30] hover:bg-green-900 text-white text-sm px-4 py-2 rounded" onClick={handleSubmitAllImages} disabled={loading || Object.keys(imageFileMap).length === 0}>
-              {loading ? "Uploading..." : "Submit All Images"}
-            </button>
+            {(productBulk.length > 0 || productEditBulk.length > 0) && (
+              <button className="bg-[#0f5D30] hover:bg-green-900 text-white text-sm px-4 py-2 rounded" onClick={handleSubmitAllImages} disabled={loading || Object.keys(imageFileMap).length === 0}>
+                {loading ? "Uploading..." : "Submit All Images"}
+              </button>
+            )}
 
           </div>
         </div>
 
 
-        <div className="flex items-center p-4 space-x-4">
-          <span className="font-semibold">Bulk Actions:</span>
-          <div className="flex space-x-2">
-            <button onClick={handleUploadImageClick} className="border border-green-500 text-green-500 text-sm hover:bg-green-50 rounded p-1 flex gap-2 pt-2">
-              <BiUpload className="text-sm" />Upload Images
-            </button>
-            <button onClick={() => setShowBulkEditModal(true)} className="border border-blue-500 text-blue-500 text-sm hover:bg-blue-50 rounded p-1 flex gap-2 pt-2">
-              <BiDownload className="text-sm" />Upload Edited Product
-            </button>
-
+        {(productBulk.length > 0 || productEditBulk.length > 0) && (
+          <div className="flex items-center p-4 space-x-4 bg-gray-50 border-b">
+            <span className="font-semibold">Bulk Actions:</span>
+            <div className="flex space-x-2">
+              <button onClick={() => setShowBulkEditModal(true)} className="border border-blue-500 text-blue-500 text-sm hover:bg-blue-50 rounded p-1 flex gap-2 pt-2">
+                <BiDownload className="text-sm" />Upload Edited Product
+              </button>
+            </div>
+            <div className="ml-auto text-sm text-gray-600">
+              <span className="font-medium">Tip:</span> Use the upload buttons in the table to select images for each product, then click "Submit All Images" above to upload them all at once.
+            </div>
           </div>
-
-        </div>
+        )}
 
 
 
@@ -455,7 +385,33 @@ export default function BulkProductUpload() {
             Make sure your file matches the template format.
           </p>
           
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
+          <div 
+            className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+              const files = Array.from(e.dataTransfer.files);
+              const excelFile = files.find(file => 
+                file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+              );
+              if (excelFile) {
+                setExcelFile(excelFile);
+              } else {
+                toast.error('Please drop an Excel file (.xlsx or .xls)');
+              }
+            }}
+          >
             <label className="flex flex-col items-center cursor-pointer">
               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -525,7 +481,33 @@ export default function BulkProductUpload() {
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
+          <div 
+            className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+              const files = Array.from(e.dataTransfer.files);
+              const excelFile = files.find(file => 
+                file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+              );
+              if (excelFile) {
+                setExcelEditFile(excelFile);
+              } else {
+                toast.error('Please drop an Excel file (.xlsx or .xls)');
+              }
+            }}
+          >
             <label className="flex flex-col items-center cursor-pointer">
               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -575,47 +557,6 @@ export default function BulkProductUpload() {
       </Modal>
 
 
-      {showImageModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-semibold mb-4">Upload Product Images</h2>
-
-            <div className="space-y-4">
-              <div className="relative flex flex-col items-center justify-center border border-dashed border-gray-400 rounded-lg p-6 hover:bg-gray-50 transition">
-                <label className="flex flex-col items-center cursor-pointer space-y-2">
-                  <BiUpload size={32} className="text-gray-400" />
-                  <span className="text-sm text-gray-600">Click to Upload</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>
-
-              {previews.length > 0 && (
-                <div className="grid grid-cols-3 gap-4">
-                  {previews.map((src, idx) => (
-                    <img key={idx} src={src} alt={`preview-${idx}`} className="w-24 h-24 object-cover rounded-lg border" />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-6 flex justify-end space-x-4">
-              <Button label="Cancel" variant="outline" onClick={() => setShowImageModal(false)} />
-              <Button
-                onClick={uploadImages}
-                label={loading ? "Uploading..." : "Upload"}
-                disabled={loading}
-                loading={loading}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {showErrorModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
