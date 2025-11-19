@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { FaSearch, FaEdit, FaEye, FaTh, FaList, FaTrash, FaFilter, FaArchive, FaEllipsisV } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaEye, FaTh, FaList, FaTrash, FaFilter, FaArchive, FaEllipsisV, FaStar } from 'react-icons/fa';
+import { BiUpload } from 'react-icons/bi';
 import axiosInstance from '../../../store/axiosInstance';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/shared/button';
 import { toast } from 'react-toastify';
 import { saveAs } from 'file-saver';
-import { handleGetCategories } from '../../services/product';
+import { handleGetCategories, handleProductBulkImages } from '../../services/product';
 
 function Product() {
     const [currentPage, setCurrentPage] = useState(1);
@@ -22,6 +23,9 @@ function Product() {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [categories, setCategories] = useState([]);
     const [actionsMenu, setActionsMenu] = useState(null);
+    const [showBulkImageModal, setShowBulkImageModal] = useState(false);
+    const [bulkImageMap, setBulkImageMap] = useState({}); // { productId: File }
+    const [isUploadingImages, setIsUploadingImages] = useState(false);
 
     const navigate = useNavigate();
 
@@ -159,6 +163,75 @@ function Product() {
         }
     };
 
+    const handleBulkImageChange = (productId, file) => {
+        if (!file) return;
+        setBulkImageMap(prev => ({ ...prev, [productId]: file }));
+    };
+
+    const handleBulkImageUpload = async () => {
+        const entries = Object.entries(bulkImageMap);
+        if (entries.length === 0) {
+            toast.warn("Please select images for at least one product.");
+            return;
+        }
+
+        try {
+            setIsUploadingImages(true);
+
+            // Convert files to base64
+            const imageUploadPromises = entries.map(([productId, file]) => {
+                return new Promise((resolve, reject) => {
+                    if (!file) return resolve(null);
+
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64 = reader.result.split(',')[1];
+                        resolve({
+                            product_id: parseInt(productId),
+                            image: base64,
+                            is_display_image: true
+                        });
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            const imageDataArray = (await Promise.all(imageUploadPromises)).filter(Boolean);
+
+            if (imageDataArray.length === 0) {
+                toast.warn("No valid images to upload.");
+                return;
+            }
+
+            // Upload images
+            const response = await handleProductBulkImages({ products: imageDataArray });
+            const successful = response?.data?.data?.successful || [];
+            const failed = response?.data?.data?.failed || [];
+
+            if (successful.length > 0) {
+                toast.success(`Successfully uploaded ${successful.length} image(s).`);
+            }
+            if (failed.length > 0) {
+                toast.error(`Failed to upload ${failed.length} image(s).`);
+            }
+
+            // Refresh products
+            const updatedResponse = await axiosInstance.get(`/api/admin/products?page=${currentPage}&perPage=${itemsPerPage}`);
+            setAllProducts(updatedResponse.data.data || []);
+
+            // Reset
+            setBulkImageMap({});
+            setShowBulkImageModal(false);
+            setSelectedProducts([]);
+        } catch (error) {
+            console.error('Error uploading images:', error);
+            toast.error('Failed to upload images. Please try again.');
+        } finally {
+            setIsUploadingImages(false);
+        }
+    };
+
     const handleDownloadTemplate = async () => {
         try {
             toast.info('Preparing download...');
@@ -212,14 +285,23 @@ function Product() {
                         </div>
                         
                         {selectedProducts.length > 0 && (
-                            <Button
-                                label={`Delete (${selectedProducts.length})`}
-                                variant="solid"
-                                size="md"
-                                className="bg-red-600 hover:bg-red-700 text-white"
-                                onClick={handleBulkDelete}
-                                loading={isDeleting}
-                            />
+                            <>
+                                <Button
+                                    label={`Upload Images (${selectedProducts.length})`}
+                                    variant="solid"
+                                    size="md"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    onClick={() => setShowBulkImageModal(true)}
+                                />
+                                <Button
+                                    label={`Delete (${selectedProducts.length})`}
+                                    variant="solid"
+                                    size="md"
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                    onClick={handleBulkDelete}
+                                    loading={isDeleting}
+                                />
+                            </>
                         )}
                         
                         <Link to="/addproduct">
@@ -382,7 +464,15 @@ function Product() {
                                                 />
                                             </td>
                                             <td className="px-4 py-4">
-                                                <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                                                    {item.featured && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">
+                                                            <FaStar className="text-yellow-600" />
+                                                            Featured
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {item.Category?.name || item.category || 'N/A'}
@@ -425,7 +515,8 @@ function Product() {
                                                                             await axiosInstance.put(`/api/admin/products/${item.id}`, { is_archived: true });
                                                                             setAllProducts((prev) => prev.map(p => p.id === item.id ? { ...p, is_archived: true } : p));
                                                                             setActionsMenu(null);
-                                                                        } catch (err) {
+                                                                        } catch (error) {
+                                                                            console.error('Error updating product:', error);
                                                                             alert('Update failed');
                                                                         }
                                                                     }}
@@ -441,7 +532,8 @@ function Product() {
                                                                             await axiosInstance.put(`/api/admin/products/${item.id}`, { is_archived: false });
                                                                             setAllProducts((prev) => prev.map(p => p.id === item.id ? { ...p, is_archived: false } : p));
                                                                             setActionsMenu(null);
-                                                                        } catch (err) {
+                                                                        } catch (error) {
+                                                                            console.error('Error updating product:', error);
                                                                             alert('Update failed');
                                                                         }
                                                                     }}
@@ -508,7 +600,15 @@ function Product() {
                                         className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                                     />
                                 </div>
-                                <div className="h-48 bg-gray-100 flex items-center justify-center">
+                                <div className="h-48 bg-gray-100 flex items-center justify-center relative">
+                                    {item.featured && (
+                                        <div className="absolute top-2 right-2 z-10">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300 shadow-sm">
+                                                <FaStar className="text-yellow-600" />
+                                                Featured
+                                            </span>
+                                        </div>
+                                    )}
                                     {item.display_image || item.display_attachment_url?.url ? (
                                         <img 
                                             src={item.display_image || item.display_attachment_url.url} 
@@ -523,7 +623,9 @@ function Product() {
                                     )}
                                 </div>
                                 <div className="p-4">
-                                    <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">{item.name}</h3>
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                        <h3 className="font-semibold text-lg text-gray-900 line-clamp-2 flex-1">{item.name}</h3>
+                                    </div>
                                     <p className="text-sm text-gray-600 mb-2">{item.Category?.name || item.category || 'N/A'}</p>
                                     <p className="text-lg font-bold text-green-600 mb-3">
                                         ₦{parseFloat(item.price || 0).toLocaleString()}
@@ -586,6 +688,104 @@ function Product() {
                     Next
                 </button>
             </div>
+
+            {/* Bulk Image Upload Modal */}
+            {showBulkImageModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-semibold">Bulk Upload Display Images</h2>
+                            <button
+                                onClick={() => {
+                                    setShowBulkImageModal(false);
+                                    setBulkImageMap({});
+                                }}
+                                className="text-gray-500 hover:text-gray-700 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-4">
+                            Select display images for {selectedProducts.length} selected product(s). You can upload images for all or some of them.
+                        </p>
+
+                        <div className="space-y-4 mb-6">
+                            {selectedProducts.map(productId => {
+                                const product = filteredProducts.find(p => p.id === productId);
+                                if (!product) return null;
+                                
+                                const selectedFile = bulkImageMap[productId];
+                                
+                                return (
+                                    <div key={productId} className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex-1">
+                                                <h3 className="font-medium text-gray-900">{product.name}</h3>
+                                                <p className="text-sm text-gray-500">ID: {product.id}</p>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                {selectedFile ? (
+                                                    <div className="flex items-center gap-3">
+                                                        <img
+                                                            src={URL.createObjectURL(selectedFile)}
+                                                            alt="Preview"
+                                                            className="w-20 h-20 object-cover rounded-lg border"
+                                                        />
+                                                        <button
+                                                            onClick={() => {
+                                                                setBulkImageMap(prev => {
+                                                                    const newMap = { ...prev };
+                                                                    delete newMap[productId];
+                                                                    return newMap;
+                                                                });
+                                                            }}
+                                                            className="text-red-600 hover:text-red-700 text-sm"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors cursor-pointer">
+                                                        <BiUpload className="text-2xl text-gray-400 mb-2" />
+                                                        <span className="text-sm text-gray-600">Upload Image</span>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => handleBulkImageChange(productId, e.target.files[0])}
+                                                        />
+                                                    </label>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => {
+                                    setShowBulkImageModal(false);
+                                    setBulkImageMap({});
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <Button
+                                label={isUploadingImages ? "Uploading..." : `Upload ${Object.keys(bulkImageMap).length} Image(s)`}
+                                variant="solid"
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={handleBulkImageUpload}
+                                disabled={isUploadingImages || Object.keys(bulkImageMap).length === 0}
+                                loading={isUploadingImages}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
