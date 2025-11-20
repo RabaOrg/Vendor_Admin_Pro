@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Bell, Send, Trash, Plus, Upload } from "lucide-react";
 import { useFetchGetNotification, useFetchGetNotificationSettings } from '../../../hooks/queries/notification';
 
-import { handleAddNotification, handleDeleteNotification, handleAddBulkNotification } from '../../../services/notification';
+import { handleAddNotification, handleDeleteNotification, handleAddBulkNotification, handleUpdateNotificationType } from '../../../services/notification';
 import { toast } from 'react-toastify';
 import { useQueryClient } from "@tanstack/react-query";
 import Button from '../../../components/shared/button';
@@ -70,6 +70,22 @@ function Notification() {
       toast.error("Something went wrong while adding bulk emails.");
     } finally {
       setIsLoadings(false);
+    }
+  };
+
+  const handleToggleNotificationType = async (notificationType, currentEnabled) => {
+    try {
+      const response = await handleUpdateNotificationType({
+        notification_type: notificationType,
+        enabled: !currentEnabled
+      });
+      if (response) {
+        toast.success("Notification setting updated successfully");
+        queryClient.invalidateQueries(["notificationsettings"]);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update notification setting");
     }
   };
 
@@ -161,9 +177,8 @@ function Notification() {
               <input
                 type="checkbox"
                 checked={notif.enabled}
-                onChange={() => { }}
-                disabled
-                className="w-5 h-5 mt-1 accent-blue-600"
+                onChange={() => handleToggleNotificationType(notif.type, notif.enabled)}
+                className="w-5 h-5 mt-1 accent-blue-600 cursor-pointer"
               />
             </li>
           ))}
