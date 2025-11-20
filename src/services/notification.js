@@ -26,6 +26,13 @@ export const handleGetSettingNotification = async () => {
     
     return data.data
 }
+
+export const handleUpdateNotificationType = async (formInfo) => {
+  return axiosInstance.put(
+   "/api/admin/notifications/settings/type",
+    formInfo
+  );
+};
 export const handleDeleteNotification = async (email) => {
   return axiosInstance.delete(
    `/api/admin/notifications/emails/${email}`
