@@ -4,6 +4,7 @@ import { FaEdit, FaArrowLeft, FaImage, FaTrash, FaPlus, FaMinus } from 'react-ic
 import Button from '../../../components/shared/button'
 import { useFetchSingleProduct } from '../../../hooks/queries/product'
 import { handleGetSingleProduct, handleGetCategories } from '../../../services/product'
+import { handleGetSingleVendor } from '../../../services/loans'
 import axiosInstance from '../../../../store/axiosInstance'
 
 function ViewProductDetails() {
@@ -11,6 +12,7 @@ function ViewProductDetails() {
     const navigate = useNavigate()
     const [product, setProduct] = useState(null)
     const [categories, setCategories] = useState([])
+    const [vendor, setVendor] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     
@@ -23,7 +25,24 @@ function ViewProductDetails() {
                 
                 // Fetch product details
                 const productResponse = await axiosInstance.get(`/api/admin/products/${id}`)
-                setProduct(productResponse.data.data)
+                const productData = productResponse.data.data
+                setProduct(productData)
+                
+                // Fetch vendor if product has vendor_id or vendor object
+                const vendorId = productData.vendor?.id || productData.vendor_id;
+                if (vendorId) {
+                    // If vendor object is already in response, use it; otherwise fetch
+                    if (productData.vendor) {
+                        setVendor(productData.vendor)
+                    } else {
+                        try {
+                            const vendorData = await handleGetSingleVendor(vendorId)
+                            setVendor(vendorData)
+                        } catch (error) {
+                            console.error('Error fetching vendor:', error)
+                        }
+                    }
+                }
                 
                 // Fetch categories
                 const categoriesData = await handleGetCategories()
@@ -54,6 +73,7 @@ function ViewProductDetails() {
 
     const formatPrice = (price) => {
         if (!price) return 'N/A'
+        // Price is already in Naira (no conversion needed)
         return `₦${parseFloat(price).toLocaleString()}`
     }
 
@@ -174,6 +194,15 @@ function ViewProductDetails() {
                                             {product.shipping_days_min && product.shipping_days_max 
                                                 ? `${product.shipping_days_min} - ${product.shipping_days_max} days`
                                                 : 'N/A'
+                                            }
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Dealer/Vendor</label>
+                                        <p className="text-gray-900">
+                                            {vendor 
+                                                ? (vendor.name || vendor.business_name || `${vendor.first_name || ''} ${vendor.last_name || ''}`.trim() || 'Unknown Vendor')
+                                                : 'Admin Managed'
                                             }
                                         </p>
                                     </div>

@@ -14,8 +14,6 @@ function Addproduct() {
     const [selectedDisplayImage, setSelectedDisplayImage] = useState(null)
     const [previewImages, setPreviewImages] = useState([])
     const [displayPreview, setDisplayPreview] = useState(null)
-    const [showVendorModal, setShowVendorModal] = useState(false) // Only show when requested
-    const [selectedVendorId, setSelectedVendorId] = useState('')
     const navigate = useNavigate()
     const { data: repaymentPlan } = useFetchRepaymentPlans()
     const { data: vendorData } = useFetchVendorData({ page: 1, limit: 100 })
@@ -64,18 +62,6 @@ function Addproduct() {
         fetchData()
     }, [])
 
-    // Show vendor selection modal once on mount (only on first visit in this session)
-    useEffect(() => {
-        // Check if modal has been shown before in this session
-        const hasSeenModal = sessionStorage.getItem('vendorModalShown')
-        
-        if (!hasSeenModal) {
-            // Small delay to ensure page is rendered
-            setTimeout(() => {
-                setShowVendorModal(true)
-            }, 100)
-        }
-    }, []) // Only run once on mount
     
     // Set repayment plans when data is loaded
     useEffect(() => {
@@ -93,12 +79,35 @@ function Addproduct() {
         }
     }, [repaymentPlan])
 
+    // Format number with thousand separators
+    const formatNumberWithCommas = (value) => {
+        // Remove all non-digit characters
+        const numericValue = value.replace(/\D/g, '')
+        // Add thousand separators
+        return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    }
+
+    // Parse formatted number back to numeric value
+    const parseFormattedNumber = (value) => {
+        return value.replace(/,/g, '')
+    }
+
     const handleInput = (e) => {
         const { name, value, type, checked } = e.target
-        setProduct(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }))
+        
+        // Special handling for price field - format with commas
+        if (name === 'price' && type !== 'checkbox') {
+            const formattedValue = formatNumberWithCommas(value)
+            setProduct(prev => ({
+                ...prev,
+                [name]: formattedValue
+            }))
+        } else {
+            setProduct(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }))
+        }
     }
 
     const handleNestedInput = (e) => {
@@ -203,20 +212,20 @@ function Addproduct() {
             // Append basic product fields
             formData.append('name', product.name)
             formData.append('description', product.description)
-            formData.append('price', product.price)
-            formData.append('category_id', product.category_id)
+            // Remove commas from price (price is in Naira, no conversion needed)
+            formData.append('price', parseFormattedNumber(product.price))
+            // Convert empty strings to null for bigint fields
+            formData.append('category_id', product.category_id && product.category_id.trim() !== "" ? product.category_id : '')
             formData.append('stock', product.stock || 0)
             formData.append('featured', product.featured || false)
-            formData.append('repayment_plan_id', product.repayment_plan_id || '')
+            formData.append('repayment_plan_id', product.repayment_plan_id && product.repayment_plan_id.trim() !== "" ? product.repayment_plan_id : '')
             formData.append('shipping_days_min', product.shipping_days_min || 1)
             formData.append('shipping_days_max', product.shipping_days_max || 7)
             formData.append('status', product.status || 'active')
             formData.append('lease_eligible', product.lease_eligible || false)
             formData.append('marketplace_enabled', product.marketplace_enabled || false)
-            // Append vendor_id if selected (optional - can be null for admin products)
-            if (product.vendor_id) {
-                formData.append('vendor_id', product.vendor_id)
-            }
+            // Append vendor_id (empty string will be converted to null by backend)
+            formData.append('vendor_id', product.vendor_id && product.vendor_id.trim() !== "" ? product.vendor_id : '')
             formData.append('specifications', JSON.stringify(product.specifications))
             formData.append('loan_terms', JSON.stringify(product.loan_terms))
             
@@ -247,21 +256,13 @@ function Addproduct() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${showVendorModal ? 'pointer-events-none opacity-50' : ''}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Add New Product</h1>
                             <p className="mt-1 text-sm text-gray-600">Create a new product for your inventory</p>
-                            {product.vendor_id && (
-                                <button
-                                    onClick={() => setShowVendorModal(true)}
-                                    className="mt-2 text-sm text-green-600 hover:text-green-700 underline"
-                                >
-                                    Change Vendor
-                                </button>
-                            )}
                         </div>
                         <div className="mt-4 sm:mt-0 flex gap-3">
                             <Button
@@ -314,11 +315,11 @@ function Addproduct() {
                                         Price (₦) *
                                     </label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         name="price"
                                         value={product.price}
                                         onChange={handleInput}
-                                        placeholder="0.00"
+                                        placeholder="0"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                         required
                                     />
@@ -343,6 +344,27 @@ function Addproduct() {
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+
+                                {/* Vendor/Dealer */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Dealer/Vendor (Optional)
+                                    </label>
+                                    <select
+                                        name="vendor_id"
+                                        value={product.vendor_id}
+                                        onChange={handleInput}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    >
+                                        <option value="">None (Admin Managed)</option>
+                                        {vendorData?.data?.data?.map && vendorData.data.data.map((vendor) => (
+                                            <option key={vendor.id} value={vendor.id}>
+                                                {vendor.business_name || `${vendor.first_name} ${vendor.last_name}`}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="mt-1 text-xs text-gray-500">Select a dealer/vendor for this product or leave empty for admin-managed products</p>
                                 </div>
 
                                 {/* Shipping Days Min */}
@@ -788,71 +810,6 @@ function Addproduct() {
                     </div>
                 </form>
             </div>
-
-            {/* Vendor Selection Modal */}
-            {showVendorModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {product.vendor_id ? 'Change Vendor' : 'Set Default Vendor'}
-                        </h2>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Choose a vendor for this product (optional). You can update this later. 
-                            Leave empty to create an admin-managed product.
-                        </p>
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Select Vendor
-                            </label>
-                            <select
-                                value={selectedVendorId || product.vendor_id || ''}
-                                onChange={(e) => setSelectedVendorId(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            >
-                                <option value="">None (Admin Managed)</option>
-                                {vendorData?.data?.data?.map && vendorData.data.data.map((vendor) => (
-                                    <option key={vendor.id} value={vendor.id}>
-                                        {vendor.business_name || `${vendor.first_name} ${vendor.last_name}`}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="flex justify-end space-x-3">
-                            {/* Skip button for first visit */}
-                            {!product.vendor_id && (
-                                <button
-                                    onClick={() => {
-                                        setShowVendorModal(false)
-                                        sessionStorage.setItem('vendorModalShown', 'true')
-                                    }}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                >
-                                    Skip
-                                </button>
-                            )}
-                            {/* Cancel button when changing vendor */}
-                            {product.vendor_id && (
-                                <button
-                                    onClick={() => setShowVendorModal(false)}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                >
-                                    Cancel
-                                </button>
-                            )}
-                            <button
-                                onClick={() => {
-                                    setShowVendorModal(false)
-                                    setProduct(prev => ({ ...prev, vendor_id: selectedVendorId }))
-                                    sessionStorage.setItem('vendorModalShown', 'true')
-                                }}
-                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                                >
-                                {product.vendor_id ? 'Update' : 'Continue'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
