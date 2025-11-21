@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { FaSearch, FaEdit, FaEye, FaTh, FaList, FaTrash, FaFilter, FaArchive, FaEllipsisV, FaStar } from 'react-icons/fa';
 import { BiUpload } from 'react-icons/bi';
 import axiosInstance from '../../../store/axiosInstance';
@@ -7,6 +7,7 @@ import Button from '../../components/shared/button';
 import { toast } from 'react-toastify';
 import { saveAs } from 'file-saver';
 import { handleGetCategories, handleProductBulkImages } from '../../services/product';
+import { useFetchVendorData } from '../../hooks/queries/loan';
 
 function Product() {
     const [currentPage, setCurrentPage] = useState(1);
@@ -21,7 +22,9 @@ function Product() {
     const [showArchived, setShowArchived] = useState(false);
     const [marketplaceFilter, setMarketplaceFilter] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
+    const [dealerFilter, setDealerFilter] = useState('');
     const [categories, setCategories] = useState([]);
+    const { data: vendorData } = useFetchVendorData({ page: 1, limit: 100 });
     const [actionsMenu, setActionsMenu] = useState(null);
     const [showBulkImageModal, setShowBulkImageModal] = useState(false);
     const [bulkImageMap, setBulkImageMap] = useState({}); // { productId: File }
@@ -46,51 +49,93 @@ function Product() {
         fetchCategories();
     }, []);
 
-    // Filter products based on search, archived status, and marketplace status
-    useEffect(() => {
-        let filtered = [...allProducts];
-
-        // Apply archived filter
-        if (!showArchived) {
-            filtered = filtered.filter(item => !item.is_archived);
-        }
-
-        // Apply marketplace filter
-        if (marketplaceFilter === 'enabled') {
-            filtered = filtered.filter(item => item.marketplace_enabled === true);
-        } else if (marketplaceFilter === 'disabled') {
-            filtered = filtered.filter(item => !item.marketplace_enabled);
-        }
-
-        // Apply category filter
-        if (categoryFilter) {
-            filtered = filtered.filter(item => item.category_id === categoryFilter);
-        }
-
-        // Apply search filter
-        if (search) {
-            filtered = filtered.filter(item => 
-                item.name.toLowerCase().includes(search.toLowerCase())
-            );
-        }
-
-        setFilteredProducts(filtered);
-    }, [allProducts, showArchived, marketplaceFilter, categoryFilter, search]);
-
-    // Fetch products from API
+    // Fetch products from API with filters
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const response = await axiosInstance.get(`/api/admin/products?page=${currentPage}&perPage=${itemsPerPage}`);
-                setAllProducts(response.data.data || []);
-                setProductMeta(response.data);
+                // Reset to page 1 when filters change (except when currentPage is already 1)
+                const pageToUse = currentPage;
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                params.append('page', pageToUse);
+                params.append('limit', itemsPerPage);
+                
+                // Add search parameter
+                if (search) {
+                    params.append('search', search);
+                }
+                
+                // Add category filter
+                if (categoryFilter) {
+                    params.append('category_id', categoryFilter);
+                }
+                
+                // Add dealer/vendor filter
+                if (dealerFilter) {
+                    if (dealerFilter === 'admin') {
+                        // For admin managed, we need to filter for products without vendor_id
+                        // Backend doesn't have a direct way to do this, so we'll handle it client-side
+                        // But we can still send other filters
+                    } else {
+                        params.append('vendor_id', dealerFilter);
+                    }
+                }
+                
+                // Add archived filter
+                if (showArchived) {
+                    params.append('is_archived', 'true');
+                } else {
+                    params.append('is_archived', 'false');
+                }
+                
+                // Add marketplace filter (if backend supports it)
+                // Note: marketplace_enabled might not be supported by backend, handle client-side if needed
+                
+                const response = await axiosInstance.get(`/api/admin/products?${params.toString()}`);
+                let products = response.data.data || [];
+                
+                // Apply client-side filters that backend doesn't support
+                // Filter for admin managed products (no vendor_id)
+                if (dealerFilter === 'admin') {
+                    products = products.filter(item => !item.vendor_id && !item.vendor);
+                }
+                
+                // Apply marketplace filter client-side (if backend doesn't support it)
+                if (marketplaceFilter === 'enabled') {
+                    products = products.filter(item => item.marketplace_enabled === true);
+                } else if (marketplaceFilter === 'disabled') {
+                    products = products.filter(item => !item.marketplace_enabled);
+                }
+                
+                setAllProducts(products);
+                setFilteredProducts(products);
+                setProductMeta(response.data.meta || response.data);
             } catch (error) {
                 console.log('Error fetching products:', error);
                 toast.error('Failed to load products');
             }
         };
         fetchProduct();
-    }, [currentPage, itemsPerPage]);
+    }, [currentPage, itemsPerPage, search, categoryFilter, dealerFilter, showArchived, marketplaceFilter]);
+    
+    // Reset to page 1 when filters change (but not when currentPage changes)
+    const prevFiltersRef = useRef({ search, categoryFilter, dealerFilter, showArchived, marketplaceFilter });
+    useEffect(() => {
+        const filtersChanged = 
+            prevFiltersRef.current.search !== search ||
+            prevFiltersRef.current.categoryFilter !== categoryFilter ||
+            prevFiltersRef.current.dealerFilter !== dealerFilter ||
+            prevFiltersRef.current.showArchived !== showArchived ||
+            prevFiltersRef.current.marketplaceFilter !== marketplaceFilter;
+        
+        if (filtersChanged && currentPage !== 1) {
+            setCurrentPage(1);
+        }
+        
+        prevFiltersRef.current = { search, categoryFilter, dealerFilter, showArchived, marketplaceFilter };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search, categoryFilter, dealerFilter, showArchived, marketplaceFilter]);
 
     const handleDeleteProduct = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
@@ -378,6 +423,24 @@ function Product() {
                                 <option value="">All Products</option>
                                 <option value="enabled">Enabled</option>
                                 <option value="disabled">Disabled</option>
+                            </select>
+                        </div>
+
+                        {/* Dealer Filter */}
+                        <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-700">Dealer:</label>
+                            <select
+                                value={dealerFilter}
+                                onChange={(e) => setDealerFilter(e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                                <option value="">All Dealers</option>
+                                <option value="admin">Admin Managed</option>
+                                {vendorData?.data?.data?.map && vendorData.data.data.map((vendor) => (
+                                    <option key={vendor.id} value={vendor.id}>
+                                        {vendor.business_name || `${vendor.first_name} ${vendor.last_name}`}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -678,11 +741,15 @@ function Product() {
                     Previous
                 </button>
                 <span className="text-sm text-gray-600">
-                    Page {currentPage} of {productMeta?.meta?.total_pages || 1}
+                    {productMeta ? (
+                        <>Page {productMeta.meta?.page || productMeta.page || currentPage} of {productMeta.meta?.total_pages || productMeta.total_pages || 1} (Showing {filteredProducts.length} of {productMeta.meta?.total || productMeta.total || 0} products)</>
+                    ) : (
+                        <>Page {currentPage}</>
+                    )}
                 </span>
                 <button
                     onClick={() => setCurrentPage(p => p + 1)}
-                    disabled={currentPage >= (productMeta?.meta?.total_pages || 1)}
+                    disabled={!productMeta || currentPage >= (productMeta.meta?.total_pages || productMeta.total_pages || 1)}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                     Next

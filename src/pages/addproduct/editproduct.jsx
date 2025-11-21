@@ -9,7 +9,7 @@ import {
     handleDeleteImage,
     handleDeleteImageDisplay
 } from '../../services/product'
-import { useFetchRepaymentPlans } from '../../hooks/queries/loan'
+import { useFetchRepaymentPlans, useFetchVendorData } from '../../hooks/queries/loan'
 import { useFetchSingleProduct } from '../../hooks/queries/product'
 
 function EditProduct() {
@@ -27,6 +27,7 @@ function EditProduct() {
     
     const { data: repaymentPlan } = useFetchRepaymentPlans()
     const { data: singleProduct, isLoading: productLoading } = useFetchSingleProduct(id)
+    const { data: vendorData } = useFetchVendorData({ page: 1, limit: 100 })
 
     const [product, setProduct] = useState({
         id: id,
@@ -43,6 +44,7 @@ function EditProduct() {
         lease_eligible: true,
         marketplace_enabled: true,
         is_archived: false,
+        vendor_id: "",
         specifications: [],
         loan_terms: {
             down_payment_percentage: "",
@@ -51,6 +53,22 @@ function EditProduct() {
             processing_fee: 0
         }
     })
+
+    // Format number with thousand separators
+    const formatNumberWithCommas = (value) => {
+        if (!value) return '';
+        // Convert to string and remove all non-digit characters (including commas)
+        const numericValue = String(value).replace(/[^\d.]/g, '');
+        // Remove decimal point if present (prices are whole numbers)
+        const wholeNumber = numericValue.split('.')[0];
+        // Add thousand separators
+        return wholeNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    // Parse formatted number back to numeric value
+    const parseFormattedNumber = (value) => {
+        return String(value).replace(/,/g, '')
+    }
 
     // Fetch real data on component mount
     useEffect(() => {
@@ -98,21 +116,25 @@ function EditProduct() {
                 id: productData.id,
                 name: productData.name || "",
                 description: productData.description || "",
-                shipping_days_min: productData.shipping_days_min || "",
-                shipping_days_max: productData.shipping_days_max || "",
-                category_id: productData.category_id || "",
-                price: productData.price || "",
+                shipping_days_min: productData.shipping_days_min ? String(productData.shipping_days_min) : "",
+                shipping_days_max: productData.shipping_days_max ? String(productData.shipping_days_max) : "",
+                category_id: productData.category_id ? String(productData.category_id) : "",
+                // Format price with commas (price is already in Naira from database)
+                // Parse as number first to ensure we have the correct numeric value
+                price: productData.price ? formatNumberWithCommas(Number(productData.price)) : "",
                 specifications: productData.specifications && typeof productData.specifications === 'object' && !Array.isArray(productData.specifications) 
                     ? Object.entries(productData.specifications).map(([key, value]) => ({ attribute: key, value }))
                     : (productData.specifications || []),
                 stock: productData.stock || 0,
                 featured: productData.featured || false,
                 lease_eligible: productData.lease_eligible || false,
-                repayment_plan_id: productData.repayment_policies?.id || productData.repayment_plan_id || "",
+                repayment_plan_id: productData.repayment_policies?.id ? String(productData.repayment_policies.id) : (productData.repayment_plan_id ? String(productData.repayment_plan_id) : ""),
                 loan_terms: productData.loan_terms || {},
                 marketplace_enabled: productData.marketplace_enabled || false,
                 is_archived: productData.is_archived || false,
-                status: productData.status || 'active'
+                status: productData.status || 'active',
+                // Extract vendor_id from vendor object if vendor exists, otherwise use vendor_id directly
+                vendor_id: productData.vendor?.id ? String(productData.vendor.id) : (productData.vendor_id ? String(productData.vendor_id) : "")
             })
 
             // Set existing images
@@ -127,10 +149,20 @@ function EditProduct() {
 
     const handleInput = (e) => {
         const { name, value, type, checked } = e.target
-        setProduct(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }))
+        
+        // Special handling for price field - format with commas
+        if (name === 'price' && type !== 'checkbox') {
+            const formattedValue = formatNumberWithCommas(value)
+            setProduct(prev => ({
+                ...prev,
+                [name]: formattedValue
+            }))
+        } else {
+            setProduct(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }))
+        }
     }
 
     const handleNestedInput = (e) => {
@@ -230,8 +262,16 @@ function EditProduct() {
         setIsLoading(true)
         try {
             // Include selected images in the product data
+            // Parse price to remove commas (price is in Naira, no conversion needed)
+            const cleanedPrice = parseFormattedNumber(product.price);
+            // Convert empty strings to null for bigint fields
             const productData = {
                 ...product,
+                price: cleanedPrice ? String(Number(cleanedPrice)) : '', // Price in Naira for database
+                // Convert empty strings to null for bigint fields
+                category_id: product.category_id && product.category_id.trim() !== "" ? product.category_id : null,
+                vendor_id: product.vendor_id && product.vendor_id.trim() !== "" ? product.vendor_id : null,
+                repayment_plan_id: product.repayment_plan_id && product.repayment_plan_id.trim() !== "" ? product.repayment_plan_id : null,
                 selectedDisplayImage: selectedDisplayImage,
                 selectedImages: selectedImages
             }
@@ -323,11 +363,11 @@ function EditProduct() {
                                         Price (₦) *
                                     </label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         name="price"
                                         value={product.price}
                                         onChange={handleInput}
-                                        placeholder="0.00"
+                                        placeholder="0"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                         required
                                     />
@@ -352,6 +392,40 @@ function EditProduct() {
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+
+                                {/* Vendor/Dealer */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Dealer/Vendor (Optional)
+                                    </label>
+                                    {product.vendor_id && (
+                                        <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                                            <p className="text-xs text-blue-700 font-medium">Current Dealer:</p>
+                                            <p className="text-sm text-blue-900">
+                                                {(() => {
+                                                    const currentVendor = vendorData?.data?.data?.find(v => v.id === product.vendor_id);
+                                                    return currentVendor 
+                                                        ? (currentVendor.business_name || `${currentVendor.first_name} ${currentVendor.last_name}`)
+                                                        : 'Loading...';
+                                                })()}
+                                            </p>
+                                        </div>
+                                    )}
+                                    <select
+                                        name="vendor_id"
+                                        value={product.vendor_id}
+                                        onChange={handleInput}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    >
+                                        <option value="">None (Admin Managed)</option>
+                                        {vendorData?.data?.data?.map && vendorData.data.data.map((vendor) => (
+                                            <option key={vendor.id} value={vendor.id}>
+                                                {vendor.business_name || `${vendor.first_name} ${vendor.last_name}`}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="mt-1 text-xs text-gray-500">Select a dealer/vendor for this product or leave empty for admin-managed products</p>
                                 </div>
 
                                 {/* Shipping Days Min */}

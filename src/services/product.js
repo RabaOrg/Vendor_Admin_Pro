@@ -44,6 +44,23 @@ export const handleCreateProduct = async (formInfo) => {
   );
 };
 
+// Helper to parse price (remove commas and ensure valid number)
+const parsePrice = (price) => {
+  if (!price) return '';
+  // Remove all non-digit characters except decimal point
+  const cleaned = String(price).replace(/[^\d.]/g, '');
+  // Ensure it's a valid number
+  const numValue = Number(cleaned);
+  if (isNaN(numValue)) return '';
+  return String(numValue);
+};
+
+// Helper to convert empty strings to null for bigint fields
+const sanitizeBigintField = (value) => {
+  if (value === '' || value === null || value === undefined) return null;
+  return value;
+};
+
 export const handleUpdateProduct = async (formInfo) => {
   // Check if formInfo has files (images) - if so, use FormData
   const hasFiles = formInfo.selectedDisplayImage || (formInfo.selectedImages && formInfo.selectedImages.length > 0);
@@ -54,8 +71,26 @@ export const handleUpdateProduct = async (formInfo) => {
     // Append all product fields
     Object.keys(formInfo).forEach(key => {
       if (key !== 'selectedDisplayImage' && key !== 'selectedImages' && key !== 'previewImages' && key !== 'displayPreview') {
-        const value = formInfo[key];
-        if (value !== undefined && value !== null) {
+        let value = formInfo[key];
+        
+        // Parse price field to remove commas and ensure it's a valid number
+        if (key === 'price') {
+          value = parsePrice(value);
+          // Ensure it's a valid number string
+          if (value && !isNaN(value)) {
+            value = String(Number(value)); // Convert to number then back to string to remove any formatting
+          }
+        }
+        
+        // Convert empty strings to null for bigint fields
+        if (key === 'category_id' || key === 'vendor_id' || key === 'repayment_plan_id') {
+          value = sanitizeBigintField(value);
+          // Always append bigint fields, even if null (send as empty string for backend to convert)
+          formData.append(key, value === null ? '' : String(value));
+          return; // Skip the rest of the loop for these fields (use return in forEach, not continue)
+        }
+        
+        if (value !== undefined && value !== null && value !== '') {
           if (typeof value === 'object' && !Array.isArray(value)) {
             formData.append(key, JSON.stringify(value));
           } else if (Array.isArray(value)) {
@@ -99,9 +134,18 @@ export const handleUpdateProduct = async (formInfo) => {
     );
   } else {
     // No files, send as JSON
+    // Parse price and sanitize bigint fields before sending
+    const productData = {
+      ...formInfo,
+      price: parsePrice(formInfo.price),
+      // Convert empty strings to null for bigint fields
+      category_id: sanitizeBigintField(formInfo.category_id),
+      vendor_id: sanitizeBigintField(formInfo.vendor_id),
+      repayment_plan_id: sanitizeBigintField(formInfo.repayment_plan_id)
+    };
     return axiosInstance.put(
       `/api/admin/products/${formInfo.id}`,
-      formInfo
+      productData
     );
   }
 };
