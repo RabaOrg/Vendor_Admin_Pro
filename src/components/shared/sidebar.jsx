@@ -4,11 +4,14 @@ import { useAuthStore } from "../../../store/store";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaSignOutAlt } from "react-icons/fa";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useFetchNotificationCounts } from "../../hooks/queries/adminNotification";
 
 const SidebarComponent = ({ isOpen, toggleSidebar }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { logOut } = useAuthStore();
+    const { data: countsData } = useFetchNotificationCounts();
+    const entityCounts = countsData?.by_entity || {};
 
     const menuItems = [
         { name: "Dashboard", icon: <Icons.Dashboard />, path: "/" },
@@ -94,20 +97,43 @@ const SidebarComponent = ({ isOpen, toggleSidebar }) => {
 
 
                     <ul className="space-y-1 mt-14">
-                        {menuItems.map((item) => (
-                            <li
-                                key={item.name}
-                                className={`flex items-center font-medium text-sm space-x-2 px-4 py-3 rounded cursor-pointer 
-                                    ${activeItem === item.name
-                                        ? "bg-[#0f5d30] text-white"
-                                        : "text-gray-700 hover:bg-gray-200"
-                                    }`}
-                                onClick={() => handleItemClick(item.name, item.path)}
-                            >
-                                <span className="text-lg">{item.icon}</span>
-                                <span>{item.name}</span>
-                            </li>
-                        ))}
+                        {menuItems.map((item) => {
+                            // Get badge count based on menu item
+                            let badgeCount = 0;
+                            if (item.name === "Customer") {
+                                badgeCount = entityCounts.customer || 0;
+                            } else if (item.name === "Vendor Management") {
+                                badgeCount = entityCounts.vendor || 0;
+                            } else if (item.name === "Applications") {
+                                badgeCount = entityCounts.application || 0;
+                            }
+                            
+                            return (
+                                <li
+                                    key={item.name}
+                                    className={`flex items-center justify-between font-medium text-sm px-4 py-3 rounded cursor-pointer 
+                                        ${activeItem === item.name
+                                            ? "bg-[#0f5d30] text-white"
+                                            : "text-gray-700 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => handleItemClick(item.name, item.path)}
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-lg">{item.icon}</span>
+                                        <span>{item.name}</span>
+                                    </div>
+                                    {badgeCount > 0 && (
+                                        <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full ${
+                                            activeItem === item.name 
+                                                ? "bg-white text-[#0f5d30]" 
+                                                : "bg-red-600 text-white"
+                                        }`}>
+                                            {badgeCount > 99 ? '99+' : badgeCount}
+                                        </span>
+                                    )}
+                                </li>
+                            );
+                        })}
                         <li
                             className={`text-sm px-4 py-3 rounded cursor-pointer transition-colors
     ${activeItem === "Payment"

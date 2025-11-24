@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { useFetchVendorData } from '../../../hooks/queries/loan'
 import { Link } from 'react-router-dom'
-import { FaEye, FaDownload } from 'react-icons/fa'
+import { FaEye, } from 'react-icons/fa'
 import Button from '../../../components/shared/button'
 import { useNavigate } from 'react-router-dom'
 import ApplicationList from '../application/application'
-import axiosInstance from '../../../../store/axiosInstance'
-import { saveAs } from 'file-saver'
-import { toast } from 'react-toastify'
 
 function ActivationLists() {
   const [page, setPage] = useState(1);
@@ -25,25 +22,6 @@ function ActivationLists() {
   };
   const handleViewCustomer = (id) => {
     Navigate(`/view_activation/${id}`)
-  }
-
-  const handleExportVendors = async () => {
-    try {
-      toast.info('Preparing vendor export...');
-      const response = await axiosInstance.get('/api/admin/vendors/export', {
-        responseType: 'arraybuffer'
-      });
-      const blob = new Blob(
-        [response.data],
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-      const fileName = `vendors_export_${new Date().toISOString().split('T')[0]}.xlsx`;
-      saveAs(blob, fileName);
-      toast.success('Vendor data exported successfully!');
-    } catch (error) {
-      console.error('Error exporting vendors:', error);
-      toast.error('Failed to export vendor data');
-    }
   }
   if (isPending)
     return (
@@ -70,23 +48,14 @@ function ActivationLists() {
       <div className="inline-block min-w-full  rounded-lg overflow-hidden">
         <div className="flex items-center justify-between p-4 mt-3">
           <h1 className="text-[30px] font-semibold text-black mt-6 mb-4 ">Vendor Management</h1>
-          <div className="flex gap-3">
-            <button
-              onClick={handleExportVendors}
-              className="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg mt-4 md:mt-0 flex items-center gap-2"
-            >
-              <FaDownload />
-              <span>Export to Excel</span>
-            </button>
-            <Link to={"/vendor_statistics"}>
-              <Button
-                label="View Vendor statistics"
-                variant="solid"
-                size="md"
-                className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
-              />
-            </Link>
-          </div>
+          <Link to={"/vendor_statistics"}>
+            <Button
+              label="View Vendor statistics"
+              variant="solid"
+              size="md"
+              className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 mt-4 md:mt-0"
+            />
+          </Link>
         </div>
         <table className="min-w-full leading-normal">
           <thead className="bg-[#D5D5D5]">

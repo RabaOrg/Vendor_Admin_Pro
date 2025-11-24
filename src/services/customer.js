@@ -60,6 +60,18 @@ export const handleMarketplaceUser = async (Id) => {
     return data.data
 }
 
+export const handleDeleteMarketplaceUser = async (userId, forceDelete = false, reason = '') => {
+  return axiosInstance.delete(
+    `/api/admin/customers/user/${userId}`,
+    {
+      data: {
+        force_delete: forceDelete,
+        reason: reason
+      }
+    }
+  );
+};
+
 
 export const handleGetCustomer = async (page, perPage, search, source) => {
     let url = `/api/admin/customers?page=${page}&limit=${perPage}`;

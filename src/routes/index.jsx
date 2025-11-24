@@ -36,6 +36,7 @@ import GuarantorVerification from "../pages/dashboard/guarantor/guarantorverific
 import ApplicationPayment from "../pages/dashboard/application/applicationPay/payment";
 import SingleRecurring from "../pages/dashboard/transaction/singlerecurring";
 import Notification from "../pages/dashboard/notification";
+import AdminNotifications from "../pages/dashboard/notifications";
 
 import SmsApplication from "../pages/dashboard/notification/smsnotification/smsapplication";
 import EachSmsNotification from "../pages/dashboard/notification/smsnotification/eachsmsnotification";
@@ -247,6 +248,11 @@ export const router = createBrowserRouter([
             {
                 path: "/notification",
                 element: <Notification />
+
+            },
+            {
+                path: "/notifications",
+                element: <AdminNotifications />
 
             },
             {
