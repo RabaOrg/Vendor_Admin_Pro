@@ -20,7 +20,7 @@ export const useFetchUnreadCount = () => {
   return useQuery({
     queryFn: () => handleGetUnreadCount(),
     queryKey: ["adminUnreadCount"],
-    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
+    refetchInterval: 30000, // Refetch every 30 seconds (same as other endpoints)
   });
 };
 

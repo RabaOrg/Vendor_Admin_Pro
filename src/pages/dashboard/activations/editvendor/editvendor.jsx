@@ -73,6 +73,7 @@ function EditVendor() {
     { value: "utility_bill", label: "Utility Bill" },
     { value: "payslip", label: "Payslip" },
     { value: "bank_statement", label: "Bank Statement" },
+    { value: "business_photo", label: "Business Photo" },
     { value: "other", label: "Other" },
   ];
 
