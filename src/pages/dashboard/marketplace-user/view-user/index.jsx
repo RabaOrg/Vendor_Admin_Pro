@@ -9,6 +9,7 @@ import InfoGrid from '../../../../components/application/InfoGrid';
 import { useFetchMarketplaceUser } from '../../../../hooks/queries/marketplaceUser';
 import { formatCurrency, formatDate, formatPhoneNumber } from '../../../../utils/formatters';
 import { usePairedSections } from '../../../../hooks/usePairedSections';
+import { handleDeleteMarketplaceUser } from '../../../../services/customer';
 
 import { 
   User, 
@@ -21,7 +22,8 @@ import {
   Download,
   Settings,
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 
 function MarketplaceUserDetails() {
@@ -39,13 +41,17 @@ function MarketplaceUserDetails() {
   const [showEligibilityModal, setShowEligibilityModal] = useState(false);
   const [showKYCStatusModal, setShowKYCStatusModal] = useState(false);
   const [showAccountStatusModal, setShowAccountStatusModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eligibilityAmount, setEligibilityAmount] = useState('');
   const [kycStatus, setKycStatus] = useState('');
   const [kycStatusNotes, setKycStatusNotes] = useState('');
   const [kycEligibilityAmount, setKycEligibilityAmount] = useState('');
   const [accountStatus, setAccountStatus] = useState('');
   const [accountStatusNotes, setAccountStatusNotes] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [forceDelete, setForceDelete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Define paired sections configuration
   const pairedSectionsConfig = [
@@ -211,6 +217,30 @@ function MarketplaceUserDetails() {
       toast.error(error?.response?.data?.message || "Failed to update account status");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!window.confirm(`Are you sure you want to ${forceDelete ? 'permanently delete' : 'deactivate'} this user account? This action ${forceDelete ? 'cannot' : 'can'} be undone.`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const response = await handleDeleteMarketplaceUser(id, forceDelete, deleteReason);
+      toast.success(response?.data?.message || "User account deleted successfully");
+      setShowDeleteModal(false);
+      setDeleteReason('');
+      setForceDelete(false);
+      // Navigate back to customers list after deletion
+      setTimeout(() => {
+        navigate('/customer');
+      }, 1500);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error?.response?.data?.message || "Failed to delete user account");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -648,6 +678,22 @@ function MarketplaceUserDetails() {
                 </button>
               )}
             </div>
+
+            {/* Delete User Action */}
+            <div className="space-y-2 pt-2 border-t border-red-200">
+              <h4 className="text-sm font-semibold text-red-700 mb-2">Danger Zone</h4>
+              <button
+                onClick={() => {
+                  setDeleteReason('');
+                  setForceDelete(false);
+                  setShowDeleteModal(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete User Account
+              </button>
+            </div>
           </div>
         </CollapsibleSection>
 
@@ -985,6 +1031,100 @@ function MarketplaceUserDetails() {
                     <>
                       <CheckCircle className="w-4 h-4" />
                       Update Status
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Delete User Account</h3>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded">
+                <p className="text-sm font-medium text-red-900">User: {user.first_name} {user.last_name}</p>
+                <p className="text-sm text-red-600">{user.email}</p>
+                <p className="text-xs text-red-500 mt-1">This action will {forceDelete ? 'permanently delete' : 'deactivate'} the user account</p>
+              </div>
+
+              {/* Check for active applications */}
+              {stats?.approved_applications > 0 && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Warning:</strong> This user has {stats.approved_applications} approved application(s). 
+                    {!forceDelete && ' You may need to use force delete to remove the account.'}
+                  </p>
+                </div>
+              )}
+              
+              <div className="mb-6">
+                <label className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={forceDelete}
+                    onChange={(e) => setForceDelete(e.target.checked)}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Force Delete (Permanent)
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 ml-6">
+                  {forceDelete 
+                    ? 'Permanently delete the user account and all associated data. This cannot be undone.'
+                    : 'Deactivate the user account. The account can be reactivated later.'}
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason {forceDelete && <span className="text-red-500">*</span>}
+                  {!forceDelete && <span className="text-gray-400">(Optional)</span>}
+                </label>
+                <textarea
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder={forceDelete ? "Enter reason for permanent deletion" : "Enter reason for deactivation (optional)"}
+                  rows={3}
+                  required={forceDelete}
+                />
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteReason('');
+                    setForceDelete(false);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteUser}
+                  disabled={isDeleting || (forceDelete && !deleteReason.trim())}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isDeleting ? 'Deleting...' : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      {forceDelete ? 'Delete Permanently' : 'Deactivate Account'}
                     </>
                   )}
                 </button>
