@@ -91,7 +91,7 @@ function AdminNotifications() {
             variant="solid"
             size="md"
             className="bg-green-700 text-white"
-            icon={<CheckCheck className="w-4 h-4" />}
+            icon={CheckCheck}
             loading={markAllAsRead.isPending}
           />
         )}
