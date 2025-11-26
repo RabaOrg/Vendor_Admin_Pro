@@ -64,6 +64,7 @@ import MarketplaceEligibility from "../pages/dashboard/marketplace/eligibility";
 import MarketplaceRepaymentPlans from "../pages/dashboard/marketplace/repayment-plans";
 import MarketplaceUserDetails from "../pages/dashboard/marketplace-user/view-user";
 import MarketplaceSettings from "../pages/dashboard/marketplace-settings";
+import MarketplaceApplicationDetails from "../pages/dashboard/application/marketplace-application-details";
 
 
 
@@ -338,6 +339,7 @@ export const router = createBrowserRouter([
             { path: "/marketplace/eligibility", element: <MarketplaceEligibility /> },
             { path: "/marketplace-user/:id", element: <MarketplaceUserDetails /> },
             { path: "/sms-link-details/:id", element: <SmsLinkDetails /> },
+            { path: "/marketplace-application-details/:id", element: <MarketplaceApplicationDetails /> },
 
         ]
     }
