@@ -52,6 +52,10 @@ function MarketplaceUserDetails() {
   const [forceDelete, setForceDelete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showLoginTokenModal, setShowLoginTokenModal] = useState(false);
+  const [generatedToken, setGeneratedToken] = useState(null);
+  const [loginUrl, setLoginUrl] = useState(null);
+  const [isGeneratingToken, setIsGeneratingToken] = useState(false);
 
   // Define paired sections configuration
   const pairedSectionsConfig = [
@@ -244,6 +248,48 @@ function MarketplaceUserDetails() {
     }
   };
 
+  const handleGenerateLoginToken = async () => {
+    if (!window.confirm('This will generate a login token to access this user\'s account. Continue?')) {
+      return;
+    }
+
+    try {
+      setIsGeneratingToken(true);
+      const response = await axiosInstance.post(`/api/admin/customers/user/${id}/generate-login-token`);
+      const { token, login_url } = response.data.data;
+      
+      setGeneratedToken(token);
+      setLoginUrl(login_url);
+      setShowLoginTokenModal(true);
+      toast.success('Login token generated successfully!');
+    } catch (error) {
+      console.error('Error generating login token:', error);
+      toast.error(error?.response?.data?.message || 'Failed to generate login token');
+    } finally {
+      setIsGeneratingToken(false);
+    }
+  };
+
+  const handleCopyToken = () => {
+    if (generatedToken) {
+      navigator.clipboard.writeText(generatedToken);
+      toast.success('Token copied to clipboard!');
+    }
+  };
+
+  const handleCopyLoginUrl = () => {
+    if (loginUrl) {
+      navigator.clipboard.writeText(loginUrl);
+      toast.success('Login URL copied to clipboard!');
+    }
+  };
+
+  const handleOpenLoginUrl = () => {
+    if (loginUrl) {
+      window.open(loginUrl, '_blank');
+    }
+  };
+
   const getKycStatusBadge = (status, kycCompleted) => {
     // If KYC is completed but status is incomplete/null, show as 'pending' (awaiting review)
     const effectiveStatus = (kycCompleted && (!status || status === 'incomplete')) ? 'pending' : status;
@@ -365,6 +411,7 @@ function MarketplaceUserDetails() {
     { key: 'approved_applications', label: 'Approved Applications', value: stats.approved_applications || 0 },
     { key: 'pending_applications', label: 'Pending Applications', value: stats.pending_applications || 0 },
     { key: 'rejected_applications', label: 'Rejected Applications', value: stats.rejected_applications || 0 },
+    { key: 'equipment_value', label: 'Equipment Value', value: stats.equipment_value ? formatCurrency(stats.equipment_value) : formatCurrency(0) },
   ] : [];
 
   return (
@@ -671,12 +718,37 @@ function MarketplaceUserDetails() {
               {user.periculum_statement_key && (
                 <button
                   onClick={handleRefreshEligibility}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors mt-2"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Refresh from Periculum
                 </button>
               )}
+            </div>
+
+            {/* Admin Login Token */}
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Admin Tools</h4>
+              <button
+                onClick={handleGenerateLoginToken}
+                disabled={isGeneratingToken}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingToken ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <User className="h-4 w-4" />
+                    Generate Login Token
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-gray-500 mt-1">
+                Generate a token to login as this user
+              </p>
             </div>
 
             {/* Delete User Action */}
@@ -1127,6 +1199,88 @@ function MarketplaceUserDetails() {
                       {forceDelete ? 'Delete Permanently' : 'Deactivate Account'}
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login Token Modal */}
+      {showLoginTokenModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowLoginTokenModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform transition-all" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">User Login Token Generated</h3>
+                <button
+                  onClick={() => setShowLoginTokenModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
+                <p className="text-sm font-medium text-blue-900">Admin Impersonation</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  This token allows you to login as this user. Use it for support purposes.
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Login Token
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={generatedToken || ''}
+                    readOnly
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm font-mono"
+                  />
+                  <button
+                    onClick={handleCopyToken}
+                    className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Login URL
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={loginUrl || ''}
+                    readOnly
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm"
+                  />
+                  <button
+                    onClick={handleCopyLoginUrl}
+                    className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowLoginTokenModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={handleOpenLoginUrl}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  Open Login URL
                 </button>
               </div>
             </div>
