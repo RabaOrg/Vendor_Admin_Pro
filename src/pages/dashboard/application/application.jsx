@@ -45,6 +45,18 @@ function ApplicationList() {
     refetch(); // Refresh the application list
   };
 
+  // Helper function to get the correct product price for marketplace applications
+  // For marketplace apps, the 'amount' field incorrectly stores lease total instead of product price
+  // The product.price field contains the actual product price from the Product table
+  const getProductPrice = (item) => {
+    // For marketplace applications, use product.price if available (this is the actual product price)
+    if (item.application_type === 'marketplace' && item.product?.price) {
+      return parseFloat(item.product.price);
+    }
+    
+    // For non-marketplace applications, return the stored amount (which is correct for them)
+    return item.amount;
+  };
 
   return (
     <div className='px-6'>
@@ -185,7 +197,7 @@ function ApplicationList() {
                     </p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
-                    <p className="font-medium whitespace-no-wrap text-xs">₦{Number(item.amount).toLocaleString()}</p>
+                    <p className="font-medium whitespace-no-wrap text-xs">₦{Number(getProductPrice(item)).toLocaleString()}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
