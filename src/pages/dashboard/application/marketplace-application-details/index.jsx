@@ -482,18 +482,67 @@ function MarketplaceApplicationDetails() {
     { key: 'no_guarantors', label: 'Guarantors', value: 'No guarantors found' }
   ];
 
+  // Helper function to get the correct product price for marketplace applications
+  // For marketplace apps, the 'amount' field incorrectly stores lease total instead of product price
+  // The Product.price field contains the actual product price from the Product table
+  const getProductPrice = () => {
+    // For marketplace applications, use Product.price if available (this is the actual product price)
+    if (application_type === 'marketplace' && Product?.price) {
+      return parseFloat(Product.price);
+    }
+    
+    // Fallback: Check if we have pricing breakdown with product price
+    if (application_data?.pricingBreakdown?.productPrice) {
+      return parseFloat(application_data.pricingBreakdown.productPrice);
+    }
+    
+    // Fallback: Check calculation breakdown
+    if (application_data?.calculation_breakdown?.display_price) {
+      return parseFloat(application_data.calculation_breakdown.display_price);
+    }
+    
+    // Fallback: Calculate from cart items
+    if (application_data?.cartItems && Array.isArray(application_data.cartItems) && application_data.cartItems.length > 0) {
+      const productPriceTotal = application_data.cartItems.reduce((sum, cartItem) => {
+        const unitPrice = parseFloat(cartItem.unitPrice || cartItem.product?.priceInNaira || 0);
+        const quantity = parseInt(cartItem.quantity || 1);
+        return sum + (unitPrice * quantity);
+      }, 0);
+      
+      if (productPriceTotal > 0) {
+        return productPriceTotal;
+      }
+    }
+    
+    // Last resort: use stored amount (might be incorrect for old marketplace applications)
+    return amount;
+  };
+
+  const productPrice = getProductPrice();
+
+  // Recalculate down payment percentage based on product price (not lease total)
+  // For marketplace applications, the stored down_payment_percent may be incorrect
+  // Note: Down payment is calculated on (product price + 5% management fee), but we display it as % of product price
+  // For display purposes, we calculate: down_payment / product_price
+  // The actual down payment percentage (including management fee) would be: down_payment / (product_price * 1.05)
+  const calculatedDownPaymentPercent = productPrice && down_payment_amount 
+    ? Math.round((parseFloat(down_payment_amount) / parseFloat(productPrice)) * 100 * 100) / 100 // Round to 2 decimal places
+    : down_payment_percent;
+
   // Financial data for FinancialSummaryCard
   const financialData = application_data?.calculation_breakdown ? {
-    displayPrice: application_data.calculation_breakdown.display_price,
+    displayPrice: application_data.calculation_breakdown.display_price || productPrice,
     managementFee: application_data.calculation_breakdown.raba_markup,
     totalWithManagementFee: application_data.calculation_breakdown.total_with_markup,
-    downPayment: application_data.calculation_breakdown.down_payment,
-    downPaymentPercent: down_payment_percent,
-    financedAmount: application_data.calculation_breakdown.financed_amount,
+    downPayment: application_data.calculation_breakdown.down_payment || down_payment_amount,
+    downPaymentPercent: calculatedDownPaymentPercent, // Use recalculated percentage
+    financedAmount: productPrice && down_payment_amount ? parseFloat(productPrice) - parseFloat(down_payment_amount) : application_data.calculation_breakdown.financed_amount,
     interestRate: interest_rate,
-    totalInterest: application_data.calculation_breakdown.total_interest,
-    monthlyPayment: application_data.calculation_breakdown.monthly_payment,
-    leaseTermMonths: application_data.calculation_breakdown.lease_term_months,
+    totalInterest: productPrice && down_payment_amount && monthly_repayment && lease_tenure 
+      ? (parseFloat(monthly_repayment) * parseInt(lease_tenure)) - (parseFloat(productPrice) - parseFloat(down_payment_amount))
+      : application_data.calculation_breakdown.total_interest,
+    monthlyPayment: application_data.calculation_breakdown.monthly_payment || monthly_repayment,
+    leaseTermMonths: application_data.calculation_breakdown.lease_term_months || lease_tenure,
     leaseTenureUnit: lease_tenure_unit,
   } : null;
 
@@ -502,8 +551,9 @@ function MarketplaceApplicationDetails() {
     { key: 'reference', label: 'Application Reference', value: reference || 'N/A' },
     { key: 'applicationType', label: 'Application Type', value: application_type || 'N/A' },
     { key: 'applicationSource', label: 'Application Source', value: application_source || 'marketplace' },
-    { key: 'totalAmount', label: 'Total Amount', value: amount ? formatCurrency(amount) : 'N/A' },
+    { key: 'totalAmount', label: 'Total Amount', value: productPrice ? formatCurrency(productPrice) : 'N/A' },
     { key: 'downPayment', label: 'Down Payment', value: down_payment_amount ? formatCurrency(down_payment_amount) : 'N/A' },
+    { key: 'downPaymentPercent', label: 'Down Payment %', value: calculatedDownPaymentPercent ? `${calculatedDownPaymentPercent}%` : 'N/A' },
     { key: 'monthlyRepayment', label: 'Monthly Repayment', value: monthly_repayment ? formatCurrency(monthly_repayment) : 'N/A' },
     { key: 'leaseTenure', label: 'Lease Tenure', value: lease_tenure && lease_tenure_unit ? `${lease_tenure} ${lease_tenure_unit}s` : 'N/A' },
     { key: 'nextRepaymentDate', label: 'Next Repayment Date', value: getNextRepaymentDate() },
@@ -938,15 +988,15 @@ function MarketplaceApplicationDetails() {
           <div className="space-y-4">
             <InfoGrid
               data={[
-                { key: 'amount', label: 'Total Amount', value: amount ? formatCurrency(amount) : 'N/A' },
+                { key: 'amount', label: 'Total Amount', value: productPrice ? formatCurrency(productPrice) : 'N/A' },
                 { key: 'downPayment', label: 'Down Payment', value: down_payment_amount ? formatCurrency(down_payment_amount) : 'N/A' },
-                { key: 'downPaymentPercent', label: 'Down Payment %', value: down_payment_percent ? `${down_payment_percent}%` : 'N/A' },
-                { key: 'financedAmount', label: 'Financed Amount', value: amount && down_payment_amount ? formatCurrency(parseFloat(amount) - parseFloat(down_payment_amount)) : 'N/A' },
+                { key: 'downPaymentPercent', label: 'Down Payment %', value: calculatedDownPaymentPercent ? `${calculatedDownPaymentPercent}%` : 'N/A' },
+                { key: 'financedAmount', label: 'Financed Amount', value: productPrice && down_payment_amount ? formatCurrency(parseFloat(productPrice) - parseFloat(down_payment_amount)) : 'N/A' },
                 { key: 'monthlyRepayment', label: 'Monthly Repayment', value: monthly_repayment ? formatCurrency(monthly_repayment) : 'N/A' },
                 { key: 'interestRate', label: 'Interest Rate', value: interest_rate ? `${interest_rate}%` : 'N/A' },
                 { key: 'leaseTenure', label: 'Lease Tenure', value: lease_tenure && lease_tenure_unit ? `${lease_tenure} ${lease_tenure_unit}${lease_tenure > 1 ? 's' : ''}` : 'N/A' },
                 { key: 'totalRepayment', label: 'Total Repayment', value: monthly_repayment && lease_tenure ? formatCurrency(parseFloat(monthly_repayment) * parseInt(lease_tenure)) : 'N/A' },
-                { key: 'totalInterest', label: 'Total Interest', value: amount && down_payment_amount && monthly_repayment && lease_tenure ? formatCurrency((parseFloat(monthly_repayment) * parseInt(lease_tenure)) - (parseFloat(amount) - parseFloat(down_payment_amount))) : 'N/A' },
+                { key: 'totalInterest', label: 'Total Interest', value: productPrice && down_payment_amount && monthly_repayment && lease_tenure ? formatCurrency((parseFloat(monthly_repayment) * parseInt(lease_tenure)) - (parseFloat(productPrice) - parseFloat(down_payment_amount))) : 'N/A' },
               ]}
               columns={{ mobile: 1, tablet: 2, desktop: 3 }}
             />
