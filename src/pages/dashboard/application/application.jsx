@@ -12,7 +12,7 @@ import CreateSmsModal from '../../../components/modals/CreateSmsModal'
 function ApplicationList() {
   const [page, setPage] = useState(1);
   const [applicationTypeFilter, setApplicationTypeFilter] = useState("");
-  const [includeSmsLinks, setIncludeSmsLinks] = useState(false);
+  const [includeSmsLinks, setIncludeSmsLinks] = useState(true);
   const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
