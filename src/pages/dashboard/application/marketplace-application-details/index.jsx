@@ -39,7 +39,8 @@ import {
   Link,
   BarChart3,
   Pencil,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 
 function MarketplaceApplicationDetails() {
@@ -47,7 +48,6 @@ function MarketplaceApplicationDetails() {
   const Navigate = useNavigate();
   const [loanData, setLoanData] = useState(null);
   const [userKycData, setUserKycData] = useState(null);
-  const [isLoadingKyc, setIsLoadingKyc] = useState(false);
   const queryClient = useQueryClient();
   const [isLoads] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +55,10 @@ function MarketplaceApplicationDetails() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [showActionModal, setShowActionModal] = useState(false);
   const [isGeneratingSchedule, setIsGeneratingSchedule] = useState(false);
+  const [removingProductId, setRemovingProductId] = useState(null);
+  const [showRemoveProductModal, setShowRemoveProductModal] = useState(false);
+  const [productToRemove, setProductToRemove] = useState(null);
+  const [removalReason, setRemovalReason] = useState('');
 
   // Define paired sections configuration
   const pairedSectionsConfig = [
@@ -90,15 +94,12 @@ function MarketplaceApplicationDetails() {
         if (appData && (appData.user_id || appData.application_type === 'marketplace' || appData.application_source === 'marketplace')) {
           const userId = appData.user_id;
           if (userId) {
-            setIsLoadingKyc(true);
             try {
               const kycResponse = await axiosInstance.get(`/api/admin/customers/user/${userId}`);
               setUserKycData(kycResponse.data?.data?.user);
             } catch (kycError) {
               console.error('Error fetching user KYC data:', kycError);
               // Don't show error toast - just log it, as application data might still be useful
-            } finally {
-              setIsLoadingKyc(false);
             }
           }
         }
@@ -248,6 +249,49 @@ function MarketplaceApplicationDetails() {
     }
   };
 
+  const handleRemoveProduct = async (productId, reason) => {
+    setRemovingProductId(productId);
+    try {
+      const response = await axiosInstance.delete(`/api/admin/applications/${id}/products/${productId}`, {
+        data: { reason }
+      });
+      if (response.status === 200) {
+        toast.success('Product removed successfully. Application amounts have been recalculated.');
+        // Reload application data
+        const updatedResponse = await axiosInstance.get(`/api/admin/applications/${id}`);
+        setLoanData(updatedResponse.data);
+        queryClient.invalidateQueries(["singleLoanApplication", id]);
+        setShowRemoveProductModal(false);
+        setProductToRemove(null);
+        setRemovalReason('');
+      }
+    } catch (error) {
+      console.error('Error removing product:', error);
+      toast.error(error.response?.data?.message || 'Failed to remove product');
+    } finally {
+      setRemovingProductId(null);
+    }
+  };
+
+  const handleRestoreProduct = async (productId) => {
+    setRemovingProductId(productId);
+    try {
+      const response = await axiosInstance.post(`/api/admin/applications/${id}/products/${productId}/restore`);
+      if (response.status === 200) {
+        toast.success('Product restored successfully. Application amounts have been recalculated.');
+        // Reload application data
+        const updatedResponse = await axiosInstance.get(`/api/admin/applications/${id}`);
+        setLoanData(updatedResponse.data);
+        queryClient.invalidateQueries(["singleLoanApplication", id]);
+      }
+    } catch (error) {
+      console.error('Error restoring product:', error);
+      toast.error(error.response?.data?.message || 'Failed to restore product');
+    } finally {
+      setRemovingProductId(null);
+    }
+  };
+
   if (isPending) {
     return (
       <div className="flex justify-center items-center h-screen text-xl">
@@ -299,17 +343,16 @@ function MarketplaceApplicationDetails() {
     Customer,
     Vendor,
     Product,
+    ApplicationProducts,
+    is_multi_product,
     application_data,
-    documents,
     customer_details,
     mandates,
     transactions,
     schedules,
     sms_link,
-    upload_summary,
     application_source,
-    is_custom_product,
-    quote_document_info
+    is_custom_product
   } = applicationData;
 
   // Calculate next repayment date from schedules
@@ -482,26 +525,69 @@ function MarketplaceApplicationDetails() {
     { key: 'no_guarantors', label: 'Guarantors', value: 'No guarantors found' }
   ];
 
+  // Calculate totals from ApplicationProducts if available (source of truth for multi-product apps)
+  // Filter active products: status === 'active' or status is null/undefined (for backward compatibility)
+  const activeApplicationProducts = ApplicationProducts && ApplicationProducts.length > 0
+    ? ApplicationProducts.filter(ap => (ap.status === 'active' || !ap.status || ap.status === null))
+    : [];
+  
+  const removedApplicationProducts = ApplicationProducts && ApplicationProducts.length > 0
+    ? ApplicationProducts.filter(ap => ap.status === 'removed')
+    : [];
+
+  // Calculate cumulative totals from ApplicationProducts
+  // Use total_price if available, otherwise calculate from unit_price * quantity
+  const calculatedProductPrice = activeApplicationProducts.length > 0
+    ? activeApplicationProducts.reduce((sum, ap) => {
+        if (ap.total_price) {
+          return sum + parseFloat(ap.total_price);
+        }
+        const unitPrice = parseFloat(ap.unit_price || ap.Product?.price || 0);
+        const quantity = parseInt(ap.quantity || 1);
+        return sum + (unitPrice * quantity);
+      }, 0)
+    : null;
+
+  const calculatedDownPayment = activeApplicationProducts.length > 0
+    ? activeApplicationProducts.reduce((sum, ap) => {
+        const downPayment = parseFloat(ap.down_payment || 0);
+        const quantity = parseInt(ap.quantity || 1);
+        return sum + (downPayment * quantity);
+      }, 0)
+    : null;
+
+  const calculatedMonthlyPayment = activeApplicationProducts.length > 0
+    ? activeApplicationProducts.reduce((sum, ap) => {
+        const monthlyPayment = parseFloat(ap.monthly_payment || 0);
+        const quantity = parseInt(ap.quantity || 1);
+        return sum + (monthlyPayment * quantity);
+      }, 0)
+    : null;
+
   // Helper function to get the correct product price for marketplace applications
-  // For marketplace apps, the 'amount' field incorrectly stores lease total instead of product price
-  // The Product.price field contains the actual product price from the Product table
+  // For multi-product apps, calculate from ApplicationProducts; otherwise use stored values
   const getProductPrice = () => {
-    // For marketplace applications, use Product.price if available (this is the actual product price)
+    // Priority 1: Use calculated total from ApplicationProducts (most accurate for multi-product)
+    if (calculatedProductPrice && calculatedProductPrice > 0) {
+      return calculatedProductPrice;
+    }
+
+    // Priority 2: For single-product marketplace applications, use Product.price if available
     if (application_type === 'marketplace' && Product?.price) {
       return parseFloat(Product.price);
     }
     
-    // Fallback: Check if we have pricing breakdown with product price
+    // Priority 3: Check if we have pricing breakdown with product price
     if (application_data?.pricingBreakdown?.productPrice) {
       return parseFloat(application_data.pricingBreakdown.productPrice);
     }
     
-    // Fallback: Check calculation breakdown
+    // Priority 4: Check calculation breakdown
     if (application_data?.calculation_breakdown?.display_price) {
       return parseFloat(application_data.calculation_breakdown.display_price);
     }
     
-    // Fallback: Calculate from cart items
+    // Priority 5: Calculate from cart items
     if (application_data?.cartItems && Array.isArray(application_data.cartItems) && application_data.cartItems.length > 0) {
       const productPriceTotal = application_data.cartItems.reduce((sum, cartItem) => {
         const unitPrice = parseFloat(cartItem.unitPrice || cartItem.product?.priceInNaira || 0);
@@ -514,51 +600,60 @@ function MarketplaceApplicationDetails() {
       }
     }
     
-    // Last resort: use stored amount (might be incorrect for old marketplace applications)
+    // Last resort: use stored amount
     return amount;
   };
 
   const productPrice = getProductPrice();
+  
+  // Use calculated values if available, otherwise fall back to stored values
+  const finalDownPayment = calculatedDownPayment !== null ? calculatedDownPayment : parseFloat(down_payment_amount || 0);
+  const finalMonthlyPayment = calculatedMonthlyPayment !== null ? calculatedMonthlyPayment : parseFloat(monthly_repayment || 0);
 
   // Recalculate down payment percentage based on product price (not lease total)
   // For marketplace applications, the stored down_payment_percent may be incorrect
   // Note: Down payment is calculated on (product price + 5% management fee), but we display it as % of product price
   // For display purposes, we calculate: down_payment / product_price
   // The actual down payment percentage (including management fee) would be: down_payment / (product_price * 1.05)
-  const calculatedDownPaymentPercent = productPrice && down_payment_amount 
-    ? Math.round((parseFloat(down_payment_amount) / parseFloat(productPrice)) * 100 * 100) / 100 // Round to 2 decimal places
+  const calculatedDownPaymentPercent = productPrice && finalDownPayment 
+    ? Math.round((finalDownPayment / productPrice) * 100 * 100) / 100 // Round to 2 decimal places
     : down_payment_percent;
 
   // Financial data for FinancialSummaryCard
-  const financialData = application_data?.calculation_breakdown ? {
-    displayPrice: application_data.calculation_breakdown.display_price || productPrice,
-    managementFee: application_data.calculation_breakdown.raba_markup,
-    totalWithManagementFee: application_data.calculation_breakdown.total_with_markup,
-    downPayment: application_data.calculation_breakdown.down_payment || down_payment_amount,
-    downPaymentPercent: calculatedDownPaymentPercent, // Use recalculated percentage
-    financedAmount: productPrice && down_payment_amount ? parseFloat(productPrice) - parseFloat(down_payment_amount) : application_data.calculation_breakdown.financed_amount,
+  // Use calculated values from ApplicationProducts if available, otherwise use stored values
+  const financialData = {
+    displayPrice: productPrice,
+    managementFee: application_data?.calculation_breakdown?.raba_markup || (productPrice * 0.05), // 5% management fee
+    totalWithManagementFee: application_data?.calculation_breakdown?.total_with_markup || (productPrice * 1.05),
+    downPayment: finalDownPayment,
+    downPaymentPercent: calculatedDownPaymentPercent,
+    financedAmount: productPrice && finalDownPayment ? (productPrice - finalDownPayment) : (application_data?.calculation_breakdown?.financed_amount || 0),
     interestRate: interest_rate,
-    totalInterest: productPrice && down_payment_amount && monthly_repayment && lease_tenure 
-      ? (parseFloat(monthly_repayment) * parseInt(lease_tenure)) - (parseFloat(productPrice) - parseFloat(down_payment_amount))
-      : application_data.calculation_breakdown.total_interest,
-    monthlyPayment: application_data.calculation_breakdown.monthly_payment || monthly_repayment,
-    leaseTermMonths: application_data.calculation_breakdown.lease_term_months || lease_tenure,
+    totalInterest: productPrice && finalDownPayment && finalMonthlyPayment && lease_tenure 
+      ? (finalMonthlyPayment * parseInt(lease_tenure)) - (productPrice - finalDownPayment)
+      : (application_data?.calculation_breakdown?.total_interest || 0),
+    monthlyPayment: finalMonthlyPayment,
+    leaseTermMonths: lease_tenure,
     leaseTenureUnit: lease_tenure_unit,
-  } : null;
+  };
 
-  // Application overview data
+  // Application overview data - use calculated values from ApplicationProducts
   const applicationOverview = [
     { key: 'reference', label: 'Application Reference', value: reference || 'N/A' },
     { key: 'applicationType', label: 'Application Type', value: application_type || 'N/A' },
     { key: 'applicationSource', label: 'Application Source', value: application_source || 'marketplace' },
     { key: 'totalAmount', label: 'Total Amount', value: productPrice ? formatCurrency(productPrice) : 'N/A' },
-    { key: 'downPayment', label: 'Down Payment', value: down_payment_amount ? formatCurrency(down_payment_amount) : 'N/A' },
+    { key: 'downPayment', label: 'Down Payment', value: finalDownPayment > 0 ? formatCurrency(finalDownPayment) : 'N/A' },
     { key: 'downPaymentPercent', label: 'Down Payment %', value: calculatedDownPaymentPercent ? `${calculatedDownPaymentPercent}%` : 'N/A' },
-    { key: 'monthlyRepayment', label: 'Monthly Repayment', value: monthly_repayment ? formatCurrency(monthly_repayment) : 'N/A' },
+    { key: 'monthlyRepayment', label: 'Monthly Repayment', value: finalMonthlyPayment > 0 ? formatCurrency(finalMonthlyPayment) : 'N/A' },
     { key: 'leaseTenure', label: 'Lease Tenure', value: lease_tenure && lease_tenure_unit ? `${lease_tenure} ${lease_tenure_unit}s` : 'N/A' },
     { key: 'nextRepaymentDate', label: 'Next Repayment Date', value: getNextRepaymentDate() },
     { key: 'createdAt', label: 'Created At', value: created_at ? formatDate(created_at, 'datetime') : 'N/A' },
     { key: 'updatedAt', label: 'Last Updated', value: updated_at ? formatDate(updated_at, 'datetime') : 'N/A' },
+    // Add multi-product indicator
+    ...(is_multi_product && activeApplicationProducts.length > 0 ? [
+      { key: 'productCount', label: 'Number of Products', value: `${activeApplicationProducts.length} Product${activeApplicationProducts.length !== 1 ? 's' : ''}` }
+    ] : [])
   ];
 
   return (
@@ -614,11 +709,9 @@ function MarketplaceApplicationDetails() {
       </div>
 
       {/* Financial Summary - Expanded by default */}
-      {financialData && (
-        <div className="mb-6">
-          <FinancialSummaryCard financialData={financialData} />
-        </div>
-      )}
+      <div className="mb-6">
+        <FinancialSummaryCard financialData={financialData} />
+      </div>
 
       {/* Collapsible Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -667,19 +760,222 @@ function MarketplaceApplicationDetails() {
           </CollapsibleSection>
         )}
 
-        {/* Product Details */}
+        {/* Product Details - Multi-Product Support */}
         <CollapsibleSection
-          title="Product Details"
+          title={is_multi_product ? `Products (${activeApplicationProducts.length} active${removedApplicationProducts.length > 0 ? `, ${removedApplicationProducts.length} removed` : ''})` : "Product Details"}
           icon={ShoppingBag}
-          badge={Product?.approval_status}
-          badgeColor={Product?.approval_status === 'approved' ? 'green' : 'yellow'}
+          badge={is_multi_product ? `${activeApplicationProducts.length} active` : Product?.approval_status}
+          badgeColor={is_multi_product ? 'blue' : (Product?.approval_status === 'approved' ? 'green' : 'yellow')}
           defaultExpanded={getSectionState('product-details')}
           onToggle={(isExpanded) => toggleSection('product-details', isExpanded)}
         >
-          <InfoGrid
-            data={productInfo}
-            columns={{ mobile: 1, tablet: 2, desktop: 2 }}
-          />
+          {is_multi_product && ApplicationProducts && ApplicationProducts.length > 0 ? (
+            <div className="space-y-4">
+              {/* Active Products - Card Layout */}
+              {activeApplicationProducts.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Active Products</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    {activeApplicationProducts.map((appProduct) => (
+                      <div key={appProduct.id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                          {/* Left Section - Product Info */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h5 className="text-base font-semibold text-gray-900 mb-1">
+                                  {appProduct.Product?.name || 'N/A'}
+                                </h5>
+                                {appProduct.Product?.description && (
+                                  <p className="text-sm text-gray-600 line-clamp-2">
+                                    {appProduct.Product.description}
+                                  </p>
+                                )}
+                              </div>
+                              {(status === 'pending' || status === 'submitted') && (
+                                <button
+                                  onClick={() => {
+                                    setProductToRemove(appProduct);
+                                    setShowRemoveProductModal(true);
+                                  }}
+                                  disabled={removingProductId === appProduct.product_id}
+                                  className={`ml-4 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    removingProductId === appProduct.product_id
+                                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                      : 'bg-red-600 text-white hover:bg-red-700'
+                                  }`}
+                                >
+                                  {removingProductId === appProduct.product_id ? 'Removing...' : 'Remove'}
+                                </button>
+                              )}
+                            </div>
+                            
+                            {/* Vendor Info */}
+                            <div className="mb-3">
+                              <span className="text-xs font-medium text-gray-500 uppercase">Vendor</span>
+                              <div className="text-sm text-gray-900 mt-1">
+                                {appProduct.Vendor ? (
+                                  <div>
+                                    <span className="font-medium">
+                                      {appProduct.Vendor.business_name || `${appProduct.Vendor.first_name} ${appProduct.Vendor.last_name}`}
+                                    </span>
+                                    <span className="text-gray-500 ml-2">(ID: {appProduct.vendor_id})</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">Admin Product</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Financial Details Grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
+                              <div>
+                                <span className="text-xs font-medium text-gray-500 uppercase block mb-1">Quantity</span>
+                                <span className="text-sm font-semibold text-gray-900">{appProduct.quantity}</span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-medium text-gray-500 uppercase block mb-1">Unit Price</span>
+                                <span className="text-sm font-semibold text-gray-900">{formatCurrency(appProduct.unit_price)}</span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-medium text-gray-500 uppercase block mb-1">Down Payment</span>
+                                <span className="text-sm font-semibold text-blue-600">{formatCurrency(appProduct.down_payment)}</span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-medium text-gray-500 uppercase block mb-1">Monthly Payment</span>
+                                <span className="text-sm font-semibold text-green-600">{formatCurrency(appProduct.monthly_payment)}</span>
+                              </div>
+                            </div>
+
+                            {/* Lease Term */}
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              <span className="text-xs font-medium text-gray-500 uppercase">Lease Term</span>
+                              <span className="text-sm font-semibold text-gray-900 ml-2">
+                                {appProduct.lease_term} {appProduct.lease_term_unit}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Removed Products - Card Layout */}
+              {removedApplicationProducts.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-lg font-semibold text-red-600 mb-4">Removed Products</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    {removedApplicationProducts.map((appProduct) => (
+                      <div key={appProduct.id} className="bg-red-50 border border-red-200 rounded-lg p-5 opacity-75">
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                          {/* Left Section - Product Info */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h5 className="text-base font-semibold text-gray-900 mb-1 line-through">
+                                  {appProduct.Product?.name || 'N/A'}
+                                </h5>
+                              </div>
+                              {(status === 'pending' || status === 'submitted') && (
+                                <button
+                                  onClick={() => handleRestoreProduct(appProduct.product_id)}
+                                  disabled={removingProductId === appProduct.product_id}
+                                  className={`ml-4 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    removingProductId === appProduct.product_id
+                                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                      : 'bg-green-600 text-white hover:bg-green-700'
+                                  }`}
+                                >
+                                  {removingProductId === appProduct.product_id ? 'Restoring...' : 'Restore'}
+                                </button>
+                              )}
+                            </div>
+                            
+                            {/* Vendor Info */}
+                            <div className="mb-3">
+                              <span className="text-xs font-medium text-gray-500 uppercase">Vendor</span>
+                              <div className="text-sm text-gray-600 mt-1">
+                                {appProduct.Vendor ? (
+                                  appProduct.Vendor.business_name || `${appProduct.Vendor.first_name} ${appProduct.Vendor.last_name}`
+                                ) : (
+                                  <span className="text-gray-400">Admin Product</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Removal Details Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-red-200">
+                              <div>
+                                <span className="text-xs font-medium text-red-700 uppercase block mb-1">Removed By</span>
+                                <span className="text-sm text-gray-900">
+                                  {appProduct.RemovedBy 
+                                    ? `${appProduct.RemovedBy.first_name} ${appProduct.RemovedBy.last_name}`
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-medium text-red-700 uppercase block mb-1">Removed At</span>
+                                <span className="text-sm text-gray-900">
+                                  {appProduct.removed_at ? formatDate(appProduct.removed_at) : 'N/A'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-medium text-red-700 uppercase block mb-1">Reason</span>
+                                <span className="text-sm text-gray-900">
+                                  {appProduct.removal_reason || 'No reason provided'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Summary - Use calculated values from ApplicationProducts */}
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                <h5 className="font-semibold text-gray-800 mb-2">Application Summary (Cumulative)</h5>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-600">Active Products</div>
+                    <div className="font-semibold text-gray-900">{activeApplicationProducts.length}</div>
+                    {removedApplicationProducts.length > 0 && (
+                      <div className="text-xs text-red-600 mt-1">
+                        {removedApplicationProducts.length} removed
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-gray-600">Total Amount</div>
+                    <div className="font-semibold text-gray-900">
+                      {calculatedProductPrice ? formatCurrency(calculatedProductPrice) : formatCurrency(productPrice)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600">Total Down Payment</div>
+                    <div className="font-semibold text-gray-900">
+                      {calculatedDownPayment !== null ? formatCurrency(calculatedDownPayment) : formatCurrency(finalDownPayment)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600">Total Monthly Payment</div>
+                    <div className="font-semibold text-gray-900">
+                      {calculatedMonthlyPayment !== null ? formatCurrency(calculatedMonthlyPayment) : formatCurrency(finalMonthlyPayment)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <InfoGrid
+              data={productInfo}
+              columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+            />
+          )}
         </CollapsibleSection>
 
         {/* Bank Details (from UserFinancialAccount model) */}
@@ -1247,6 +1543,84 @@ function MarketplaceApplicationDetails() {
         onSubmit={handleCreateAction}
         applicationId={id}
       />
+
+      {/* Remove Product Modal */}
+      {showRemoveProductModal && productToRemove && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => {
+          setShowRemoveProductModal(false);
+          setProductToRemove(null);
+          setRemovalReason('');
+        }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Remove Product</h3>
+                <button
+                  onClick={() => {
+                    setShowRemoveProductModal(false);
+                    setProductToRemove(null);
+                    setRemovalReason('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                <p className="text-sm font-medium text-yellow-900">Product: {productToRemove.Product?.name || 'N/A'}</p>
+                <p className="text-sm text-yellow-700 mt-1">This will remove the product from the application and recalculate the application amounts.</p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for Removal (Optional)
+                </label>
+                <textarea
+                  value={removalReason}
+                  onChange={(e) => setRemovalReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Enter reason for removing this product..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  label="Cancel"
+                  variant="outline"
+                  onClick={() => {
+                    setShowRemoveProductModal(false);
+                    setProductToRemove(null);
+                    setRemovalReason('');
+                  }}
+                />
+                <button
+                  onClick={() => handleRemoveProduct(productToRemove.product_id, removalReason)}
+                  disabled={removingProductId === productToRemove.product_id}
+                  className={`flex items-center justify-center px-6 py-3 rounded-md font-semibold text-sm transition duration-200 ease-in-out ${
+                    removingProductId === productToRemove.product_id
+                      ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
+                >
+                  {removingProductId === productToRemove.product_id ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                      </svg>
+                      Removing...
+                    </span>
+                  ) : (
+                    'Remove Product'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

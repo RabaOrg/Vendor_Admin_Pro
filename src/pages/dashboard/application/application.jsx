@@ -12,7 +12,7 @@ import CreateSmsModal from '../../../components/modals/CreateSmsModal'
 function ApplicationList() {
   const [page, setPage] = useState(1);
   const [applicationTypeFilter, setApplicationTypeFilter] = useState("");
-  const [includeSmsLinks, setIncludeSmsLinks] = useState(false);
+  const [includeSmsLinks, setIncludeSmsLinks] = useState(true);
   const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
@@ -193,8 +193,15 @@ function ApplicationList() {
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">
-                      {item.product?.name || item.product_name || '—'}
+                      {item.is_multi_product && item.product_count > 1
+                        ? `${item.product_count} Products`
+                        : (item.product?.name || item.product_name || '—')}
                     </p>
+                    {item.is_multi_product && item.product_count > 1 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Multi-product application
+                      </p>
+                    )}
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 text-xs">
                     <p className="font-medium whitespace-no-wrap text-xs">₦{Number(getProductPrice(item)).toLocaleString()}</p>
